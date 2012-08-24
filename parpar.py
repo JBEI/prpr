@@ -84,43 +84,23 @@ def GetPlateLocation(plateName, expID):
     connection = sqlite3.connect('parpar.db')
     c = connection.cursor()
     command = 'SELECT Grid, Site from PlateLocations WHERE Plate=' + '"' + plateName + '"' + ' AND ExpID = ' + str(expID)
-    print(command)
     c.execute(command)
-    return c.fetchone()
-
-def GetMaxTips(expID):
-    connection = sqlite3.connect('parpar.db')
-    c = connection.cursor()
-    c.execute('SELECT maxTips from Experiments WHERE ExpID = ' + str(expID))
-    maxTips = c.fetchone()
-    return maxTips[0]
+    for row in c:
+        return row
         
 def GetAllTransfers(expID):
     connection = sqlite3.connect('parpar.db')
     c = connection.cursor()
-    command = 'SELECT ActionID, Type FROM Actions WHERE ExpID = ' + str(expID) + ' ORDER BY ActionID ASC'
-    c.execute(command)
-    allTransfers = c.fetchall()
-    connection.close()
+    c.execute('SELECT MAX(TransferID) FROM Transfers WHERE ExpID = ' + str(expID))
+    maxTrID = c.fetchone()[0]
+#    print(maxTrID)
+    allTransfers = []
+    for i in range(0, maxTrID):
+        command = 'SELECT TransferID, ExpID, WellID, dstWellID, Volume, Method, Tips, Options FROM Transfers WHERE ExpID = ' + str(expID) + ' AND TransferID = ' + str(i+1) + ' ORDER BY trOrder ASC'
+#        print(command)
+        c.execute(command)
+        allTransfers.append(c.fetchall())
     return allTransfers
-
-def GetTransfer(trID, expID):
-    connection = sqlite3.connect('parpar.db')
-    c = connection.cursor()
-    command = 'SELECT srcWellID, dstWellID, Volume, Method FROM Transfers WHERE ExpID = ' + str(expID) + ' AND ActionID = ' + str(trID) + ' ORDER BY trOrder ASC'
-    c.execute(command)
-    transferElements = c.fetchall()
-    connection.close()
-    return transferElements
-
-def GetCommand(trID, expID):
-    connection = sqlite3.connect('parpar.db')
-    c = connection.cursor()
-    command = 'SELECT Command, Options FROM Commands WHERE ExpID = ' + str(expID) + ' AND ActionID = ' + str(trID) + ' ORDER BY trOrder ASC'
-    c.execute(command)
-    transferElements = c.fetchall()
-    connection.close()
-    return transferElements
         
 def TransactionToList(expID, transactionID, wellInfo, wellList, method):
     connection = sqlite3.connect('parpar.db')
@@ -139,90 +119,42 @@ def CheckIfWellsAreConsequent(well1, well2):
     else:
         return False
 
-def LiquidTransfer(expID):
-    maxTips = GetMaxTips(expID)
+def LiquidTransfer(expID, robotTips):
+
     allTransfers = GetAllTransfers(expID)
-    print('111', allTransfers)
-    wash = Wash()
-    commandsList = ('Aspirate', 'Dispense')
+#    print('111', allTransfers)
     for transfer in allTransfers:
-        trID = transfer[0]
-        trType = transfer[1]
-        if trType == 'transfer':
-            els = GetTransfer(trID, expID)
-            if len(els) > maxTips:
-                for l in range(0, len(els), maxTips):
-                    cutEls = els[l:l+maxTips]
-                    for e in range(0, len(cutEls)):
-                        cutEls[e] = createTransactionDict(cutEls[e], expID)
-                    AppendToRobotCfg(expID, wash)
-                    for command in commandsList:
-                        volumesList = []
-                        listOfWells = []
-                        startWell = 0
-                        tipNum = 1
-                        trCount = 0
-                        ConstructTransaction(command, cutEls, trCount, tipNum, volumesList, startWell, listOfWells, expID)
-            else:
-                for e in range(0, len(els)):
-                    els[e] = createTransactionDict(els[e], expID)
+        transferList = []
+        for row in transfer:
+            trDict = FillWellCoordinates(row)
+            transferList.append(trDict)
+
+        wash = Wash()
+        commandsList = ('Aspirate', 'Dispense')
+
+        trListLen = len(transferList)
+#        print('trl', transferList[0])
+        if trListLen > robotTips:
+            for l in range(0, trListLen, robotTips):
+                cutTransferList = transferList[l:l+robotTips]
+#                print(cutTransferList)
+                AppendToRobotCfg(expID, wash)
                 for command in commandsList:
                     volumesList = []
                     listOfWells = []
                     startWell = 0
                     tipNum = 1
                     trCount = 0
-                    ConstructTransaction(command, els, trCount, tipNum, volumesList, startWell, listOfWells, expID)
-
-        if trType == 'command':
-            cmd = GetCommand(trID, expID)
-            for c in cmd:
-                if c[0] == 'mix':
-                    mixOptions = c[1].split('x')
-                    mixString = CreateMixString(volumesString[0], mixOptions[0])
-                    mix = Mix(volumesString[1], PlateGridAndSite, WellEncoding, mixString, mixOptions[1])
-                    AppendToRobotCfg(expID, mix)
-
-
-
-#            for element in els:
-#                srcWellID = element[0]
-#                dstWellID = element[1]
-#                volume = element[2]
-#                print( srcWellID, dstWellID, volume, '::' )
-
-
-#        transferList = []
-#        for row in transfer:
-#            trDict = FillWellCoordinates(row)
-#            transferList.append(trDict)
-#
-#        wash = Wash()
-#        commandsList = ('Aspirate', 'Dispense')
-#
-#        trListLen = len(transferList)
-##        print('trl', transferList[0])
-#        if trListLen > robotTips:
-#            for l in range(0, trListLen, robotTips):
-#                cutTransferList = transferList[l:l+robotTips]
-##                print(cutTransferList)
-#                AppendToRobotCfg(expID, wash)
-#                for command in commandsList:
-#                    volumesList = []
-#                    listOfWells = []
-#                    startWell = 0
-#                    tipNum = 1
-#                    trCount = 0
-#                    ConstructTransaction(command, cutTransferList, trCount, tipNum, volumesList, startWell, listOfWells)
-#        else:
-#            AppendToRobotCfg(expID, wash)
-#            for command in commandsList:
-#                volumesList = []
-#                listOfWells = []
-#                startWell = 0
-#                tipNum = 1
-#                trCount = 0
-#                ConstructTransaction(command, transferList, trCount, tipNum, volumesList, startWell, listOfWells)
+                    ConstructTransaction(command, cutTransferList, trCount, tipNum, volumesList, startWell, listOfWells)
+        else:
+            AppendToRobotCfg(expID, wash)
+            for command in commandsList:
+                volumesList = []
+                listOfWells = []
+                startWell = 0
+                tipNum = 1
+                trCount = 0
+                ConstructTransaction(command, transferList, trCount, tipNum, volumesList, startWell, listOfWells)
 
 def FillWellCoordinates(transferList):
     srcWellCoords = GetWell(transferList[2], transferList[1])
@@ -251,7 +183,7 @@ def UpdateTransferParameters(trDict, listOfWells):
     srcPlateLoc = GetPlateLocation(trDict['srcPlate'], expID)
     srcPlateDms = GetPlate(trDict['srcPlate'], expID)[1:]
     srcWell = eval(trDict['srcWell'])
-    srcPlateGridAndSite = str(srcPlateLoc[0]) + ',' + str(srcPlateLoc[1])
+    srcPlateGridAndSite = srcPlateLoc[0] + ',' + srcPlateLoc[1]
     srcWellBit = srcWell
     srcWellEncoding = getWellEncoding(listOfWells, int(srcPlateDms[0]), int(srcPlateDms[1]))
 
@@ -259,55 +191,22 @@ def UpdateTransferParameters(trDict, listOfWells):
     dstPlateLoc = GetPlateLocation(trDict['dstPlate'], expID)
     dstPlateDms = GetPlate(trDict['dstPlate'], expID)[1:]
     dstWell = eval(trDict['dstWell'])
-    dstPlateGridAndSite = str(dstPlateLoc[0]) + ',' + str(dstPlateLoc[1])
+    dstPlateGridAndSite = dstPlateLoc[0] + ',' + dstPlateLoc[1]
     dstWellBit = dstWell
     dstWellEncoding = getWellEncoding(listOfWells, int(dstPlateDms[0]), int(dstPlateDms[1]))
+
+    options = trDict['options']
+#    print(options)
 
     method = trDict['method']
 
 #    dstWellEncoding = getWellEncoding(int(dstWell[1]), int(dstWell[0]), int(dstPlateDms[0]), int(dstPlateDms[1]))
 
-    transferParameters = { 'srcLoc' : srcPlateGridAndSite, 'dstLoc' : dstPlateGridAndSite, 'srcWell' : srcWellEncoding, 'dstWell' : dstWellEncoding, 'method' : method}
+    transferParameters = { 'srcLoc' : srcPlateGridAndSite, 'dstLoc' : dstPlateGridAndSite, 'srcWell' : srcWellEncoding, 'dstWell' : dstWellEncoding, 'method' : method, 'options' : options}
 
 #    return(transferParameters)
 
-def createTransactionDict(transaction, expID):
-    srcw = str(transaction[0])
-    dstw = str(transaction[1])
-    volume = eval(transaction[2])
-    method = transaction[3]
-
-    connection = sqlite3.connect('parpar.db')
-    c = connection.cursor()
-    command = 'SELECT Plate, Location FROM Wells WHERE ExpID = ' + str(expID) + ' AND WellID = ' + srcw
-    c.execute(command)
-    srcInfo = c.fetchone()
-    print('2222', srcInfo, command)
-    srcPlate = srcInfo[0]
-    srcWell = srcInfo[1]
-
-    command = 'SELECT Plate, Location FROM Wells WHERE ExpID = ' + str(expID) + ' AND WellID = ' + dstw
-    c.execute(command)
-    dstInfo = c.fetchone()
-    dstPlate = dstInfo[0]
-    dstWell = dstInfo[1]
-    connection.close()
-
-    dict = {
-        'srcWell' : srcWell,
-        'srcPlate' : srcPlate,
-        'dstPlate' : dstPlate,
-        'dstWell' : dstWell,
-        'volume' : volume,
-        'expID' : expID,
-        'method' : method
-    }
-
-    print(dict)
-
-    return dict
-
-def ConstructTransaction(action, transferList, trCount, tipNum, volumesList, startWell, listOfWells, expID):
+def ConstructTransaction(action, transferList, trCount, tipNum, volumesList, startWell, listOfWells):
     """
     Creating the aspirate / dispense strings from the list of transfers
     """
@@ -319,6 +218,7 @@ def ConstructTransaction(action, transferList, trCount, tipNum, volumesList, sta
     global dstPlateDms
     global method
     global trID
+    global expID
     global trDict
     global options
 
@@ -331,9 +231,10 @@ def ConstructTransaction(action, transferList, trCount, tipNum, volumesList, sta
         else:
             trDict = transferList[trCount]
         expID = trDict['expID']
-        volume = trDict['volume']
+        volume = eval(trDict['volume'])
         srcWellBit = eval(trDict['srcWell'])
         dstWellBit = eval(trDict['dstWell'])
+        options = trDict['options']
 
 #        print(trDict['srcPlate'])
 #        print(trDict['dstPlate'])
@@ -365,6 +266,17 @@ def ConstructTransaction(action, transferList, trCount, tipNum, volumesList, sta
 
             command = Command(action, volumesString[1], PlateGridAndSite, WellEncoding, method, volumesString[0])
             AppendToRobotCfg(expID, command)
+#            print('options', options, action) #options is here on aspirate
+            if options != '':
+                if action == 'Dispense':
+                    optionList = options.split(',')
+                    for option in optionList:
+                        sepdOption = option.split(':')
+                        if sepdOption[0] == 'mix':
+                            mixOptions = sepdOption[1].split('x')
+                            mixString = CreateMixString(volumesString[0], mixOptions[0])
+                            mix = Mix(volumesString[1], PlateGridAndSite, WellEncoding, mixString, mixOptions[1])
+                            AppendToRobotCfg(expID, mix)
 
 
 #            dispense = Command('Dispense', volumesString[1], dstPlateGridAndSite, dstWellEncoding, method, volumesString[0])
@@ -382,7 +294,7 @@ def ConstructTransaction(action, transferList, trCount, tipNum, volumesList, sta
             tipNum = 1
             startWell = trCount
         trCount += 1
-        ConstructTransaction(action, transferList, trCount, tipNum, volumesList, startWell, listOfWells, expID)
+        ConstructTransaction(action, transferList, trCount, tipNum, volumesList, startWell, listOfWells)
 
     else:
         options = ''
@@ -436,7 +348,6 @@ def CheckTransaction(transferList, trCount, action):
     else:
         tr1 = transferList[trCount]
         tr0 = transferList[trCount - 1]
-
         a = CheckIfWellsAreConsequent(eval(tr0[well]), eval(tr1[well]))
 #        if (int(eval(tr1[well])[1]) == int(eval(tr0[well])[1]) + 1) and (int(eval(tr1[well])[0]) == int(eval(tr0[well])[0]) + 1):
 #            return True
