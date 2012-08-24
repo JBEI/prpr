@@ -1,0 +1,50 @@
+24 Well DeepWell,6x4
+384 Well Plate,24x16
+96 - 8 PCR tubes connected,12x8
+96 Well DeepRoundWell,12x8
+96 Well DeepWell,12x8
+96 Well Microplate,12x8
+96 Well RT-PCR,12x8
+Adapter 96 DiTi 1to1 MCA384,12x8
+Adapter 96 DiTi MCA384,12x8
+Adapter 96 Fixed 15ul MCA384,12x8
+Adapter 96 Fixed125ul MCA384,12x8
+Adapter DiTi Combo MCA384,24x16
+Adapter DiTi MCA384,24x16
+Adapter Fixed 125ul MCA384,24x16
+Adapter Fixed 15ul MCA384,24x16
+DiTi 1000ul,12x8
+DiTi 100ul MCA96,12x8
+DiTi 10ul,12x8
+DiTi 125ul MCA384,24x16
+DiTi 15ul MCA384,24x16
+DiTi 200 ul,12x8
+DiTi 200ul MCA96,12x8
+DiTi 50ul,12x8
+DiTi 50ul MCA 384,24x16
+Wash Station Cleaner deep,1x8
+Wash Station Waste,1x8
+Balance Mettler Active,1x1
+Trough 100ml,1x1
+Trough 300ml MCA,1x1
+Tube 13*100mm 16 Pos,1x16
+Tube 13*75mm 16 Pos,1x16
+24 Well CaCo2 Plate,6x4
+384 Well HalfDeepWell,24x16
+96 Well DeepWell square,12x8
+DiTi 50ul MCA384,24x16
+REMP - DTBR 96-300,12x8
+REMP - STBR 384,24x16
+REMP - STBR 96-300,12x8
+REMP - STBR 96-900,12x8
+Te-PS Sensorplate,1x1
+DiTi 100ul Filter MCA96,12x8
+Diti 200ul Filter MCA96,12x8
+DiTi 50ul MCA96,12x8
+Tipblock HP MCA96,12x8
+Tipblock Std 1col left MCA96,12x8
+Tipblock Std MCA96,12x8
+Trough 125ml MCA96,1x1
+Trough 250ml MCA96,1x1
+Trough 60ml MCA384,24x16
+Wash Block MCA96,12x8
