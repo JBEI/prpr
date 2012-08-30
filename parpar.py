@@ -1,411 +1,392 @@
 #!/usr/bin/env python3.2
 __author__ = 'Nina Stawski'
+__version__ = '0.3'
+
 import os
 import sqlite3
 
-#def GetReagent(expID, reagent):
-#    location = ExecuteCommand('SELECT * FROM (Reagents NATURAL JOIN ReagentLocations) WHERE name = ' + '"' + reagent + '" AND ExpID = ' + expID)
-#    return(location)
-    
-##from pyevo
-def getTipEncoding(tipNumber):
-    return 1 << (tipNumber - 1)
+class ParPar:
+    transactions = []
+    volumesList = []
+    wash = 'Wash(255,1,1,1,0,"2",500,"1.0",500,20,70,30,1,1,1000);'
+    def __init__(self, ID):
+        self.expID = ID
+        db = DatabaseHandler(ID)
+        self.transfers = db.transfers
+        self.maxTips = db.maxTips
+        self.logger = []
+        self.robotConfig = []
+        self.createTransfer()
+        self.updateTransactions()
+        self.addWash()
+        self.saveLog()
+        self.saveConfig()
 
-#def getMultiTipEncoding(numberOfTips):
-#    encoding = 0
-#    for i in range(1,1 + numberOfTips):
-#        encoding += getTipEncoding(i)
-#    return (encoding)
+    def createTransfer(self):
+        allTransfers = self.transfers
+        for transfer in allTransfers:
+            trType = transfer['type']
+            els = transfer['info']
+            if trType == 'transfer':
+                self.constructTransaction(('Aspirate', 'Dispense'), els)
 
-def getTipAmountString(tipNumber, amount):    
-    param = ""
-    for i in range(1,13):
-        if i <= tipNumber:
-            param += '"' + str(amount) + '",'
-        elif (not i) == 12:
-            param += ","
-        else:
-            param += "0,"
-    return param
+            elif trType == 'command':
+                self.parseCommand(els)
 
-def getWellEncoding(wellsList,maxRows,maxColumns):
-    header = '{0:02X}{1:02X}'.format(maxColumns, maxRows)
-    selString = bytearray()
-    bitCounter = 0
-    bitMask = 0
-    for x in range(1, maxColumns + 1):
-        for y in range(1, maxRows + 1):
-            for (row, column) in wellsList:
-                if x == column and y == row:
-                    bitMask |= 1 << bitCounter
-            bitCounter += 1
-            if bitCounter > 6:
-                selString.append(0x30 + bitMask)
-                bitCounter = 0
-                bitMask = 0
-    if bitCounter > 0:
-        selString.append(0x30 + bitMask)
-    return header + selString.decode('latin1')
-        
-def Wash():
-    command = 'Wash(255,1,1,1,0,"2",500,"1.0",500,20,70,30,1,1,1000);'
-    return command
+    def getTipEncoding(self, tipNumber):
+        return 1 << (tipNumber - 1)
 
-def Mix(tipNumber, gridAndSite, wellString, volumesString, mixOptions):
-    command = 'Mix(' + str(tipNumber) + ',"LCWMX",' +\
-              volumesString + ',' + str(gridAndSite) + ',1,"' +\
-              wellString + '",' + mixOptions + ',0);'
-    return command
+    def getTipAmountString(self, tipNumber, amount):
+        param = ""
+        for i in range(1,13):
+            if i <= tipNumber:
+                param += '"' + str(amount) + '",'
+            elif (not i) == 12:
+                param += ","
+            else:
+                param += "0,"
+        return param
 
-def Command(action, tipNumber, gridAndSite, wellString, method, volumesString, mixOptions=''):
-    assert (action == 'Aspirate' or action == 'Dispense'), 'You entered the wrong command. Check your script and try again'
-    command = action + '(' + str(tipNumber) + ',"' +\
-              method + '",' + volumesString + ',' +\
-              str(gridAndSite) + ',1,"' + wellString +\
-              '",0);'
-    return command
+    def getWellEncoding(self, wellsList, maximums):
+        maxRows = maximums[0]
+        maxColumns = maximums[1]
+        header = '{0:02X}{1:02X}'.format(maxColumns, maxRows)
+        selString = bytearray()
+        bitCounter = 0
+        bitMask = 0
+        for x in range(1, maxColumns + 1):
+            for y in range(1, maxRows + 1):
+                for (row, column) in wellsList:
+                    if x == column and y == row:
+                        bitMask |= 1 << bitCounter
+                bitCounter += 1
+                if bitCounter > 6:
+                    selString.append(0x30 + bitMask)
+                    bitCounter = 0
+                    bitMask = 0
+        if bitCounter > 0:
+            selString.append(0x30 + bitMask)
+        return header + selString.decode('latin1')
 
-def GetWell(wellID, expID):
-    connection = sqlite3.connect('parpar.db')
-    c = connection.cursor()
-    c.execute('SELECT Plate, Location FROM Wells WHERE WellID = ' + str(wellID) + ' AND ExpID = ' + str(expID))
-    for row in c:
-        return [row[0], row[1]]
-
-def GetPlate(plateName, expID):
-    connection = sqlite3.connect('parpar.db')
-    c = connection.cursor()
-    command = 'SELECT FactoryName, Rows, Columns from (Plates NATURAL JOIN PlateLocations) WHERE Plate=' + '"' + plateName + '"' + ' AND ExpID = ' + str(expID)
-    c.execute(command)
-    for row in c:
-        return row
-        
-def GetPlateLocation(plateName, expID):
-    connection = sqlite3.connect('parpar.db')
-    c = connection.cursor()
-    command = 'SELECT Grid, Site from PlateLocations WHERE Plate=' + '"' + plateName + '"' + ' AND ExpID = ' + str(expID)
-    c.execute(command)
-    for row in c:
-        return row
-        
-def GetAllTransfers(expID):
-    connection = sqlite3.connect('parpar.db')
-    c = connection.cursor()
-    c.execute('SELECT MAX(TransferID) FROM Transfers WHERE ExpID = ' + str(expID))
-    maxTrID = c.fetchone()[0]
-#    print(maxTrID)
-    allTransfers = []
-    for i in range(0, maxTrID):
-        command = 'SELECT TransferID, ExpID, WellID, dstWellID, Volume, Method, Tips, Options FROM Transfers WHERE ExpID = ' + str(expID) + ' AND TransferID = ' + str(i+1) + ' ORDER BY trOrder ASC'
-#        print(command)
-        c.execute(command)
-        allTransfers.append(c.fetchall())
-    return allTransfers
-        
-def TransactionToList(expID, transactionID, wellInfo, wellList, method):
-    connection = sqlite3.connect('parpar.db')
-    c = connection.cursor()
-    c.execute('SELECT * FROM Wells WHERE WellID = ' + str(wellInfo[0]) + ' AND ExpID = ' + expID)
-    for row in c:
-        wellList.append([transactionID, row[2], row[3], wellInfo[1], method])
-    return wellList
-
-def CheckIfWellsAreConsequent(well1, well2):
-    if int(well1[1]) == int(well2[1]):
-        if int(well1[0]) == (int(well2[0]) - 1):
-            return True
+    def checkIfWellsAreConsequent(self, well1Info, well2Info):
+        if well1Info['plate'] == well2Info['plate']:
+            well1 = well1Info['well']
+            well2 = well2Info['well']
+            if int(well1[1]) == int(well2[1]):
+                if int(well1[0]) == (int(well2[0]) - 1):
+                    return True
+                else:
+                    return False
+            else:
+                return False
         else:
             return False
-    else:
-        return False
 
-def LiquidTransfer(expID, robotTips):
+    def config(self, line):
+        self.robotConfig.append(line)
 
-    allTransfers = GetAllTransfers(expID)
-#    print('111', allTransfers)
-    for transfer in allTransfers:
-        transferList = []
-        for row in transfer:
-            trDict = FillWellCoordinates(row)
-            transferList.append(trDict)
-
-        wash = Wash()
-        commandsList = ('Aspirate', 'Dispense')
-
-        trListLen = len(transferList)
-#        print('trl', transferList[0])
-        if trListLen > robotTips:
-            for l in range(0, trListLen, robotTips):
-                cutTransferList = transferList[l:l+robotTips]
-#                print(cutTransferList)
-                AppendToRobotCfg(expID, wash)
-                for command in commandsList:
-                    volumesList = []
-                    listOfWells = []
-                    startWell = 0
-                    tipNum = 1
-                    trCount = 0
-                    ConstructTransaction(command, cutTransferList, trCount, tipNum, volumesList, startWell, listOfWells)
+    def addWash(self):
+        if len(self.robotConfig) == 0:
+            self.config(self.wash)
         else:
-            AppendToRobotCfg(expID, wash)
+            if not self.robotConfig[-1].startswith('Wash'):
+                self.config(self.wash)
+
+    def saveConfig(self):
+        fileName = 'esc' + os.sep + 'config' + self.expID + '.esc'
+        myfile = open(fileName, 'a', encoding='latin1')
+        for line in self.robotConfig:
+            myfile.write(line.rstrip() + '\r\n')
+        myfile.close()
+
+    def log(self, item):
+        from datetime import datetime
+        time = str(datetime.now())
+        self.logger.append(time + ': ' + item)
+
+    def saveLog(self):
+        logname = 'logs/experiment' + self.expID + '.log'
+        self.log('Translation log location: ' + logname)
+        writefile = open(logname, "a")
+        writefile.writelines( "%s\n" % item for item in self.logger )
+        print('Translation log location: ' + logname)
+
+    def message(self, message):
+        command = 'UserPrompt("' + message + '",0,-1);'
+        print(command)
+        self.config(command)
+
+    def mix(self, tipNumber, volumesString, gridAndSite, wellString, mixOptions):
+        location = str(gridAndSite[0]) + ',' + str(gridAndSite[1])
+        command = 'Mix(' + str(tipNumber) + ',"LCWMX",' + \
+                  volumesString + ',' + location + ',1,"' + \
+                  wellString + '",' + mixOptions + ',0);'
+        self.config(command)
+
+    def command(self, action, tipNumber, gridAndSite, wellString, method, volumesString):
+        location = str(gridAndSite[0]) + ',' + str(gridAndSite[1])
+        command = action            + '(' + \
+                  str(tipNumber)    + ',"' + \
+                  method            + '",' + \
+                  volumesString     + ',' + \
+                  location          + ',1,"' + \
+                  wellString        + '",0);'
+        self.config(command)
+
+    def updateTransactions(self):
+        for transaction in self.transactions:
+            volumesDict = {}
+            wells = []
+            plateInfo = {}
+            for t in transaction:
+                if t:
+                    for e in range(0, len(t)):
+                        element = t[e]
+                        if element['command'] == 'message':
+                            self.message(element['message'])
+                        else:
+                            if e:
+                                previousElement = t[e-1]
+                                consequent = self.checkIfWellsAreConsequent(previousElement['wellInfo'], element['wellInfo'])
+                                if not consequent:
+                                    volumesList = self.fillVolumesList(volumesDict)
+                                    volumesLine = self.joinVolumesList(volumesList)
+
+                                    plateDimensions = plateInfo['dimensions']
+                                    wellenc = self.getWellEncoding(wells, plateDimensions)
+                                    gridAndSite = plateInfo['location']
+                                    volume = volumesLine[0]
+                                    tipsEncoding = volumesLine[1]
+                                    action = element['command']
+                                    if action == 'Aspirate' or action == 'Dispense':
+                                        method = element['method']
+                                        self.command(action, tipsEncoding, gridAndSite, wellenc, method, volume)
+                                    if action == 'Mix':
+                                        volume = self.createMixString(volume, element['volume'])
+                                        mixOptions = element['times']
+                                        self.mix(tipsEncoding, volume, gridAndSite, wellenc, mixOptions)
+
+                                    volumesDict = {element['tipNumber'] : '"' + str(element['volume']) + '"' }
+                                    wells = []
+                                    plateInfo = {'dimensions' : element['wellInfo']['plateDimensions'], 'location' : element['wellInfo']['plate']}
+                                else:
+                                    volumesDict[element['tipNumber']] = '"' + str(element['volume']) + '"'
+                                    wells.append(element['wellInfo']['well'])
+                            else:
+                                if element['command'] == 'Aspirate' or element['command'] == 'Mix':
+                                    self.addWash()
+                                volumesDict[element['tipNumber']] = '"' + str(element['volume']) + '"'
+                                wells.append(element['wellInfo']['well'])
+                                plateInfo = {'dimensions' : element['wellInfo']['plateDimensions'], 'location' : element['wellInfo']['plate']}
+                    element = t[len(t)-1]
+                    if element['command'] == 'message':
+                        pass
+                    else:
+                        volumesList = self.fillVolumesList(volumesDict)
+                        volumesLine = self.joinVolumesList(volumesList)
+                        plateDimensions = plateInfo['dimensions']
+                        wellenc = self.getWellEncoding(wells, plateDimensions)
+                        gridAndSite = plateInfo['location']
+                        volume = volumesLine[0]
+                        tipsEncoding = volumesLine[1]
+                        action = element['command']
+                        if action == 'Aspirate' or action == 'Dispense':
+                            method = element['method']
+                            self.command(action, tipsEncoding, gridAndSite, wellenc, method, volume)
+                        if action == 'Mix':
+                            volume = self.createMixString(volume, element['volume'])
+                            mixOptions = element['times']
+                            self.mix(tipsEncoding, volume, gridAndSite, wellenc, mixOptions)
+
+    def constructTransaction(self, commandsList, transferList):
+        """
+        Creating the aspirate / dispense strings from the list of transfers
+        """
+        tr = self.splitTransaction(transferList)
+        for element in tr:
             for command in commandsList:
-                volumesList = []
-                listOfWells = []
-                startWell = 0
-                tipNum = 1
-                trCount = 0
-                ConstructTransaction(command, transferList, trCount, tipNum, volumesList, startWell, listOfWells)
 
-def FillWellCoordinates(transferList):
-    srcWellCoords = GetWell(transferList[2], transferList[1])
-    dstWellCoords = GetWell(transferList[3], transferList[1])
+                trList = []
+                z = max([x['volume'][1] for x in element])
+                for n in range(0, z+1):
+                    trList.append([])
 
-    trDict = {'trID' : transferList[0], 'expID' : transferList[1], 'srcPlate' : srcWellCoords[0], 'srcWell' : srcWellCoords[1], 'dstPlate' : dstWellCoords[0], 'dstWell' : dstWellCoords[1], 'method' : transferList[5], 'volume' : transferList[6], 'options' : transferList[7]}
+                tipNumber = 1
+                for e in element:
+                    method = e['method']
+                    if command == 'Aspirate':
+                        wellInfo = e['source']
+                    elif command == 'Dispense':
+                        wellInfo = e['destination']
+                    for i in range(0, e['volume'][1]):
+                        trList[i].append({ 'command' : command, 'tipNumber' : tipNumber, 'wellInfo' : wellInfo, 'volume' : e['volume'][0], 'method' : method })
+                    if len(e['volume']) == 3:
+                        trList[e['volume'][1]].append({ 'command' : command, 'tipNumber' : tipNumber, 'wellInfo' : wellInfo, 'volume' : e['volume'][2], 'method' : method })
+                    tipNumber += 1
+                self.transactions.append(trList)
 
-    return trDict
+    def parseCommand(self, transferList):
+        tr = self.splitTransaction(transferList)
+        for element in tr:
+            elements = []
+            el = self.splitTransaction(element)
+            for e in el:
+                trList = []
+                tipNumber = 1
+                for option in e:
+                    if option['command'] == 'mix':
+                        wellInfo = option['target']
+                        trList.append({ 'command' : 'Mix', 'tipNumber' : tipNumber, 'wellInfo' : wellInfo, 'volume' : option['volume'], 'times' : option['times'] })
+                        tipNumber += 1
+                    elif option['command'] == 'message':
+                        trList.append(option)
+                elements.append(trList)
+            self.transactions.append(elements)
 
-def UpdateTransferParameters(trDict, listOfWells):
-    global srcWellEncoding
-    global dstWellEncoding
-    global srcPlateGridAndSite
-    global dstPlateGridAndSite
-    global srcPlateDms
-    global dstPlateDms
-    global srcWellBit
-    global dstWellBit
-    global method
-    global options
+    def splitTransaction(self, transferList):
+        count = 1
+        list = []
+        for t in range(0, len(transferList), self.maxTips):
+            cutList = transferList[t:t+self.maxTips]
+            list.append(cutList)
+        return list
 
-    expID = trDict['expID']
+    def createMixString(self, volumesString, newVolume):
+        ms = volumesString.split(',')
+        for i in range(0, len(ms)):
+            if ms[i] != '0':
+                ms[i] = '"' + newVolume + '"'
+        volumesString = self.joinVolumesList(ms)
+        return volumesString[0]
 
-    #source
-#    print(trDict)
-    srcPlateLoc = GetPlateLocation(trDict['srcPlate'], expID)
-    srcPlateDms = GetPlate(trDict['srcPlate'], expID)[1:]
-    srcWell = eval(trDict['srcWell'])
-    srcPlateGridAndSite = srcPlateLoc[0] + ',' + srcPlateLoc[1]
-    srcWellBit = srcWell
-    srcWellEncoding = getWellEncoding(listOfWells, int(srcPlateDms[0]), int(srcPlateDms[1]))
-
-    #destination
-    dstPlateLoc = GetPlateLocation(trDict['dstPlate'], expID)
-    dstPlateDms = GetPlate(trDict['dstPlate'], expID)[1:]
-    dstWell = eval(trDict['dstWell'])
-    dstPlateGridAndSite = dstPlateLoc[0] + ',' + dstPlateLoc[1]
-    dstWellBit = dstWell
-    dstWellEncoding = getWellEncoding(listOfWells, int(dstPlateDms[0]), int(dstPlateDms[1]))
-
-    options = trDict['options']
-#    print(options)
-
-    method = trDict['method']
-
-#    dstWellEncoding = getWellEncoding(int(dstWell[1]), int(dstWell[0]), int(dstPlateDms[0]), int(dstPlateDms[1]))
-
-    transferParameters = { 'srcLoc' : srcPlateGridAndSite, 'dstLoc' : dstPlateGridAndSite, 'srcWell' : srcWellEncoding, 'dstWell' : dstWellEncoding, 'method' : method, 'options' : options}
-
-#    return(transferParameters)
-
-def ConstructTransaction(action, transferList, trCount, tipNum, volumesList, startWell, listOfWells):
-    """
-    Creating the aspirate / dispense strings from the list of transfers
-    """
-    global srcWellEncoding
-    global dstWellEncoding
-    global srcPlateGridAndSite
-    global dstPlateGridAndSite
-    global srcPlateDms
-    global dstPlateDms
-    global method
-    global trID
-    global expID
-    global trDict
-    global options
-
-    if trCount < len(transferList):
-        if tipNum == 1:
-            trDict = transferList[trCount]
-            UpdateTransferParameters(trDict, listOfWells)
-            tipNum+=1
-
-        else:
-            trDict = transferList[trCount]
-        expID = trDict['expID']
-        volume = eval(trDict['volume'])
-        srcWellBit = eval(trDict['srcWell'])
-        dstWellBit = eval(trDict['dstWell'])
-        options = trDict['options']
-
-#        print(trDict['srcPlate'])
-#        print(trDict['dstPlate'])
-        #check if transactionID is the same with previous element in the list, or different
-        #if different, end volume list and pass it to the create aspirate function (and remember the position we were at, we will need it for dispense)
-        nosplit = CheckTransaction(transferList, trCount, action)
-        if nosplit == True:
-            volumesList.append('"' + str(volume[0]) + '"')
-            if action == 'Aspirate':
-                listOfWells.append(srcWellBit)
-            elif action == 'Dispense':
-                listOfWells.append(dstWellBit)
-            tipNum += 1
-        else:
-            volumesList = FillVolumesList(volumesList, startWell)
-#            print(volumesList)
-#            startWell = trCount
-#            startWell = len(volumesList) + startWell
-            volumesString = JoinVolumesString(volumesList)
-#            startWell = trCount
-#            AppendToRobotCfg(expID, wash)
-
-            if action == 'Aspirate':
-                PlateGridAndSite = srcPlateGridAndSite
-                WellEncoding = getWellEncoding(listOfWells, int(srcPlateDms[0]), int(srcPlateDms[1]))
-            elif action == 'Dispense':
-                PlateGridAndSite = dstPlateGridAndSite
-                WellEncoding = getWellEncoding(listOfWells, int(dstPlateDms[0]), int(dstPlateDms[1]))
-
-            command = Command(action, volumesString[1], PlateGridAndSite, WellEncoding, method, volumesString[0])
-            AppendToRobotCfg(expID, command)
-#            print('options', options, action) #options is here on aspirate
-            if options != '':
-                if action == 'Dispense':
-                    optionList = options.split(',')
-                    for option in optionList:
-                        sepdOption = option.split(':')
-                        if sepdOption[0] == 'mix':
-                            mixOptions = sepdOption[1].split('x')
-                            mixString = CreateMixString(volumesString[0], mixOptions[0])
-                            mix = Mix(volumesString[1], PlateGridAndSite, WellEncoding, mixString, mixOptions[1])
-                            AppendToRobotCfg(expID, mix)
-
-
-#            dispense = Command('Dispense', volumesString[1], dstPlateGridAndSite, dstWellEncoding, method, volumesString[0])
-#            AppendToRobotCfg(expID, dispense)
-            #todo: aspirate and dispense have problems stacking
-
-            del volumesList[:]
-            del listOfWells[:]
-#            startWell = trCount
-            volumesList.append('"' + str(volume[0]) + '"')
-            if action == 'Aspirate':
-                listOfWells.append(srcWellBit)
-            elif action == 'Dispense':
-                listOfWells.append(dstWellBit)
-            tipNum = 1
-            startWell = trCount
-        trCount += 1
-        ConstructTransaction(action, transferList, trCount, tipNum, volumesList, startWell, listOfWells)
-
-    else:
-        options = ''
-        UpdateTransferParameters(trDict, listOfWells)
-        volumesList = FillVolumesList(volumesList, startWell)
-        volumesString = JoinVolumesString(volumesList)
-#        AppendToRobotCfg(expID, wash)
-
+    def checkTransaction(transferList, trCount, action):
+        """
+        Checks if the current transaction should be split into separate transactions. Basically checks that wells are consequent.
+        """
         if action == 'Aspirate':
-            PlateGridAndSite = srcPlateGridAndSite
-            WellEncoding = getWellEncoding(listOfWells, int(srcPlateDms[0]), int(srcPlateDms[1]))
+            well = 'srcWell'
         elif action == 'Dispense':
-            PlateGridAndSite = dstPlateGridAndSite
-            WellEncoding = getWellEncoding(listOfWells, int(dstPlateDms[0]), int(dstPlateDms[1]))
-
-        command = Command(action, volumesString[1], PlateGridAndSite, WellEncoding, method, volumesString[0])
-        AppendToRobotCfg(expID, command)
-        if options != '':
-            if action == 'Dispense':
-                optionList = options.split(',')
-                for option in optionList:
-                    sepdOption = option.split(':')
-                    if sepdOption[0] == 'MIX':
-                        mixOptions = sepdOption[1].split('x')
-                        mixString = CreateMixString(volumesString[0], mixOptions[0])
-                        mix = Mix(volumesString[1], PlateGridAndSite, WellEncoding, mixString, mixOptions[1])
-                        AppendToRobotCfg(expID, mix)
-        tipNum = 1
-
-#        dispense = Command('Dispense', volumesString[1], dstPlateGridAndSite, dstWellEncoding, method, volumesString[0])
-#        AppendToRobotCfg(expID, dispense)
-
-def CreateMixString(volumesString, newVolume):
-    ms = volumesString.split(',')
-    for i in range(0, len(ms)):
-        if ms[i] != '0':
-            ms[i] = '"' + newVolume + '"'
-    volumesString = JoinVolumesString(ms)
-    return volumesString[0]
-
-def CheckTransaction(transferList, trCount, action):
-    """
-    Checks if the current transaction should be split into separate transactions. Basically checks that wells are consequent.
-    """
-    if action == 'Aspirate':
-        well = 'srcWell'
-    elif action == 'Dispense':
-        well = 'dstWell'
-    if trCount == 0:
-        return True
-    else:
-        tr1 = transferList[trCount]
-        tr0 = transferList[trCount - 1]
-        a = CheckIfWellsAreConsequent(eval(tr0[well]), eval(tr1[well]))
-#        if (int(eval(tr1[well])[1]) == int(eval(tr0[well])[1]) + 1) and (int(eval(tr1[well])[0]) == int(eval(tr0[well])[0]) + 1):
-#            return True
-#        else:
-#            return False
-        return(a)
-
-def FillVolumesList(volumesList, startWell):
-    """
-    Finalizes the list of volumes by adding zeroes where needed.
-    """
-    if(startWell > 0):
-        for i in range(0, startWell):
-            volumesList.insert(0, '0')
-    listSize = len(volumesList)
-    if(listSize < 12):
-        rest = 12 - listSize
-        for i in range(0, rest):
-            volumesList.append('0')
-    return(volumesList)
-
-def JoinVolumesString(volumesList):
-    """
-    Creates the final list of volumes for aspirate / dispense commands
-    """
-    tipsEnc = 0
-    for i in range(0, len(volumesList)):
-        if(volumesList[i] != '0'):
-            tipsEnc += getTipEncoding(i+1)
-    volumesString = ','.join(volumesList)
-    return(volumesString, tipsEnc)
-
-def SplitWells(multWells):
-    sepdWells = {}
-    for well in multWells:
-        if (well[1] in sepdWells.keys()):
-            sepdWells[well[1]].append(well)
+            well = 'dstWell'
+        if trCount == 0:
+            return True
         else:
-            sepdWells[well[1]] = []
-            sepdWells[well[1]].append(well)
-    return(sepdWells)
-    
-def AppendToRobotCfg(expID, line):
-    fileName = 'esc' + os.sep + 'config' + str(expID) + '.esc'
-    try:
-        myfile = open(fileName, 'a', encoding='latin1')
-    except IOError:
-        os.mkdir('esc')
-        myfile = open(fileName, 'a', encoding='latin1')
-    myfile.write(line.rstrip() + '\r\n')
-    myfile.close()
+            tr1 = transferList[trCount]
+            tr0 = transferList[trCount - 1]
 
-def AppendToLog(expID, line):
-    logName = 'logs' + os.sep + 'exp' + str(expID) + '.log'
-    try:
-        myfile = open(logName, 'a')
-    except IOError:
-        os.mkdir('esc')
-        myfile = open(logName, 'a')
-    myfile.write(line.rstrip() + '\r\n')
-    myfile.close()
+            a = CheckIfWellsAreConsequent(eval(tr0[well]), eval(tr1[well]))
+            return(a)
+
+    def fillVolumesList(self, volumesDict):
+        """
+        Finalizes the list of volumes by adding zeroes where needed.
+        """
+        for l in range (0, 12):
+            if l+1 not in volumesDict:
+                volumesDict[l+1] = '0'
+        volumesList = []
+        for d in range (1, 13):
+            volumesList.append(volumesDict[d])
+        return volumesList
+
+    def joinVolumesList(self, volumesList):
+        """
+        Creates the final list of volumes for aspirate / dispense commands
+        """
+        tipsEnc = 0
+        for i in range(0, len(volumesList)):
+            if volumesList[i] != '0':
+                tipsEnc += self.getTipEncoding(i+1)
+        volumesString = ','.join(volumesList)
+        return volumesString, tipsEnc
+
+class DatabaseHandler:
+    def __init__(self, expID):
+        self.conn = sqlite3.connect('parpar.db')
+        self.crsr = self.conn.cursor()
+        self.expID = str(expID)
+        self.maxTips = self.getMaxTips()
+        self.transfers = []
+        self.getAllTransfers()
+
+    def getAllTransfers(self):
+        command = 'SELECT ActionID, Type FROM Actions WHERE ExpID = ' + self.expID + ' ORDER BY ActionID ASC'
+        self.crsr.execute(command)
+        self.allTransfers = self.crsr.fetchall()
+        for t in range(0, len(self.allTransfers)):
+            transfer = self.allTransfers[t]
+            transferID = str(transfer[0])
+            transferType = transfer[1]
+            tr = self.getTransfer(transferID, transferType)
+            self.transfers.append(tr)
+
+    def getMaxTips(self):
+        tips = self.getOne('SELECT maxTips from Experiments WHERE ExpID = ' + self.expID)
+        return tips[0]
+
+    def getTransfer(self, actionID, type):
+        if type == 'transfer':
+            command = 'SELECT srcWellID, dstWellID, Volume, Method FROM Transfers WHERE ExpID = ' + self.expID + ' AND ActionID = ' + str(actionID) + ' ORDER BY trOrder ASC'
+        elif type == 'command':
+            command = 'SELECT Command, Options FROM Commands WHERE ExpID = ' + self.expID + ' AND ActionID = ' + str(actionID) + ' ORDER BY trOrder ASC'
+        self.crsr.execute(command)
+        transferElements = self.crsr.fetchall()
+        transfer = {'type' : type, 'info' : []}
+        for element in transferElements:
+            if type == 'transfer':
+                srcWell = self.getWell(element[0])
+                dstWell = self.getWell(element[1])
+                volume = eval(element[2])
+                method = element[3]
+                transfer['info'].append({ 'source' : srcWell, 'destination' : dstWell, 'volume' : volume, 'method' : method })
+            if type == 'command':
+                if element[0] == 'mix':
+                    mixOptions = element[1].split('x')
+                    m = self.getAll('SELECT Location FROM CommandLocations WHERE ActionID = ' + str(actionID))
+                    for well in m:
+                        w = self.getWell(well[0])
+                        transfer['info'].append({'command' : 'mix', 'volume' : mixOptions[0], 'times' : mixOptions[1], 'target' : w })
+                elif element[0] == 'message':
+                    message = element[1]
+                    transfer['info'].append({'command' : 'message', 'message' : message})
+        return transfer
+
+    def getWell(self, wellID):
+        w = self.getOne('SELECT Plate, Location FROM Wells WHERE WellID = ' + str(wellID))
+        plateName = w[0]
+        wellLocation = eval(w[1])
+        plateDimensions = self.getOne('SELECT Rows, Columns FROM Plates NATURAL JOIN PlateLocations WHERE Plate = "' + plateName + '"')
+        plateLocation = self.getOne('SELECT Grid, Site FROM PlateLocations WHERE Plate = "' + plateName + '"')
+        return { 'well' : wellLocation, 'plateDimensions' : plateDimensions, 'plate' : plateLocation }
+
+    def getOne(self, message):
+        self.crsr.execute(message + ' AND ExpID = ' + self.expID)
+        row = self.crsr.fetchone()
+        return row
+
+    def getAll(self, message):
+        self.crsr.execute(message + ' AND ExpID = ' + self.expID)
+        all = self.crsr.fetchall()
+        return all
+
+    def close(self):
+        self.conn.commit()
+        self.crsr.close()
+        self.conn.close()
+
+    @staticmethod
+    def db(request):
+        conn = sqlite3.connect('parpar.db')
+        c = conn.cursor()
+        c.execute(request)
+        q = c.fetchall()
+        conn.commit()
+        c.close()
+        conn.close()
+        return q
+
+
+if __name__ == '__main__':
+    parpar = ParPar(310)
+    print('Robot Config:')
+    for element in parpar.robotConfig:
+        print(element)
