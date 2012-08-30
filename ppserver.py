@@ -4,7 +4,7 @@ __version__ = '0.3'
 import bottle
 from bottle import *
 import os
-from parpar import *
+#from parpar import *
 from parparser import *
 from tempfile import TemporaryFile
 
@@ -71,10 +71,11 @@ def config():
     data = request.files.data
     print('filelength', len(request.files))
     if getconfig != '':
-
-        global experiment
-        experiment = Experiment(maxVolume=150,tips=8,db=DatabaseHandler())
+        db=DBHandler()
+        experiment = Experiment(maxVolume=150,tips=8,db=db)
         expID = experiment.ID
+        print('!!!', experiment.ID)
+
 
         if data != '':
             raw = data.file.read()
@@ -100,7 +101,7 @@ def config():
         ParseFile(readfile, experiment)
         print(experiment.testindex)
         if experiment.testindex:
-            ParPar(experiment.ID)
+            parpar = ParPar(expID)
             file = 'config' + str(expID) + '.esc'
             return template('pages' + os.sep + 'page.html', file = file, btn = 'btn-success', text = getconfig, hide = '', codeerror = 'hide', fileerror = 'hide', alertsuccess = '', tables = GetDefaultTables(), version = __version__)
         else:

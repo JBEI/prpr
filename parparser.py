@@ -15,27 +15,24 @@ from copy import deepcopy
 #todo: switch to postgres
 
 class Experiment:
-    name = ''
-    components = {}
-    plates = {}
-    volumes = {}
-    recipes = {}
-    robotTips = 8
-    maxVolume = 150
-    tableAdded = False
-    dosStringAdded = False
-    docString = []
-    transactionList = []
-    logger = []
-    wells = []
-    testindex = 0
-
     def __init__(self, maxVolume, tips, db):
         """
         New experiment with parameters:
         robotTips - maximum amount of tips the robot has
         maxVolume - maximum capacity of a tip
         """
+        self.name = ''
+        self.components = {}
+        self.plates = {}
+        self.volumes = {}
+        self.recipes = {}
+        self.tableAdded = False
+        self.dosStringAdded = False
+        self.docString = []
+        self.transactionList = []
+        self.logger = []
+        self.wells = []
+        self.testindex = 0
         self.ID = str(db.selectMax('Experiments'))
         self.robotTips = tips
         self.maxVolume = maxVolume
@@ -159,6 +156,7 @@ class Experiment:
             except ValueError:
                 alphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
                 letterIndex = alphabet.find(well[:1]) + 1
+                print(letterIndex, rowsMax)
                 assert (letterIndex <= rowsMax), 'Well letter coordinate is out of range'
                 assert (int(well[1:]) <= colsMax), 'Well number coordinate is out of range'
                 return letterIndex, int(well[1:])
@@ -232,7 +230,7 @@ class Experiment:
         if transferMethod == 'DEFAULT':
             method = comp.method
         else:
-            m = DatabaseHandler.checkIfMethodExists(transferMethod)
+            m = DBHandler.checkIfMethodExists(transferMethod)
             if m:
                 method = m
             else:
@@ -372,7 +370,7 @@ class Plate:
         self.name = plateName
         self.factoryName = factoryName
         self.location = plateLocation
-        db = DatabaseHandler.db('SELECT Rows, Columns from Plates WHERE FactoryName=' + '"' + factoryName + '"')
+        db = DBHandler.db('SELECT Rows, Columns from Plates WHERE FactoryName=' + '"' + factoryName + '"')
         self.dimensions = db[0]
 
 class Volume:
@@ -393,7 +391,7 @@ class Recipe:
         self.subrecipes[name] = info
 
 
-class DatabaseHandler:
+class DBHandler:
     def __init__(self):
         self.conn = sqlite3.connect('parpar.db')
         self.crsr = self.conn.cursor()
@@ -546,7 +544,7 @@ class DatabaseHandler:
         Checks if the method entered by the user exists in the database.
         """
         methods = []
-        list = DatabaseHandler.db('select * from Methods')
+        list = DBHandler.db('select * from Methods')
         for row in list:
             methods.append(row[0])
         if method in methods: return method
@@ -702,20 +700,6 @@ def LineToList(line, configFileName, experiment):
         else:
             experiment.log('Error, no such command: "' + line[0] + '"')
 
-#        #note: loading information from file
-#        loadFile = open(line[1] + '.xls', "r")
-#        reagentPlate = line[2]
-#        reagentMethod = line[3]
-#        loadLines = loadFile.readlines()
-#        for r in range(1, len(loadLines)):
-#            lineList = loadLines[r].split()
-#            for c in range(1, len(lineList)):
-#                rDict = {'Name' : lineList[c], 'Plate' : reagentPlate, 'Wells' : [(r, c)], 'Method': reagentMethod}
-#                DatabaseConnect()
-#                AddElements('Reagents', rDict, expID)
-#                DatabaseDisconnect()
-
-
 def ParseConfigFile(experiment):
     parser = argparse.ArgumentParser(description = 'Transfer liquids') #create the new argument parser for the command line arguments
     parser.add_argument('config_file_name', type = argparse.FileType('r'), default = sys.stdin, help = 'Config file')
@@ -736,12 +720,12 @@ def ParseFile(filename, experiment):
         line = filename.readline()
     logname = 'logs/experiment' + experiment.ID + '.log'
     SaveToFile(experiment.logger, logname) #save log
-    db = DatabaseHandler()
+    db = DBHandler()
     db.updateExperiment(experiment)
 
 if __name__ == '__main__':
     global experiment
-    experiment = Experiment(maxVolume=150,tips=8,db=DatabaseHandler())
+    experiment = Experiment(maxVolume=150,tips=8,db=DBHandler())
     print('Experiment ID: ', experiment.ID)
     ParseConfigFile(experiment)
 

@@ -307,6 +307,7 @@ class DatabaseHandler:
         self.maxTips = self.getMaxTips()
         self.transfers = []
         self.getAllTransfers()
+        self.close()
 
     def getAllTransfers(self):
         command = 'SELECT ActionID, Type FROM Actions WHERE ExpID = ' + self.expID + ' ORDER BY ActionID ASC'
@@ -352,6 +353,7 @@ class DatabaseHandler:
 
     def getWell(self, wellID):
         w = self.getOne('SELECT Plate, Location FROM Wells WHERE WellID = ' + str(wellID))
+        print(w, wellID)
         plateName = w[0]
         wellLocation = eval(w[1])
         plateDimensions = self.getOne('SELECT Rows, Columns FROM Plates NATURAL JOIN PlateLocations WHERE Plate = "' + plateName + '"')
