@@ -104,7 +104,6 @@ class Experiment:
         def WellsRename(startCoords, i, plateDimensions, direction):
             rowsMax = plateDimensions[0]
             colsMax = plateDimensions[1]
-#            print('12', rowsMax, colsMax, plateDimensions, i)
             currentNum = startCoords[0] + i
             if direction == 'vertical':
                 if currentNum <= rowsMax:
@@ -156,7 +155,6 @@ class Experiment:
             except ValueError:
                 alphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
                 letterIndex = alphabet.find(well[:1]) + 1
-                print(letterIndex, rowsMax)
                 assert (letterIndex <= rowsMax), 'Well letter coordinate is out of range'
                 assert (int(well[1:]) <= colsMax), 'Well number coordinate is out of range'
                 return letterIndex, int(well[1:])
@@ -342,7 +340,6 @@ class Experiment:
     def log(self, item):
         from datetime import datetime
         time = str(datetime.now())
-        print(item)
         self.logger.append(time + ': ' + item)
 
 class Well:
@@ -380,10 +377,8 @@ class Volume:
         self.amount = dict['amount']
 
 class Recipe:
-    name = ''
-    subrecipes = {}
-
     def __init__(self, name):
+        self.subrecipes = {}
         self.name = name
         self.lineCounter = 0
 
