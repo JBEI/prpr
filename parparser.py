@@ -631,50 +631,6 @@ def ParseRecipe(configFileName, recipeName, experiment):
                 recipeLine.append((reagent, volume))
             experiment.recipes[recipeName].addSubrecipe(lineName, {'name' : lineName, 'line' : lineNo, 'recipe' : recipeLine})
         ParseRecipe(configFileName, recipeName, experiment)
-        
-def ParseReagent(reagentLine, expID):
-    """
-    Gets a list made from the line containing reagent information, parses it to the reagent dictionary.
-    """
-    plateAndWell = ParseReagentInfo(reagentLine[1], expID)[0]
-    if len(reagentLine) <3 or reagentLine[2] == 'DEFAULT':
-        method = 'LC_W_Bot_Bot'
-    else:
-        method = reagentLine[2]
-    reagentDict = {'Name' : reagentLine[0], 'Plate' : plateAndWell['Plate'], 'Wells' : plateAndWell['Wells'], 'Method' : method}
-    #todo: parse the separate wells and call ParseWells() on every bit.
-    return reagentDict
-
-def ParseReagentInfo(reagentInfo, expID):
-    """
-    Get a string containing information about the reagent.
-    Check either reagent name or well coordinates against the reagents already in the database (what do we do with this information?)
-    If there is a name and reagent is in the database, get its coordinates
-    Return parsed coordinates of the reagent
-    """
-    if ':' in reagentInfo:
-        reagent = LocationFunction(reagentInfo, expID)
-    else:
-        #note: parse what will happen if there are two names used (for example: water,sugar)
-        reagentRaw = []
-        #todo: for each plate name, join wells together
-        DatabaseConnect()
-        crsr.execute('SELECT Plate, Location, Method FROM (ReagentNames NATURAL JOIN Reagents NATURAL JOIN Wells) WHERE Wells.ExpID = ' + expID + ' AND Name = ' + '"' + reagentInfo + '"')
-        for row in crsr:
-            reagentRaw.append({'Plate' : row[0], 'Wells' : row[1], 'Method' : row[2]})
-        DatabaseDisconnect()
-        reagent = []
-        plateInfo = reagentRaw[0]['Plate']
-        #todo: change the style to make it more visible on what gets updated and what's not
-        for r in range(0, len(reagentRaw)):
-            if reagentRaw[r]['Plate'] != plateInfo:
-                reagent.append({'Plate' : plateInfo, 'Wells' : eval(reagentRaw[r]['Wells']), 'Method' : reagentRaw[r]['Method']})
-            else:
-                if len(reagent) == 0:
-                    reagent.append({'Plate' : plateInfo, 'Wells' : [eval(reagentRaw[r]['Wells'])], 'Method' : reagentRaw[r]['Method']})
-                else:
-                    reagent[len(reagent) - 1]['Wells'].append(eval(reagentRaw[r]['Wells']))
-    return reagent
 
     
 def LineToList(line, configFileName, experiment):
