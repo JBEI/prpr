@@ -6,8 +6,6 @@ import os
 import sqlite3
 
 class ParPar:
-    transactions = []
-    volumesList = []
     wash = 'Wash(255,1,1,1,0,"2",500,"1.0",500,20,70,30,1,1,1000);'
     def __init__(self, ID):
         self.expID = ID
@@ -16,6 +14,8 @@ class ParPar:
         self.maxTips = db.maxTips
         self.logger = []
         self.robotConfig = []
+        self.transactions = []
+        self.volumesList = []
         self.createTransfer()
         self.updateTransactions()
         self.addWash()

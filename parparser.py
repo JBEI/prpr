@@ -343,8 +343,6 @@ class Experiment:
         self.logger.append(time + ': ' + item)
 
 class Well:
-    plate = ''
-    location = ''
     def __init__(self, dict):
         self.plate = dict['Plate']
         self.location = dict['Location']
@@ -359,10 +357,6 @@ class Component:
             self.method = dict['method']
 
 class Plate:
-    name = ''
-    location = ''
-    factoryName = ''
-    dimensions = ''
     def __init__(self, plateName, factoryName, plateLocation):
         self.name = plateName
         self.factoryName = factoryName
@@ -371,7 +365,6 @@ class Plate:
         self.dimensions = db[0]
 
 class Volume:
-    name = ''
     def __init__(self, dict):
         self.name = dict['name']
         self.amount = dict['amount']
