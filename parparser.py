@@ -31,6 +31,11 @@ class Experiment:
     testindex = 0
 
     def __init__(self, maxVolume, tips, db):
+        """
+        New experiment with parameters:
+        robotTips - maximum amount of tips the robot has
+        maxVolume - maximum capacity of a tip
+        """
         self.ID = str(db.selectMax('Experiments'))
         self.robotTips = tips
         self.maxVolume = maxVolume
@@ -436,6 +441,9 @@ class DatabaseHandler:
                 return id[0] + 1
 
     def updateExperiment(self, experiment):
+        """
+        Dumps experiment information into database
+        """
         self.experiment = experiment
         list = [experiment.name,
                 experiment.docString,
@@ -569,6 +577,9 @@ def ParseLocation(locationLine):
     return locationStore
 
 def PlateFileParse(plateFile, experiment, plateNicknames, plateIndexes):
+    """
+    Gets plate names and locations from the table file
+    """
     plateLine = plateFile.readline()
     global stringCounter
     stringCounter = 0
@@ -577,7 +588,7 @@ def PlateFileParse(plateFile, experiment, plateNicknames, plateIndexes):
         PlateNameParse(parts, plateFile, experiment, plateNicknames, plateIndexes)
         plateLine = plateFile.readline()
 
-def PlateNameParse(parts, plateFile, experiment, plateNicknames, plateIndexes): #NEW parse plate names
+def PlateNameParse(parts, plateFile, experiment, plateNicknames, plateIndexes):
     global stringCounter
     if stringCounter < 31:
         if parts[0] == '998':
@@ -612,20 +623,16 @@ def SaveToFile(information, filename):
 
 def ParseRecipe(configFileName, recipeName, experiment):
     """
-    Goes through the recipe line-by-line and adds it to the list until the 'ENDRECIPE' found.
+    Goes through the recipe line-by-line and adds it to the list until the end of the recipe found.
     """
     unsplitline = configFileName.readline()
     line = unsplitline.split()
     if line:
         if unsplitline[0] != '#':
-#            if ':' in line[0][-1]:
             lineName = line[0][0:-1]
             uncutLine = line[1:] #everything except the line name
             experiment.recipes[recipeName].lineCounter += 1
             lineNo = experiment.recipes[recipeName].lineCounter
-#            else:
-#                recipe.addSubrecipe(lineNo, {'line' : lineNo})
-#                uncutLine = line
             recipeLine = []
             for reagent, volume in zip(uncutLine[::2], uncutLine[1::2]):
                 recipeLine.append((reagent, volume))
@@ -690,26 +697,23 @@ def LineToList(line, configFileName, experiment):
 
 
         elif line[0].startswith('#'):
-#            experiment.log(' '.join(line))
             return
 
         else:
             experiment.log('Error, no such command: "' + line[0] + '"')
 
-#
 #        #note: loading information from file
-#        elif line[0] == 'LOAD':
-#            loadFile = open(line[1] + '.xls', "r")
-#            reagentPlate = line[2]
-#            reagentMethod = line[3]
-#            loadLines = loadFile.readlines()
-#            for r in range(1, len(loadLines)):
-#                lineList = loadLines[r].split()
-#                for c in range(1, len(lineList)):
-#                    rDict = {'Name' : lineList[c], 'Plate' : reagentPlate, 'Wells' : [(r, c)], 'Method': reagentMethod}
-#                    DatabaseConnect()
-#                    AddElements('Reagents', rDict, expID)
-#                    DatabaseDisconnect()
+#        loadFile = open(line[1] + '.xls', "r")
+#        reagentPlate = line[2]
+#        reagentMethod = line[3]
+#        loadLines = loadFile.readlines()
+#        for r in range(1, len(loadLines)):
+#            lineList = loadLines[r].split()
+#            for c in range(1, len(lineList)):
+#                rDict = {'Name' : lineList[c], 'Plate' : reagentPlate, 'Wells' : [(r, c)], 'Method': reagentMethod}
+#                DatabaseConnect()
+#                AddElements('Reagents', rDict, expID)
+#                DatabaseDisconnect()
 
 
 def ParseConfigFile(experiment):
@@ -717,12 +721,10 @@ def ParseConfigFile(experiment):
     parser.add_argument('config_file_name', type = argparse.FileType('r'), default = sys.stdin, help = 'Config file')
     args = parser.parse_args()
     ParseFile(args.config_file_name, experiment)
-#    if not args.log:
-#        print('hey!')
 
 def ParseFile(filename, experiment):
     """
-    ParseFile reads the file string by string  ###     expID = experiment.ID
+    ParseFile reads the file string by string
     """
     global expName
     global setList

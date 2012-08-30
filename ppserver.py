@@ -123,6 +123,9 @@ def download(filename):
     return static_file(filename, root='tables', download=filename)
 
 def GetDefaultTables():
+    """
+    Getting a list of default tables from folder 'tables'
+    """
     tablesDir = os.listdir('tables')
     tables = []
     for name in tablesDir:
