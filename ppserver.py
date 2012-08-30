@@ -1,5 +1,5 @@
 __author__ = 'Nina Stawski'
-__version__ = '0.2'
+__version__ = '0.3'
 
 import bottle
 from bottle import *
@@ -18,14 +18,24 @@ maxAm = 150
 def parpar():
     return template('pages' + os.sep + 'page.html', file = '', btn = '', text = '', hide = 'hide',  codeerror = 'hide', fileerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
 
+@route('/disclamer')
+def disclamer():
+    return template('pages' + os.sep + 'disclamer.html', version = __version__)
+    
+@route('/copyright')
+def copyright():
+    return template('pages' + os.sep + 'copyright.html', version = __version__)
+
 @post('/table')
 def table():
     plateIndexes = {}
     plateNicknames = {}
+    experiment=False
     tablename = request.body.read().decode()
     tabledirname = 'tables' + os.sep
     plateFile = open(tabledirname + tablename, "r")
-    PlateFileParse(plateFile, plateIndexes, plateNicknames)
+    PlateFileParse(plateFile, experiment, plateNicknames, plateIndexes)
+    print(plateNicknames, plateIndexes)
     plates = []
     for key in plateIndexes.keys():
         plates.append([key, [plateIndexes[key][0], plateIndexes[key][1]], plateNicknames[key]])
@@ -40,11 +50,13 @@ def plates():
     plateFile.seek(0)
     plateIndexes = {}
     plateNicknames = {}
-    PlateFileParse(plateFile, plateIndexes, plateNicknames) #plateFile
+    experiment = False
+    PlateFileParse(plateFile, experiment, plateNicknames, plateIndexes)
     plates = []
     for key in plateIndexes.keys():
         plates.append([key, [plateIndexes[key][0], plateIndexes[key][1]], plateNicknames[key]])
         tojs = json_dumps(plates)
+    print(plateNicknames, plateIndexes)
     return tojs
 
 @post('/sample')
@@ -59,18 +71,16 @@ def config():
     data = request.files.data
     print('filelength', len(request.files))
     if getconfig != '':
-        DatabaseConnect()
-        global expID
-        expID = str(int(ExecuteCommand('SELECT max(ExpID) FROM Experiments;')[0]) + 1)
+
+        global experiment
+        experiment = Experiment(maxVolume=150,tips=8,db=DatabaseHandler())
+        expID = experiment.ID
 
         if data != '':
             raw = data.file.read()
             tablename = 'tables_' + expID + '.ewt'
             tabledirname = 'tables' + os.sep
             tablefile = open(tabledirname + tablename, "wb")
-#            except IOError:
-#                os.mkdir(tabledirname)
-#                tablefile = open(tabledirname + tablename, "wb")
             tablefile.write(raw)
             tablefile.close()
         else:
@@ -81,28 +91,22 @@ def config():
         dirname = 'incoming' + os.sep
         filename = 'config_' + expID + '.par'
         writefile = open(dirname + filename, "w")
-#        except IOError:
-#            os.mkdir(dirname)
-#            writefile = open(dirname + filename, "w")
         if getconfig.startswith('TABLE'):
             getconfig = '\n'.join(getconfig.split('\n')[1:]) #removing the extra 'TABLE' from the config file
         list = ['TABLE ', tablename ,'\n', '\n', getconfig] #adding the chosen/uploaded table to the config file
         writefile.writelines( ''.join(list) )
         writefile.close()
         readfile = open(dirname + filename, "r")
-        testindex = ParseFile(readfile, expID)
-        print(testindex)
-        if testindex > 0:
-            LiquidTransfer(expID, robotTips)
-            wash = Wash()
-            AppendToRobotCfg(expID, wash)
+        ParseFile(readfile, experiment)
+        print(experiment.testindex)
+        if experiment.testindex:
+            ParPar(experiment.ID)
             file = 'config' + str(expID) + '.esc'
             return template('pages' + os.sep + 'page.html', file = file, btn = 'btn-success', text = getconfig, hide = '', codeerror = 'hide', fileerror = 'hide', alertsuccess = '', tables = GetDefaultTables(), version = __version__)
         else:
             return template('pages' + os.sep + 'page.html', file = '', btn = '', text = '', hide = 'hide', codeerror = '', fileerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
     else:
         return template('pages' + os.sep + 'page.html', file = '', btn = '', text = '', hide = 'hide', codeerror = '', fileerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
-#    elif getconfig != '' and data == '':
 
 @route('/static/:path#.+#', name='static')
 def static(path):
@@ -119,7 +123,6 @@ def download(filename):
     return static_file(filename, root='tables', download=filename)
 
 def GetDefaultTables():
-    DatabaseConnect()
     tablesDir = os.listdir('tables')
     tables = []
     for name in tablesDir:
@@ -129,7 +132,6 @@ def GetDefaultTables():
             tables.append(name)
     tables.sort()
     jsonTables = json_dumps(tables)
-    DatabaseDisconnect()
     return jsonTables
 
 if __name__ == '__main__':
