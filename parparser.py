@@ -340,6 +340,7 @@ class Experiment:
     def log(self, item):
         from datetime import datetime
         time = str(datetime.now())
+        print(item)
         self.logger.append(time + ': ' + item)
 
 class Well:

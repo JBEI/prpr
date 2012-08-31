@@ -74,7 +74,6 @@ def config():
         db=DBHandler()
         experiment = Experiment(maxVolume=150,tips=8,db=db)
         expID = experiment.ID
-        print('!!!', experiment.ID)
 
 
         if data != '':
