@@ -42,7 +42,7 @@ def CreateTables():
     crsr.execute('create table Actions(ExpID, ActionID, Type, PRIMARY KEY(ExpID, ActionID));')
     crsr.execute('create table Transfers(ExpID, ActionID, trOrder, srcWellID, dstWellID, Volume, Method, PRIMARY KEY(ExpID, ActionID, trOrder, srcWellID, dstWellID));')
     crsr.execute('create table Commands(ExpID, ActionID, trOrder, Command, Options, PRIMARY KEY(ExpID, ActionID, trOrder));')
-    crsr.execute('create table CommandLocations(ExpID, ActionID, Location, PRIMARY KEY(ExpID, ActionID, Location));')
+    crsr.execute('create table CommandLocations(ExpID, ActionID, trOrder, Location, PRIMARY KEY(ExpID, ActionID, Location));')
 
     DatabaseDisconnect()
     
@@ -78,9 +78,10 @@ def UpdatePlates():
         DatabaseDisconnect()
 
 def CreateFolders():
-    os.mkdir('esc')
-    os.mkdir('incoming')
-    os.mkdir('logs')
+    dirs = ['esc', 'incoming', 'logs']
+    for directory in dirs:
+        if not os.path.exists(directory):
+            os.mkdir(directory)
 
 CreateFolders()
 CreateTables()

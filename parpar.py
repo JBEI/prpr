@@ -135,6 +135,7 @@ class ParPar:
 
     def updateTransactions(self):
         for transaction in self.transactions:
+            #empty containers for volumes, plate info and wells are created
             volumesDict = {}
             wells = []
             plateInfo = {}
@@ -342,7 +343,7 @@ class DatabaseHandler:
             if type == 'command':
                 if element[0] == 'mix':
                     mixOptions = element[1].split('x')
-                    m = self.getAll('SELECT Location FROM CommandLocations WHERE ActionID = ' + str(actionID))
+                    m = self.getAll('SELECT Location FROM CommandLocations WHERE ActionID = ' + str(actionID), order='ORDER BY trOrder ASC')
                     for well in m:
                         w = self.getWell(well[0])
                         transfer['info'].append({'command' : 'mix', 'volume' : mixOptions[0], 'times' : mixOptions[1], 'target' : w })
@@ -364,8 +365,8 @@ class DatabaseHandler:
         row = self.crsr.fetchone()
         return row
 
-    def getAll(self, message):
-        self.crsr.execute(message + ' AND ExpID = ' + self.expID)
+    def getAll(self, message, order=''):
+        self.crsr.execute(message + ' AND ExpID = ' + self.expID + ' ' + order)
         all = self.crsr.fetchall()
         return all
 

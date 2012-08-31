@@ -519,8 +519,10 @@ class DBHandler:
                                 self.insert('Commands', [expID, actionID, trOrder, command, options])
                                 if tr['action'] == 'mix':
                                     locationList = tr['location']
+                                    m = t
                                     for l in locationList:
-                                        self.insert('CommandLocations', [expID, actionID, str(id(l))])
+                                        self.insert('CommandLocations', [expID, actionID, str(m), str(id(l))])
+                                        m+=1
 
     def close(self):
         self.conn.commit()
