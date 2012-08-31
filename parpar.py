@@ -151,7 +151,6 @@ class ParPar:
                                 if not consequent:
                                     volumesList = self.fillVolumesList(volumesDict)
                                     volumesLine = self.joinVolumesList(volumesList)
-
                                     plateDimensions = plateInfo['dimensions']
                                     wellenc = self.getWellEncoding(wells, plateDimensions)
                                     gridAndSite = plateInfo['location']
@@ -162,12 +161,13 @@ class ParPar:
                                         method = element['method']
                                         self.command(action, tipsEncoding, gridAndSite, wellenc, method, volume)
                                     if action == 'Mix':
-                                        volume = self.createMixString(volume, element['volume'])
                                         mixOptions = element['times']
                                         self.mix(tipsEncoding, volume, gridAndSite, wellenc, mixOptions)
 
                                     volumesDict = {element['tipNumber'] : '"' + str(element['volume']) + '"' }
                                     wells = []
+                                    wells.append(element['wellInfo']['well'])
+                                    volumesDict[element['tipNumber']] = '"' + str(element['volume']) + '"'
                                     plateInfo = {'dimensions' : element['wellInfo']['plateDimensions'], 'location' : element['wellInfo']['plate']}
                                 else:
                                     volumesDict[element['tipNumber']] = '"' + str(element['volume']) + '"'
@@ -185,6 +185,7 @@ class ParPar:
                         volumesList = self.fillVolumesList(volumesDict)
                         volumesLine = self.joinVolumesList(volumesList)
                         plateDimensions = plateInfo['dimensions']
+                        wells.append(element['wellInfo']['well'])
                         wellenc = self.getWellEncoding(wells, plateDimensions)
                         gridAndSite = plateInfo['location']
                         volume = volumesLine[0]
@@ -194,7 +195,6 @@ class ParPar:
                             method = element['method']
                             self.command(action, tipsEncoding, gridAndSite, wellenc, method, volume)
                         if action == 'Mix':
-                            volume = self.createMixString(volume, element['volume'])
                             mixOptions = element['times']
                             self.mix(tipsEncoding, volume, gridAndSite, wellenc, mixOptions)
 
