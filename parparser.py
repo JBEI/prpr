@@ -189,7 +189,7 @@ class Experiment:
         else:
             amount = int(amount)
         if amount < maxVolume:
-            return (amount, 1)
+            return amount, 1
         else:
             times = amount / maxVolume
             left = amount - maxVolume * int(times)

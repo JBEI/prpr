@@ -86,7 +86,7 @@ class ParPar:
         self.robotConfig.append(line)
 
     def addWash(self):
-        if len(self.robotConfig) == 0:
+        if not len(self.robotConfig):
             self.config(self.wash)
         else:
             if not self.robotConfig[-1].startswith('Wash'):
@@ -166,8 +166,7 @@ class ParPar:
                                         self.mix(tipsEncoding, volume, gridAndSite, wellenc, mixOptions)
 
                                     volumesDict = {element['tipNumber'] : '"' + str(element['volume']) + '"' }
-                                    wells = []
-                                    wells.append(element['wellInfo']['well'])
+                                    wells = [element['wellInfo']['well']]
                                     volumesDict[element['tipNumber']] = '"' + str(element['volume']) + '"'
                                     plateInfo = {'dimensions' : element['wellInfo']['plateDimensions'], 'location' : element['wellInfo']['plate']}
                                 else:
@@ -245,7 +244,7 @@ class ParPar:
             self.transactions.append(elements)
 
     def splitTransaction(self, transferList):
-        count = 1
+#        count = 1
         list = []
         for t in range(0, len(transferList), self.maxTips):
             cutList = transferList[t:t+self.maxTips]
@@ -259,23 +258,6 @@ class ParPar:
                 ms[i] = '"' + newVolume + '"'
         volumesString = self.joinVolumesList(ms)
         return volumesString[0]
-
-    def checkTransaction(transferList, trCount, action):
-        """
-        Checks if the current transaction should be split into separate transactions. Basically checks that wells are consequent.
-        """
-        if action == 'Aspirate':
-            well = 'srcWell'
-        elif action == 'Dispense':
-            well = 'dstWell'
-        if trCount == 0:
-            return True
-        else:
-            tr1 = transferList[trCount]
-            tr0 = transferList[trCount - 1]
-
-            a = CheckIfWellsAreConsequent(eval(tr0[well]), eval(tr1[well]))
-            return(a)
 
     def fillVolumesList(self, volumesDict):
         """
