@@ -225,6 +225,8 @@ class Experiment:
             if ':' in component:
                 comp = Component({'name' : component, 'location' : component})
                 self.add('component', component, comp)
+            else:
+                self.log('Error. Wrong component "' + component + '".')
         if transferMethod == 'DEFAULT':
             method = comp.method
         else:
