@@ -35,6 +35,6 @@ MAKE   Drinks:coffee,lemonade  DrinksPlate:A1+2   DEFAULT      MIX:30x10
 #         component  destination   volume(uL)     method       options
 SPREAD    Water      PL6:A4+10,A6  DrinkVol       DEFAULT      MIX:25x20
 
-MESSAGE Start spreading the reagent
+MESSAGE Start transferring the reagent
 #         source     destination   volume(uL)     method       options
 TRANSFER  PL1:A1+3   PL6:A7+3      150            LC_W_Bot_Bot MIX:15x8
