@@ -93,7 +93,7 @@ def config():
         writefile = open(dirname + filename, "w")
         if getconfig.startswith('TABLE'):
             getconfig = '\n'.join(getconfig.split('\n')[1:]) #removing the extra 'TABLE' from the config file
-        list = ['TABLE ', tablename ,'\n', '\n', getconfig] #adding the chosen/uploaded table to the config file
+        list = ['TABLE ', tablename ,'\n', '\n', getconfig] #adding the chosen/uploaded table to the config file.
         writefile.writelines( ''.join(list) )
         writefile.close()
         readfile = open(dirname + filename, "r")
