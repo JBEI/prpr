@@ -16,7 +16,7 @@ maxAm = 150
 
 @route('/')
 def parpar():
-    return template('pages' + os.sep + 'page.html', file = '', btn = '', text = '', hide = 'hide',  codeerror = 'hide', fileerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
+    return template('pages' + os.sep + 'page.html', file = '', log = '', btn = '', text = '', hide = 'hide',  codeerror = 'hide', fileerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
 
 @route('/disclamer')
 def disclamer():
@@ -87,7 +87,7 @@ def config():
             if preselected != 'select':
                 tablename = preselected
             else:
-                return template('pages' + os.sep + 'page.html', file = '', btn = '', text = getconfig, hide = 'hide', fileerror = '', codeerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
+                return template('pages' + os.sep + 'page.html', file = '', log = '', btn = '', text = getconfig, hide = 'hide', fileerror = '', codeerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
         dirname = 'incoming' + os.sep
         filename = 'config_' + expID + '.par'
         writefile = open(dirname + filename, "w")
@@ -102,11 +102,12 @@ def config():
         if experiment.testindex:
             parpar = ParPar(expID)
             file = 'config' + str(expID) + '.esc'
-            return template('pages' + os.sep + 'page.html', file = file, btn = 'btn-success', text = getconfig, hide = '', codeerror = 'hide', fileerror = 'hide', alertsuccess = '', tables = GetDefaultTables(), version = __version__)
+            log = 'experiment' + str(expID) + '.log'
+            return template('pages' + os.sep + 'page.html', file = file, log = log, btn = 'btn-success', text = getconfig, hide = '', codeerror = 'hide', fileerror = 'hide', alertsuccess = '', tables = GetDefaultTables(), version = __version__)
         else:
-            return template('pages' + os.sep + 'page.html', file = '', btn = '', text = '', hide = 'hide', codeerror = '', fileerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
+            return template('pages' + os.sep + 'page.html', file = '', log = '', btn = '', text = '', hide = 'hide', codeerror = '', fileerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
     else:
-        return template('pages' + os.sep + 'page.html', file = '', btn = '', text = '', hide = 'hide', codeerror = '', fileerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
+        return template('pages' + os.sep + 'page.html', file = '', log = '', btn = '', text = '', hide = 'hide', codeerror = '', fileerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
 
 @route('/static/:path#.+#', name='static')
 def static(path):
@@ -115,7 +116,11 @@ def static(path):
 @route('/download/<filename>')
 def download(filename):
     print(filename)
-    return static_file(filename, root='esc', download=filename)
+    if filename.startswith('config'):
+        root = 'esc'
+    else:
+        root = 'logs'
+    return static_file(filename, root, download=filename)
 
 @route('/get/<filename>')
 def download(filename):

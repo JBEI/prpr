@@ -9,8 +9,8 @@
     <meta name="author" content="Nina Stawski">
 
     <link href="static/css/bootstrap.css" rel="stylesheet">
-    <link href="static/css/parpar.css" rel="stylesheet">
     <link href="static/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="static/css/parpar.css" rel="stylesheet">
 
     <!--[if lt IE 9]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -36,7 +36,7 @@
 <body onload="selectTables()">
 
 <div class="container">
-    <div class="span7">
+    <div class="span8">
         <h1>Welcome to <img src="static/img/favicon.ico" alt="PaR-PaR favicon"/>PaR-PaR!</h1>
         <p>A new simple way to make your experiments faster.<br/>Simply write your code in the window below, add a table file and click 'Prepare robot file'.<br/>The resulting file will be available for you to download on the right.</p>
 		<p><a href="/copyright">Copyright</a>&nbsp;&nbsp;::&nbsp;&nbsp;<a href="/disclamer">Disclamer</a>&nbsp;&nbsp;::&nbsp;&nbsp;<a href="https://github.com/JBEI/parpar">Get code</a></p>
@@ -48,7 +48,7 @@
             <div class="span8">
                 <h3>Script</h3>
 
-                <div id="myModal" class="modal hide fade in">
+                <div id="myModal" class="modal hide fade in parpar-modal">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal">×</button>
                         <h3 id="platename">Plate file name</h3>
@@ -94,6 +94,9 @@
                     <form action="/download/{{file}}">
                         <button class="btn {{btn}}">Download</button> {{file}}
                     </form>
+                    <!--<form action="/download/{{log}}">-->
+                        <!--<button class="btn">Log</button> {{log}}-->
+                    <!--</form>-->
                 </div>
             </div>
         </div>
