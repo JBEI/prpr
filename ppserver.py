@@ -131,13 +131,10 @@ def GetDefaultTables():
     """
     Getting a list of default tables from folder 'tables'
     """
-    tablesDir = os.listdir('tables')
+    tablesDir = os.listdir('default_tables')
     tables = []
     for name in tablesDir:
-        if 'JBEI' in name:
-            tables.append(name)
-        if 'BreakfastDrinks' in name:
-            tables.append(name)
+        tables.append(name)
     tables.sort()
     jsonTables = json_dumps(tables)
     return jsonTables
