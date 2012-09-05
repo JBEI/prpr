@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 __author__ = 'Nina Stawski'
 __version__ = '0.3'
 
@@ -78,14 +79,13 @@ def config():
 
         if data != '':
             raw = data.file.read()
-            tablename = 'tables_' + expID + '.ewt'
-            tabledirname = 'tables' + os.sep
+            tablename = 'tables' + os.sep + 'tables_' + expID + '.ewt'
             tablefile = open(tabledirname + tablename, "wb")
             tablefile.write(raw)
             tablefile.close()
         else:
             if preselected != 'select':
-                tablename = preselected
+                tablename = 'default_tables' + os.sep + preselected
             else:
                 return template('pages' + os.sep + 'page.html', file = '', log = '', btn = '', text = getconfig, hide = 'hide', fileerror = '', codeerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
         dirname = 'incoming' + os.sep

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.2
+#!/usr/bin/env python3
 __author__ = 'Nina Stawski'
 __version__ = '0.3'
 

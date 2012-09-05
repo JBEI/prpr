@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.2
+#!/usr/bin/env python3
 __author__ = 'Nina Stawski'
 __version__ = '0.3'
 
@@ -664,7 +664,7 @@ def LineToList(line, configFileName, experiment):
             elif command['name'] == 'table':
                 if not experiment.tableAdded:
                     experiment.tableAdded = True
-                    tablefolder = 'tables' + os.sep
+                    tablefolder = 'default_tables' + os.sep
                     fileName = tablefolder + line[1]
                     copyfile(tablefolder + line[1], 'esc' + os.sep + 'config' + experiment.ID + '.esc')
                     plateFile = open(fileName, "r")
