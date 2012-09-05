@@ -116,6 +116,10 @@ class ParPar:
         print(command)
         self.config(command)
 
+    def comment(self, comment):
+        command = 'Comment("' + comment + '");'
+        self.config(command)
+
     def mix(self, tipNumber, volumesString, gridAndSite, wellString, mixOptions):
         location = str(gridAndSite[0]) + ',' + str(gridAndSite[1])
         command = 'Mix(' + str(tipNumber) + ',"LCWMX",' + \
@@ -145,6 +149,8 @@ class ParPar:
                         element = t[e]
                         if element['command'] == 'message':
                             self.message(element['message'])
+                        if element['command'] == 'comment':
+                            self.comment(element['message'])
                         else:
                             if e:
                                 previousElement = t[e-1]
@@ -179,7 +185,8 @@ class ParPar:
                                 wells.append(element['wellInfo']['well'])
                                 plateInfo = {'dimensions' : element['wellInfo']['plateDimensions'], 'location' : element['wellInfo']['plate']}
                     element = t[len(t)-1]
-                    if element['command'] == 'message':
+
+                    if element['command'] == 'message' or element['command'] == 'comment':
                         pass
                     else:
                         volumesList = self.fillVolumesList(volumesDict)
@@ -238,7 +245,7 @@ class ParPar:
                         wellInfo = option['target']
                         trList.append({ 'command' : 'Mix', 'tipNumber' : tipNumber, 'wellInfo' : wellInfo, 'volume' : option['volume'], 'times' : option['times'] })
                         tipNumber += 1
-                    elif option['command'] == 'message':
+                    elif option['command'] == 'message' or option['command'] == 'comment':
                         trList.append(option)
                 elements.append(trList)
             self.transactions.append(elements)
@@ -329,9 +336,10 @@ class DatabaseHandler:
                     for well in m:
                         w = self.getWell(well[0])
                         transfer['info'].append({'command' : 'mix', 'volume' : mixOptions[0], 'times' : mixOptions[1], 'target' : w })
-                elif element[0] == 'message':
+                elif element[0] == 'message' or element[0] == 'comment':
+                    command = element[0]
                     message = element[1]
-                    transfer['info'].append({'command' : 'message', 'message' : message})
+                    transfer['info'].append({'command' : command, 'message' : message})
         return transfer
 
     def getWell(self, wellID):

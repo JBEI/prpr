@@ -74,6 +74,9 @@ class Experiment:
             self.recipes[itemName] = itemInfo
 
     def parseLocation(self, location):
+        """
+        Parses the given location, i.e. PL3:A1+4 to individual wells
+        """
 
         def ParseWells(wells, plateDimensions):
             wellsLargeList = wells.split(',')
@@ -245,6 +248,7 @@ class Experiment:
                 print('your component in short location ', component)
 
     def make(self, line):
+        self.addComment('------ BEGIN MAKE ' + line[0] + ' in ' + line[1] + ' ------')
         self.testindex += 1
         recipeInfo = line[0].split(':')
         recipeName = self.recipes[recipeInfo[0]]
@@ -295,7 +299,10 @@ class Experiment:
                     else:
                         self.log('Error. Wrong mixing options in "' + line + '"')
 
+        self.addComment('------ END MAKE ' + line[0] + ' in ' + line[1] + ' ------')
+
     def transfer(self, transferInfo, type):
+        self.addComment('------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
         self.testindex += 1
         source = transferInfo[0]
         if transferInfo[1] not in self.components:
@@ -335,9 +342,15 @@ class Experiment:
                         self.transactionList.append([transaction])
                     else:
                         self.log('Error. Wrong mixing options in "' + transferInfo + '"')
+        self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+
     def message(self, line):
         message = {'type' : 'command', 'action' : 'message', 'options' : line}
         self.transactionList.append([message])
+
+    def addComment(self, line):
+        comment = {'type' : 'command', 'action' : 'comment', 'options' : line}
+        self.transactionList.append([comment])
 
     def log(self, item):
         from datetime import datetime
@@ -686,6 +699,8 @@ def LineToList(line, configFileName, experiment):
             elif command['name'] == 'message':
                 experiment.message(' '.join(line[1:]))
 
+            elif command['name'] == 'comment':
+                experiment.addComment(' '. join(line[1:]))
 
         elif line[0].startswith('#'):
             return
