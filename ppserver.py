@@ -80,7 +80,7 @@ def config():
         if data != '':
             raw = data.file.read()
             tablename = 'tables' + os.sep + 'tables_' + expID + '.ewt'
-            tablefile = open(tabledirname + tablename, "wb")
+            tablefile = open(tablename, "wb")
             tablefile.write(raw)
             tablefile.close()
         else:
