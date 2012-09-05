@@ -664,9 +664,11 @@ def LineToList(line, configFileName, experiment):
             elif command['name'] == 'table':
                 if not experiment.tableAdded:
                     experiment.tableAdded = True
-                    tablefolder = 'default_tables' + os.sep
-                    fileName = tablefolder + line[1]
-                    copyfile(tablefolder + line[1], 'esc' + os.sep + 'config' + experiment.ID + '.esc')
+                    if __name__ == "__main__":
+                        fileName = 'default_tables' + os.sep + line[1]
+                    else:
+                        fileName = line[1]
+                    copyfile(fileName, 'esc' + os.sep + 'config' + experiment.ID + '.esc')
                     plateFile = open(fileName, "r")
                     experiment.log('Table file location: "' + fileName + '"')
                     PlateFileParse(plateFile, experiment, plateNicknames={}, plateIndexes={})
