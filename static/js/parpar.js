@@ -72,7 +72,7 @@ function ParseTableData(data) {
         var name = arr[0];
         var grid = arr[1][0];
         var site = arr[1][1]+1;
-        var plate = arr[2]
+        var plate = arr[2];
 
         $("#row" + site).children("#" + grid).append('<div id="plate-nickname">' + name + '</div><div id="plate-name">' + plate + '</div>');
         $("#row" + site).children("#" + grid).addClass('grid-active');
