@@ -59,7 +59,7 @@ class Experiment:
 
     def add(self, target, itemName, itemInfo):
         """
-        usage: addItem(target, name, info)
+        usage: add(target, name, info)
         target: component|plate|volume|recipe
         """
         self.log('Added a ' + target + ' "' + itemName + '"')
