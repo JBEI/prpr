@@ -113,7 +113,6 @@ class ParPar:
 
     def message(self, message):
         command = 'UserPrompt("' + message + '",0,-1);'
-        print(command)
         self.config(command)
 
     def comment(self, comment):
@@ -149,7 +148,7 @@ class ParPar:
                         element = t[e]
                         if element['command'] == 'message':
                             self.message(element['message'])
-                        if element['command'] == 'comment':
+                        elif element['command'] == 'comment':
                             self.comment(element['message'])
                         else:
                             if e:

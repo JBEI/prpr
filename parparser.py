@@ -632,16 +632,19 @@ def ParseRecipe(configFileName, recipeName, experiment):
     unsplitline = configFileName.readline()
     line = unsplitline.split()
     if line:
-        if unsplitline[0] != '#':
-            lineName = line[0][0:-1]
-            uncutLine = line[1:] #everything except the line name
-            experiment.recipes[recipeName].lineCounter += 1
-            lineNo = experiment.recipes[recipeName].lineCounter
-            recipeLine = []
-            for reagent, volume in zip(uncutLine[::2], uncutLine[1::2]):
-                recipeLine.append((reagent, volume))
-            experiment.recipes[recipeName].addSubrecipe(lineName, {'name' : lineName, 'line' : lineNo, 'recipe' : recipeLine})
-        ParseRecipe(configFileName, recipeName, experiment)
+        if not CheckCommand(line[0]):
+            if unsplitline[0] != '#':
+                lineName = line[0][0:-1]
+                uncutLine = line[1:] #everything except the line name
+                experiment.recipes[recipeName].lineCounter += 1
+                lineNo = experiment.recipes[recipeName].lineCounter
+                recipeLine = []
+                for reagent, volume in zip(uncutLine[::2], uncutLine[1::2]):
+                    recipeLine.append((reagent, volume))
+                experiment.recipes[recipeName].addSubrecipe(lineName, {'name' : lineName, 'line' : lineNo, 'recipe' : recipeLine})
+            ParseRecipe(configFileName, recipeName, experiment)
+        else:
+            LineToList(line, configFileName, experiment)
 
     
 def LineToList(line, configFileName, experiment):
