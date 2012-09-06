@@ -33,7 +33,7 @@ def table():
     plateNicknames = {}
     experiment=False
     tablename = request.body.read().decode()
-    tabledirname = 'tables' + os.sep
+    tabledirname = 'default_tables' + os.sep
     plateFile = open(tabledirname + tablename, "r")
     PlateFileParse(plateFile, experiment, plateNicknames, plateIndexes)
     print(plateNicknames, plateIndexes)
@@ -134,7 +134,8 @@ def GetDefaultTables():
     tablesDir = os.listdir('default_tables')
     tables = []
     for name in tablesDir:
-        tables.append(name)
+        if not name.startswith('.'):
+            tables.append(name)
     tables.sort()
     jsonTables = json_dumps(tables)
     return jsonTables
