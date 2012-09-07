@@ -1,3 +1,10 @@
+/**
+ * parpar.js, a part of PaR-PaR, a biology-friendly language for liquid-transferring robots
+ * Author: Nina Stawski, nstawski@lbl.gov, me@ninastawski.com
+ * Copyright 2012, Lawrence Berkeley National Laboratory
+ * http://github.com/JBEI/parpar/blob/master/license.txt
+ */
+
 function clicked() {
     var selection = $('#tables option:selected').val();
     if (selection == 'select') {
