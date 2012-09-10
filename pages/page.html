@@ -48,7 +48,14 @@
                             '<button class="close" data-dismiss="alert">×</button>' +
                             alertSuccess[success] + '</div>');
                 }
-                $('#result').show();
+                $('#script').append('<div class="span4" id="result">' +
+                        '<div class="span3"><h4>Result</h4></div>' +
+                        '   <div class="span3 well">' +
+                        '       <form action="/download/{{file}}">' +
+                        '           <button class="btn {{btn}}">Download</button> {{file}}' +
+                        '       </form>' +
+                        '   </div>' +
+                        '</div>');
             }
         })
 
@@ -67,7 +74,7 @@
     </div>
     <div class="span1 inline pull-right"><a href="mailto:nstawski@lbl.gov?subject=PaR-PaR%20v.{{version}}%20feedback" class="label label-info">Version {{version}}</a></div>
     <div class="span12">
-        <div class="row">
+        <div class="row" id="script">
             <div class="span8">
                 <h4>Script</h4>
 
@@ -97,14 +104,6 @@
                 <textarea class="input-xlarge span8" id="textarea" rows="30" name="text">{{text}}</textarea>
                 <button class="btn pull-right" type="submit" name="upload" >&nbsp;Prepare robot file&nbsp;</button>
                 </form>
-            </div>
-            <div class="span4 hide" id="result">
-                <div class="span3"><h4>Result</h4></div>
-                <div class="span3 well">
-                    <form action="/download/{{file}}">
-                        <button class="btn {{btn}}">Download</button> {{file}}
-                    </form>
-                </div>
             </div>
         </div>
     </div>

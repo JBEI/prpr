@@ -226,7 +226,7 @@ class Experiment:
             self.log('Error. No ' + target + ' "' + itemName + '" defined.')
             self.errorLog('Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
 
-    def createTransfer(self, component, destination, volume, transferMethod):
+    def createTransfer(self, component, destination, volume, transferMethod, line):
         if component in self.components or ':' in component:
             if component in self.components:
                 comp = self.components[component]
@@ -234,6 +234,8 @@ class Experiment:
                 if ':' in component:
                     comp = Component({'name' : component, 'location' : component})
                     self.add('component', component, comp)
+            method = ''
+            methodError = False
             if transferMethod == 'DEFAULT':
                 method = comp.method
             else:
@@ -241,20 +243,29 @@ class Experiment:
                 if m:
                     method = m
                 else:
+                    methodError = True
                     self.log('Wrong method "' + transferMethod + '"')
-            return {'src' : comp.location, 'dst' : destination, 'volume' : self.splitAmount(volume), 'method' : method, 'type' : 'transfer'}
+                    self.errorLog('Error. Wrong method "' + transferMethod + '" in line "' + line + '"')
+            if method:
+                return {'src' : comp.location, 'dst' : destination, 'volume' : self.splitAmount(volume), 'method' : method, 'type' : 'transfer'}
+            else:
+                if not methodError:
+                    self.errorLog('Error. No method defined in line "' + line + '"')
         else:
             self.log('Error. Wrong component "' + component + '".')
             self.errorLog('Error. Component "' + component + '" is not defined. Please correct the error and try again.')
             return False
 
-    def make(self, line):
+    def make(self, splitLine):
+        originalLine = ' '.join(splitLine)
+        line = splitLine[1:]
         if len(line) >= 3:
             self.addComment('------ BEGIN MAKE ' + line[0] + ' in ' + line[1] + ' ------')
             self.testindex += 1
             recipeInfo = line[0].split(':')
 
             if recipeInfo[0] in self.recipes:
+                subrecipeError = False
                 recipeName = self.recipes[recipeInfo[0]]
                 recipe = []
                 if line[1] not in self.components:
@@ -270,53 +281,63 @@ class Experiment:
                 if len(recipeInfo) == 2:
                     subrecipes = recipeInfo[1].split(',')
                     for sub in subrecipes:
-                        recipe.append(recipeName.subrecipes[sub]['recipe'])
+                        if sub in recipeName.subrecipes:
+                            recipe.append(recipeName.subrecipes[sub]['recipe'])
+                        else:
+                            subrecipeError = True
+                            self.errorLog('Error. No such line "' + str(sub) + '" in recipe "' + recipeInfo[0] + '"')
                 else:
                     recipeLines = sorted(recipeName.subrecipes.values(), key=lambda k: k['line'])
                     for rLine in recipeLines:
                         recipe.append(rLine['recipe'])
-                if len(recipe) == len(dstLocation):
-                    a = zip(*recipe)
-                    for element in a:
-                        transferString = []
-                        z = zip(element, dstLocation)
-                        for el in z:
-                            component = el[0][0]
-                            volume = el[0][1]
-                            destination = el[1]
-                            transferMethod = line[2]
-                            transaction = self.createTransfer(component, destination, volume, transferMethod)
-                            if transaction:
-                                transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
-                                transferString.append(transaction)
-                        if transferString:
-                            self.transactionList.append(transferString)
-                else:
-                    self.log('Error. Please specify the correct amount of wells in line: "MAKE  ' + '  '.join(line) + '".')
-                    self.errorLog('Error. Please specify the correct amount of wells in line: "MAKE  ' + '  '.join(line) + '".')
+                if not subrecipeError:
+                    if len(recipe) == len(dstLocation):
+                        a = zip(*recipe)
+                        for element in a:
+                            transferString = []
+                            z = zip(element, dstLocation)
+                            for el in z:
+                                component = el[0][0]
+                                volume = el[0][1]
+                                destination = el[1]
+                                transferMethod = line[2]
+                                transaction = self.createTransfer(component, destination, volume, transferMethod, originalLine)
+                                if transaction:
+                                    transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
+                                    transferString.append(transaction)
+                            if transferString:
+                                self.transactionList.append(transferString)
+                    else:
+                        self.log('Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
+                        self.errorLog('Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
 
-                if len(line) > 3:
-                    options = line[3].split(',')
-                    for option in options:
-                        a = option.lower()
-                        if a.startswith('mix'):
-                            mixoptions = a.split(':')
-                            if len(mixoptions) == 2:
-                                transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dest.location}
-                                self.transactionList.append([transaction])
-                            else:
-                                self.log('Error. Wrong mixing options in "' + line + '"')
-                                self.errorLog('Error. Wrong mixing options in "' + line + '". Please correct the error and try again.')
+                    if len(line) > 3:
+                        options = line[3].split(',')
+                        for option in options:
+                            a = option.lower()
+                            if a.startswith('mix'):
+                                mixoptions = a.split(':')
+                                if len(mixoptions) == 2:
+                                    transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dest.location}
+                                    self.transactionList.append([transaction])
+                                else:
+                                    self.log('Error. Wrong mixing options in line "' + originalLine + '"')
+                                    self.errorLog('Error. Wrong mixing options in line "' + originalLine + '". Please correct the error and try again.')
+                else:
+                    pass
             else:
                 self.errorLog('Error. No such recipe as "' + recipeInfo[0] + '".')
 
 
             self.addComment('------ END MAKE ' + line[0] + ' in ' + line[1] + ' ------')
         else:
-            self.errorLog('Error. Not enough parameters in line "MAKE ' + ' '.join(line) + '". Please correct your script.')
+            self.errorLog('Error. Not enough parameters in line "' + originalLine + '". Please correct your script.')
 
 
-    def transfer(self, transferInfo, type):
+    def transfer(self, splitLine, type):
+        originalLine = ' '.join(splitLine)
+        transferInfo = splitLine[1:]
+
         if len(transferInfo) >= 4:
             self.addComment('------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
             self.testindex += 1
@@ -330,7 +351,7 @@ class Experiment:
             volume = transferInfo[2]
             method = transferInfo[3]
 
-            transferLine = self.createTransfer(source, destination, volume, method)
+            transferLine = self.createTransfer(source, destination, volume, method, originalLine)
             if transferLine:
 
                 if type == 'transfer':
@@ -358,11 +379,11 @@ class Experiment:
                                 transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dest.location}
                                 self.transactionList.append([transaction])
                             else:
-                                self.log('Error. Wrong mixing options in "' + transferInfo + '"')
+                                self.log('Error. Wrong mixing options in line "' + originalLine + '"')
                 self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
 
         else:
-            self.errorLog('Error. Not enough parameters in line "' + type.upper()+ ' ' + ' '.join(transferInfo) + '". Please correct your script.')
+            self.errorLog('Error. Not enough parameters in line "' + originalLine + '". Please correct your script.')
 
     def message(self, line):
         message = {'type' : 'command', 'action' : 'message', 'options' : line}
@@ -713,16 +734,19 @@ def LineToList(line, configFileName, experiment):
                     experiment.log('Docstring already added for this experiment.')
 
             elif command['name'] == 'plate':
-                plateNickname = line[1]
-                plateName = line[2]
-                experiment.plates[plateNickname] = experiment.plates[plateName]
-                experiment.log('Added a nickname "' + plateNickname + '" to the plate name "' + plateName + '"')
+                if len(line) == 3:
+                    plateNickname = line[1]
+                    plateName = line[2]
+                    experiment.plates[plateNickname] = experiment.plates[plateName]
+                    experiment.log('Added a nickname "' + plateNickname + '" to the plate name "' + plateName + '"')
+                else:
+                    experiment.errorLog('Error. Wrong parameter count in line "' + ' '.join(line) + '"')
 
             elif command['name'] == 'make':
-                experiment.make(line[1:])
+                experiment.make(line)
 
             elif command['name'] == 'transfer' or command['name'] == 'spread':
-                experiment.transfer(line[1:], command['name'])
+                experiment.transfer(line, command['name'])
 
             elif command['name'] == 'message':
                 experiment.message(' '.join(line[1:]))
