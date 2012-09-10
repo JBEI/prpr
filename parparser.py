@@ -38,6 +38,7 @@ class Experiment:
         self.maxVolume = maxVolume
         db.insert('Experiments', [self.ID, self.robotTips, self.maxVolume])
         self.log('Experiment ID: ' + str(self.ID))
+        self.errorLogger = []
 
     def addName(self, name):
         self.name = name
@@ -186,23 +187,26 @@ class Experiment:
             amount = self.volumes[volume].amount
         else:
             amount = volume
-        splitAmount = amount.split('.')
-        if len(splitAmount) > 1: # works for small volumes only
-            amount = float(amount)
-        else:
-            amount = int(amount)
-        if amount < maxVolume:
-            return amount, 1
-        else:
-            times = amount / maxVolume
-            left = amount - maxVolume * int(times)
-            if left > 0:
-                tipsNeeded = int(times)
-                newAmount = (maxVolume, tipsNeeded, left)
+        if amount.isdigit():
+            splitAmount = amount.split('.')
+            if len(splitAmount) > 1: # works for small volumes only
+                amount = float(amount)
             else:
-                tipsNeeded = int(times)
-                newAmount = (maxVolume, tipsNeeded)
-            return newAmount
+                amount = int(amount)
+            if amount < maxVolume:
+                return amount, 1
+            else:
+                times = amount / maxVolume
+                left = amount - maxVolume * int(times)
+                if left > 0:
+                    tipsNeeded = int(times)
+                    newAmount = (maxVolume, tipsNeeded, left)
+                else:
+                    tipsNeeded = int(times)
+                    newAmount = (maxVolume, tipsNeeded)
+                return newAmount
+        else:
+            self.errorLog('Error, volume "' + volume + '" is not defined. Please correct the error and try again.')
 
     def get(self, target, itemName):
         if target == 'component':
@@ -220,6 +224,7 @@ class Experiment:
             return item[itemName]
         else:
             self.log('Error. No ' + target + ' "' + itemName + '" defined.')
+            self.errorLog('Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
 
     def createTransfer(self, component, destination, volume, transferMethod):
         if component in self.components:
@@ -230,6 +235,7 @@ class Experiment:
                 self.add('component', component, comp)
             else:
                 self.log('Error. Wrong component "' + component + '".')
+                self.errorLog('Error. Wrong component "' + component + '". Please correct the error and try again.')
         if transferMethod == 'DEFAULT':
             method = comp.method
         else:
@@ -248,101 +254,115 @@ class Experiment:
                 print('your component in short location ', component)
 
     def make(self, line):
-        self.addComment('------ BEGIN MAKE ' + line[0] + ' in ' + line[1] + ' ------')
-        self.testindex += 1
-        recipeInfo = line[0].split(':')
-        recipeName = self.recipes[recipeInfo[0]]
-        recipe = []
-        if line[1] not in self.components:
-            dest = Component({'name' : line[1], 'location' : line[1]})
-            self.add('component', dest.name, dest)
+        if len(line) >= 3:
+            self.addComment('------ BEGIN MAKE ' + line[0] + ' in ' + line[1] + ' ------')
+            self.testindex += 1
+            recipeInfo = line[0].split(':')
+
+            if recipeInfo[0] in self.recipes:
+                recipeName = self.recipes[recipeInfo[0]]
+                recipe = []
+                if line[1] not in self.components:
+                    dest = Component({'name' : line[1], 'location' : line[1]})
+                    self.add('component', dest.name, dest)
+                else:
+                    dest = self.components[line[1]]
+                dstLocation = dest.location
+
+                if len(recipeInfo) == 2:
+                    subrecipes = recipeInfo[1].split(',')
+                    for sub in subrecipes:
+                        recipe.append(recipeName.subrecipes[sub]['recipe'])
+                else:
+                    recipeLines = sorted(recipeName.subrecipes.values(), key=lambda k: k['line'])
+                    for rLine in recipeLines:
+                        recipe.append(rLine['recipe'])
+                if len(recipe) == len(dstLocation):
+                    a = zip(*recipe)
+                    for element in a:
+                        transferString = []
+                        z = zip(element, dstLocation)
+                        for el in z:
+                            component = el[0][0]
+        #                    self.checkIfComponentExists(component)
+                            volume = el[0][1]
+                            destination = el[1]
+                            transferMethod = line[2]
+                            transaction = self.createTransfer(component, destination, volume, transferMethod)
+                            transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
+                            transferString.append(transaction)
+                        self.transactionList.append(transferString)
+                else:
+                    self.log('Error. Please specify the correct amount of wells in line: "MAKE  ' + '  '.join(line) + '".')
+                    self.errorLog('Error. Please specify the correct amount of wells in line: "MAKE  ' + '  '.join(line) + '".')
+
+                if len(line) > 3:
+                    options = line[3].split(',')
+                    for option in options:
+                        a = option.lower()
+                        if a.startswith('mix'):
+                            mixoptions = a.split(':')
+                            if len(mixoptions) == 2:
+                                transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dest.location}
+                                self.transactionList.append([transaction])
+                            else:
+                                self.log('Error. Wrong mixing options in "' + line + '"')
+                                self.errorLog('Error. Wrong mixing options in "' + line + '". Please correct the error and try again.')
+            else:
+                self.errorLog('Error. No such recipe as "' + recipeInfo[0] + '".')
+
+
+            self.addComment('------ END MAKE ' + line[0] + ' in ' + line[1] + ' ------')
         else:
-            dest = self.components[line[1]]
-        dstLocation = dest.location
+            self.errorLog('Error. Not enough parameters in line "MAKE ' + ' '.join(line) + '". Please correct your script.')
 
-        if len(recipeInfo) == 2:
-            subrecipes = recipeInfo[1].split(',')
-            for sub in subrecipes:
-                recipe.append(recipeName.subrecipes[sub]['recipe'])
-        else:
-            recipeLines = sorted(recipeName.subrecipes.values(), key=lambda k: k['line'])
-            for rLine in recipeLines:
-                recipe.append(rLine['recipe'])
-        if len(recipe) == len(dstLocation):
-            a = zip(*recipe)
-            for element in a:
-                transferString = []
-                z = zip(element, dstLocation)
-                for el in z:
-                    component = el[0][0]
-#                    self.checkIfComponentExists(component)
-                    volume = el[0][1]
-                    destination = el[1]
-                    transferMethod = line[2]
-                    transaction = self.createTransfer(component, destination, volume, transferMethod)
-                    transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
-                    transferString.append(transaction)
-                self.transactionList.append(transferString)
-        else:
-            self.log('Error. Please specify the correct amount of wells in line: "MAKE  ' + '  '.join(line) + '".')
-
-
-        if len(line) > 3:
-            options = line[3].split(',')
-            for option in options:
-                a = option.lower()
-                if a.startswith('mix'):
-                    mixoptions = a.split(':')
-                    if len(mixoptions) == 2:
-                        transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dest.location}
-                        self.transactionList.append([transaction])
-                    else:
-                        self.log('Error. Wrong mixing options in "' + line + '"')
-
-        self.addComment('------ END MAKE ' + line[0] + ' in ' + line[1] + ' ------')
 
     def transfer(self, transferInfo, type):
-        self.addComment('------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
-        self.testindex += 1
-        source = transferInfo[0]
-        if transferInfo[1] not in self.components:
-            dest = Component({'name' : transferInfo[1], 'location' : transferInfo[1]})
-            self.add('component', dest.name, dest)
+        if len(transferInfo) >= 4:
+            self.addComment('------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+            self.testindex += 1
+            source = transferInfo[0]
+            if transferInfo[1] not in self.components:
+                dest = Component({'name' : transferInfo[1], 'location' : transferInfo[1]})
+                self.add('component', dest.name, dest)
+            else:
+                dest = self.components[transferInfo[1]]
+            destination = dest.location
+            volume = transferInfo[2]
+            method = transferInfo[3]
+
+            transferLine = self.createTransfer(source, destination, volume, method)
+
+            if type == 'transfer':
+                if len(transferLine['src']) == len(transferLine['dst']):
+                    newTr = zip(transferLine['src'], transferLine['dst'])
+
+            if type == 'spread':
+                newTr = zip(cycle(transferLine['src']), transferLine['dst'])
+
+            transfer = []
+            for tr in newTr:
+                trLine = deepcopy(transferLine)
+                trLine['src'] = tr[0]
+                trLine['dst'] = tr[1]
+                transfer.append(trLine)
+            self.transactionList.append(transfer)
+
+            if len(transferInfo) > 4:
+                options = transferInfo[4].split(',')
+                for option in options:
+                    a = option.lower()
+                    if a.startswith('mix'):
+                        mixoptions = a.split(':')
+                        if len(mixoptions) == 2:
+                            transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dest.location}
+                            self.transactionList.append([transaction])
+                        else:
+                            self.log('Error. Wrong mixing options in "' + transferInfo + '"')
+            self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+
         else:
-            dest = self.components[transferInfo[1]]
-        destination = dest.location
-        volume = transferInfo[2]
-        method = transferInfo[3]
-
-        transferLine = self.createTransfer(source, destination, volume, method)
-
-        if type == 'transfer':
-            if len(transferLine['src']) == len(transferLine['dst']):
-                newTr = zip(transferLine['src'], transferLine['dst'])
-
-        if type == 'spread':
-            newTr = zip(cycle(transferLine['src']), transferLine['dst'])
-
-        transfer = []
-        for tr in newTr:
-            trLine = deepcopy(transferLine)
-            trLine['src'] = tr[0]
-            trLine['dst'] = tr[1]
-            transfer.append(trLine)
-        self.transactionList.append(transfer)
-
-        if len(transferInfo) > 4:
-            options = transferInfo[4].split(',')
-            for option in options:
-                a = option.lower()
-                if a.startswith('mix'):
-                    mixoptions = a.split(':')
-                    if len(mixoptions) == 2:
-                        transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dest.location}
-                        self.transactionList.append([transaction])
-                    else:
-                        self.log('Error. Wrong mixing options in "' + transferInfo + '"')
-        self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+            self.errorLog('Error. Not enough parameters in line "' + type.upper()+ ' ' + ' '.join(transferInfo) + '". Please correct your script.')
 
     def message(self, line):
         message = {'type' : 'command', 'action' : 'message', 'options' : line}
@@ -357,6 +377,9 @@ class Experiment:
         time = str(datetime.now())
         print(item)
         self.logger.append(time + ': ' + item)
+
+    def errorLog(self, item):
+        self.errorLogger.append(item)
 
 class Well:
     def __init__(self, dict):
@@ -712,6 +735,7 @@ def LineToList(line, configFileName, experiment):
 
         else:
             experiment.log('Error, no such command: "' + line[0] + '"')
+            experiment.errorLog('Error, no such command: "' + line[0] + '". Please correct the error and try again.')
 
 def ParseConfigFile(experiment):
     parser = argparse.ArgumentParser(description = 'Transfer liquids') #create the new argument parser for the command line arguments

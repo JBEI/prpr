@@ -21,18 +21,42 @@
     <link rel="shortcut icon" href="static/img/favicon.ico">
 
     <script>
-        function selectTables() {
+
+        $(document).ready(function () {
+
             var tablesList = {{!tables}};
-        for (var i = 0; i < tablesList.length; i++) {
-            $('#tables').append('<option value="' + tablesList[i] + '">' + tablesList[i] + '</option>')
-        }
-        }
+            for (var i = 0; i < tablesList.length; i++) {
+                $('#tables').append('<option value="' + tablesList[i] + '">' + tablesList[i] + '</option>')
+            }
+
+            var alertError = {{!alerterror}};
+            var alertSuccess = {{!alertsuccess}};
+
+            if (alertError.length > 0) {
+                errors = removeDuplicates(alertError);
+                for (var err in errors) {
+                    $('#form').before('<div class="alert alert-error">' +
+                            '<button class="close" data-dismiss="alert">×</button>' +
+                            alertError[err] + '</div>');
+                }
+            }
+
+            if (alertSuccess.length > 0) {
+                results = removeDuplicates(alertSuccess);
+                for (var success in results) {
+                    $('#form').before('<div class="alert alert-success">' +
+                            '<button class="close" data-dismiss="alert">×</button>' +
+                            alertSuccess[success] + '</div>');
+                }
+                $('#result').show();
+            }
+        })
 
     </script>
 
 </head>
 
-<body onload="selectTables()">
+<body>
 
 <div class="container">
     <div class="span8">
@@ -61,20 +85,7 @@
                     </div>
                 </div>
 
-                <div class="alert alert-error {{codeerror}}">
-                    <button class="close" data-dismiss="alert">×</button>
-                    Your configuration file doesn't contain any actions. Please refer to PaR-PaR howto guide.
-                </div>
-                <div class="alert alert-error {{fileerror}}">
-                    <button class="close" data-dismiss="alert">×</button>
-                    Please select or upload the table file for your configuration script.
-                </div>
-                <div class="alert alert-success {{alertsuccess}}">
-                    <button class="close" data-dismiss="alert">×</button>
-                    Your configuration file has been successfully processed.
-                </div>
-
-                <form action="/getconfig" method="post" enctype="multipart/form-data">
+                <form action="/getconfig" method="post" enctype="multipart/form-data" id="form">
 
                 <div class="controls" id="table">
                     <select id="tables" class="span3" name="tableselect" onchange = "clicked();">
@@ -87,14 +98,11 @@
                 <button class="btn pull-right" type="submit" name="upload" >&nbsp;Prepare robot file&nbsp;</button>
                 </form>
             </div>
-            <div class="span4 {{hide}}">
+            <div class="span4 hide" id="result">
                 <div class="span3"><h3>Result</h3></div>
                 <div class="span3 well">
                     <form action="/download/{{file}}">
                         <button class="btn {{btn}}">Download</button> {{file}}
-                    </form>
-                    <form action="/download/{{log}}">
-                        <button class="btn">Log</button> {{log}}
                     </form>
                 </div>
             </div>

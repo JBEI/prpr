@@ -17,7 +17,11 @@ maxAm = 150
 
 @route('/')
 def parpar():
-    return template('pages' + os.sep + 'page.html', file = '', log = '', btn = '', text = '', hide = 'hide',  codeerror = 'hide', fileerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
+    return template('pages' + os.sep + 'page.html', file = '', btn = '', text = '', alerterror = [], alertsuccess = [], tables = GetDefaultTables(), version = __version__)
+
+@route('/preview')
+def preview():
+    return template('pages' + os.sep + 'page_dev.html', version = __version__)
 
 @route('/disclamer')
 def disclamer():
@@ -67,6 +71,8 @@ def sample():
 
 @post('/getconfig')
 def config():
+    errorList = []
+    successList = []
     getconfig = request.forms.get('text', '').strip()
     preselected = request.forms.get('tableselect')
     data = request.files.data
@@ -87,7 +93,8 @@ def config():
             if preselected != 'select':
                 tablename = 'default_tables' + os.sep + preselected
             else:
-                return template('pages' + os.sep + 'page.html', file = '', log = '', btn = '', text = getconfig, hide = 'hide', fileerror = '', codeerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
+                errorList.append("Please select or upload the table file for your configuration script.")
+                return template('pages' + os.sep + 'page.html', file = '', btn = '', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
         dirname = 'incoming' + os.sep
         filename = 'config_' + expID + '.par'
         writefile = open(dirname + filename, "w")
@@ -98,16 +105,23 @@ def config():
         writefile.close()
         readfile = open(dirname + filename, "r")
         ParseFile(readfile, experiment)
-        print(experiment.testindex)
-        if experiment.testindex:
+        print('testindex__', experiment.testindex)
+        if len(experiment.errorLogger):
+            for item in experiment.errorLogger:
+                errorList.append(item)
+            return template('pages' + os.sep + 'page.html', file = '', btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
+        elif experiment.testindex:
             parpar = ParPar(expID)
             file = 'config' + str(expID) + '.esc'
             log = 'experiment' + str(expID) + '.log'
-            return template('pages' + os.sep + 'page.html', file = file, log = log, btn = 'btn-success', text = getconfig, hide = '', codeerror = 'hide', fileerror = 'hide', alertsuccess = '', tables = GetDefaultTables(), version = __version__)
+            successList.append("Your configuration file has been successfully processed.")
+            return template('pages' + os.sep + 'page.html', file = file, btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
         else:
-            return template('pages' + os.sep + 'page.html', file = '', log = '', btn = '', text = '', hide = 'hide', codeerror = '', fileerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
+            errorList.append("Your configuration file doesn't contain any actions. Please refer to PaR-PaR howto guide.")
+            return template('pages' + os.sep + 'page.html', file = '', btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
     else:
-        return template('pages' + os.sep + 'page.html', file = '', log = '', btn = '', text = '', hide = 'hide', codeerror = '', fileerror = 'hide', alertsuccess = 'hide', tables = GetDefaultTables(), version = __version__)
+        errorList.append("Your configuration file doesn't contain any actions. Please refer to PaR-PaR howto guide.")
+        return template('pages' + os.sep + 'page.html', file = '', btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
 
 @route('/static/:path#.+#', name='static')
 def static(path):
