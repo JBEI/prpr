@@ -227,31 +227,26 @@ class Experiment:
             self.errorLog('Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
 
     def createTransfer(self, component, destination, volume, transferMethod):
-        if component in self.components:
-            comp = self.components[component]
-        else:
-            if ':' in component:
-                comp = Component({'name' : component, 'location' : component})
-                self.add('component', component, comp)
+        if component in self.components or ':' in component:
+            if component in self.components:
+                comp = self.components[component]
             else:
-                self.log('Error. Wrong component "' + component + '".')
-                self.errorLog('Error. Wrong component "' + component + '". Please correct the error and try again.')
-        if transferMethod == 'DEFAULT':
-            method = comp.method
-        else:
-            m = DBHandler.checkIfMethodExists(transferMethod)
-            if m:
-                method = m
+                if ':' in component:
+                    comp = Component({'name' : component, 'location' : component})
+                    self.add('component', component, comp)
+            if transferMethod == 'DEFAULT':
+                method = comp.method
             else:
-                self.log('Wrong method "' + transferMethod + '"')
-
-        return {'src' : comp.location, 'dst' : destination, 'volume' : self.splitAmount(volume), 'method' : method, 'type' : 'transfer'}
-
-    def checkIfComponentExists(self, component):
-        for c in self.components:
-            if component in self.components[c].shortLocation:
-
-                print('your component in short location ', component)
+                m = DBHandler.checkIfMethodExists(transferMethod)
+                if m:
+                    method = m
+                else:
+                    self.log('Wrong method "' + transferMethod + '"')
+            return {'src' : comp.location, 'dst' : destination, 'volume' : self.splitAmount(volume), 'method' : method, 'type' : 'transfer'}
+        else:
+            self.log('Error. Wrong component "' + component + '".')
+            self.errorLog('Error. Component "' + component + '" is not defined. Please correct the error and try again.')
+            return False
 
     def make(self, line):
         if len(line) >= 3:
@@ -263,8 +258,11 @@ class Experiment:
                 recipeName = self.recipes[recipeInfo[0]]
                 recipe = []
                 if line[1] not in self.components:
-                    dest = Component({'name' : line[1], 'location' : line[1]})
-                    self.add('component', dest.name, dest)
+                    if ':' in line[1]:
+                        dest = Component({'name' : line[1], 'location' : line[1]})
+                        self.add('component', dest.name, dest)
+                    else:
+                        self.errorLog('Error. Wrong component "' + line[1] + '". Please correct the error and try again.')
                 else:
                     dest = self.components[line[1]]
                 dstLocation = dest.location
@@ -284,14 +282,15 @@ class Experiment:
                         z = zip(element, dstLocation)
                         for el in z:
                             component = el[0][0]
-        #                    self.checkIfComponentExists(component)
                             volume = el[0][1]
                             destination = el[1]
                             transferMethod = line[2]
                             transaction = self.createTransfer(component, destination, volume, transferMethod)
-                            transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
-                            transferString.append(transaction)
-                        self.transactionList.append(transferString)
+                            if transaction:
+                                transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
+                                transferString.append(transaction)
+                        if transferString:
+                            self.transactionList.append(transferString)
                 else:
                     self.log('Error. Please specify the correct amount of wells in line: "MAKE  ' + '  '.join(line) + '".')
                     self.errorLog('Error. Please specify the correct amount of wells in line: "MAKE  ' + '  '.join(line) + '".')
@@ -332,34 +331,35 @@ class Experiment:
             method = transferInfo[3]
 
             transferLine = self.createTransfer(source, destination, volume, method)
+            if transferLine:
 
-            if type == 'transfer':
-                if len(transferLine['src']) == len(transferLine['dst']):
-                    newTr = zip(transferLine['src'], transferLine['dst'])
+                if type == 'transfer':
+                    if len(transferLine['src']) == len(transferLine['dst']):
+                        newTr = zip(transferLine['src'], transferLine['dst'])
 
-            if type == 'spread':
-                newTr = zip(cycle(transferLine['src']), transferLine['dst'])
+                if type == 'spread':
+                    newTr = zip(cycle(transferLine['src']), transferLine['dst'])
 
-            transfer = []
-            for tr in newTr:
-                trLine = deepcopy(transferLine)
-                trLine['src'] = tr[0]
-                trLine['dst'] = tr[1]
-                transfer.append(trLine)
-            self.transactionList.append(transfer)
+                transfer = []
+                for tr in newTr:
+                    trLine = deepcopy(transferLine)
+                    trLine['src'] = tr[0]
+                    trLine['dst'] = tr[1]
+                    transfer.append(trLine)
+                self.transactionList.append(transfer)
 
-            if len(transferInfo) > 4:
-                options = transferInfo[4].split(',')
-                for option in options:
-                    a = option.lower()
-                    if a.startswith('mix'):
-                        mixoptions = a.split(':')
-                        if len(mixoptions) == 2:
-                            transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dest.location}
-                            self.transactionList.append([transaction])
-                        else:
-                            self.log('Error. Wrong mixing options in "' + transferInfo + '"')
-            self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+                if len(transferInfo) > 4:
+                    options = transferInfo[4].split(',')
+                    for option in options:
+                        a = option.lower()
+                        if a.startswith('mix'):
+                            mixoptions = a.split(':')
+                            if len(mixoptions) == 2:
+                                transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dest.location}
+                                self.transactionList.append([transaction])
+                            else:
+                                self.log('Error. Wrong mixing options in "' + transferInfo + '"')
+                self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
 
         else:
             self.errorLog('Error. Not enough parameters in line "' + type.upper()+ ' ' + ' '.join(transferInfo) + '". Please correct your script.')
