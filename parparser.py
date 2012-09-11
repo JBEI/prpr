@@ -88,21 +88,24 @@ class Experiment:
                 if '-' in well:
                     wellsList = well.split('-')
                     direction = 'horizontal'
-                startWell = wellsList[0]
-                rowsMax = plateDimensions[0]
-                colsMax = plateDimensions[1]
-                if len(wellsList) == 2:
-                    assert (wellsList[1] != ''), "Well number after '+' can't be empty."
-                    numberWells = int(wellsList[1])
-                    startCoords = GetWellCoordinates(startWell, plateDimensions)
-                    for i in range(0, numberWells):
-                        addedWells = WellsRename(startCoords, i, plateDimensions, direction)
-                        assert(addedWells[1] <= colsMax), 'Wells locations are out of range'
-                        wellsNewlist.append(addedWells)
-                elif len(wellsList) == 1:
-                    wellsNewlist.append(GetWellCoordinates(wellsList[0], plateDimensions))
+                if wellsList[0]:
+                    startWell = wellsList[0]
+                    rowsMax = plateDimensions[0]
+                    colsMax = plateDimensions[1]
+                    if len(wellsList) == 2:
+                        assert (wellsList[1] != ''), "Well number after '+' can't be empty."
+                        numberWells = int(wellsList[1])
+                        startCoords = GetWellCoordinates(startWell, plateDimensions, str(location))
+                        for i in range(0, numberWells):
+                            addedWells = WellsRename(startCoords, i, plateDimensions, direction)
+                            assert(addedWells[1] <= colsMax), 'Wells locations are out of range'
+                            wellsNewlist.append(addedWells)
+                    elif len(wellsList) == 1:
+                        wellsNewlist.append(GetWellCoordinates(wellsList[0], plateDimensions, str(location)))
+                    else:
+                        self.errorLog('Error. Can\'t be more than one \'+\'. Correct syntax in ' + str(location) + ' and run again. \n')
                 else:
-                    self.log('Can\'t be more than one \'+\'. Correct syntax in ' + str(location) + ' and run again. \n')
+                    self.errorLog('Error. Well can\'t be empty in locaton "' + str(location) + '"')
             return wellsNewlist
 
         def WellsRename(startCoords, i, plateDimensions, direction):
@@ -135,33 +138,42 @@ class Experiment:
                         return newRow, newCol
 
 
-        def GetWellCoordinates(well, plateDimensions):
+        def GetWellCoordinates(well, plateDimensions, location):
             """
             Takes the well coordinates entered by the user and dimensions of the plate and returns the wells plate coordinates
             """
-            rowsMax = plateDimensions[0]
-            colsMax = plateDimensions[1]
-            try:
-                int(well)
-                well = int(well)
-                assert (well <= rowsMax*colsMax), 'Well number is out of range'
-                if well <= rowsMax:
-                    newCol = 1
-                    newRow = well
-                else:
-                    times = int(well/rowsMax)
-                    newCol = times + 1
-                    newRow = well - (times * rowsMax)
-                if newRow == 0:
-                    return newRow + rowsMax, newCol - 1
-                else:
-                    return newRow, newCol
-            except ValueError:
-                alphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
-                letterIndex = alphabet.find(well[:1]) + 1
-                assert (letterIndex <= rowsMax), 'Well letter coordinate is out of range'
-                assert (int(well[1:]) <= colsMax), 'Well number coordinate is out of range'
-                return letterIndex, int(well[1:])
+            if well:
+                rowsMax = plateDimensions[0]
+                colsMax = plateDimensions[1]
+                try:
+                    int(well)
+                    well = int(well)
+                    if well > rowsMax*colsMax:
+                        self.errorLog('Error. Well "' + well + '" in location "' + location + '" is out of range')
+                    else:
+                        if well <= rowsMax:
+                            newCol = 1
+                            newRow = well
+                        else:
+                            times = int(well/rowsMax)
+                            newCol = times + 1
+                            newRow = well - (times * rowsMax)
+                        if newRow == 0:
+                            return newRow + rowsMax, newCol - 1
+                        else:
+                            return newRow, newCol
+                except ValueError:
+                    alphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
+                    letterIndex = alphabet.find(well[:1]) + 1
+                    if letterIndex > rowsMax:
+                        self.errorLog('Error. Well "' + well + '" letter coordinate in location "' + location + '" is out of range')
+                    elif int(well[1:]) > colsMax:
+                        self.errorLog('Error. Well "' + well + '" number coordinate in location "' + location + '" is out of range')
+                    else:
+                        return letterIndex, int(well[1:])
+            else:
+                self.errorLog('Error. No well defined in location "' + location + '"')
+
         loc = []
         if '/' in location:
             newLoc = location.split('/')
@@ -169,16 +181,22 @@ class Experiment:
             newLoc = [location]
         for line in newLoc:
             plateAndWells = line.split(':')
-            plateName = self.plates[plateAndWells[0]].name
-            plateDms = self.plates[plateAndWells[0]].dimensions
-            plateLocation = self.plates[plateAndWells[0]].location
-            wells =  ParseWells(plateAndWells[1], plateDms)
-            for well in wells:
-                if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
-                    print('aiaiaiaiaiaiaiai!!!!')
-                w = Well({'Plate' : plateName, 'Location' : well})
-                loc.append(w)
-                self.wells.append(w)
+            if plateAndWells[0]:
+                plateName = self.plates[plateAndWells[0]].name
+                plateDms = self.plates[plateAndWells[0]].dimensions
+                plateLocation = self.plates[plateAndWells[0]].location
+            else:
+                self.errorLog('Error. No plate in location "' + str(location) + '"')
+            if plateAndWells[1]:
+                wells =  ParseWells(plateAndWells[1], plateDms)
+                for well in wells:
+                    if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
+                        print('aiaiaiaiaiaiaiai!!!!')
+                    w = Well({'Plate' : plateName, 'Location' : well})
+                    loc.append(w)
+                    self.wells.append(w)
+            else:
+                self.errorLog('Error. No wells in location "' + str(location) + '"')
         return loc
 
     def splitAmount(self, volume):

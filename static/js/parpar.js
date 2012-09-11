@@ -146,3 +146,44 @@ function removeDuplicates(arr) {
     }
     return out;
 }
+
+var wellArray = Array();
+var rID = 0;
+
+function createPlates() {
+    for (var i = 1; i <= 4; i++) {
+        $('#plate').append('<div id="row' + i + '" class="parpar-row"></div>');
+        for (var k = 1; k <= 6; k++) {
+            var wellId = i + '' + k;
+            $('#row' + i).append('<div id="well' + wellId + '" class="parpar-well" onclick="fillWell(' + wellId + ');"></div>');
+        }
+
+    }
+}
+
+function fillWell(wellId) {
+    $('#well' + wellId).toggleClass('parpar-well-filled');
+
+    var wellLoc = '(' + wellId.toString().substr(0,1) + ',' + wellId.toString().substr(1,1) + ')';
+
+    if ($('#well' + wellId).hasClass('parpar-well-filled')) {
+
+        wellArray.push(wellId);
+    }
+    else {
+        ind = wellArray.indexOf(wellId);
+        console.log('array index', ind);
+        wellArray.splice(ind,1);
+    }
+    $('#loc').remove();
+
+    $('#wellInfo').append('<span class="input-xlarge uneditable-input" id="loc">' + wellArray.sort() + '</span>');
+}
+
+function addNew() {
+    console.log(rID);
+    var test = '<div id="reagent' + rID + '">' + '<form><input type="text" placeholder="reagent' + rID + '" class="span2" /></form>' + '</div>'
+    console.log(test);
+    $('#wellInfo').append(test);
+    rID++;
+}

@@ -75,3 +75,25 @@ body {
     overflow: hidden;
     color: #000000;
 }
+
+.parpar-well {
+    border: 1px solid #001E96;
+    background: #70B1C9;
+    display: inline-block;
+    height: 60px;
+    width: 60px;
+    -webkit-border-radius: 50%;
+    margin: 4px;
+}
+.parpar-well-filled {
+    background: #006098;
+}
+.parpar-row {
+    display: block;
+}
+.parpar-plate {
+    height: 288px;
+    width: 420px;
+    -webkit-border-radius: 12px;
+    padding: 20px;
+}
