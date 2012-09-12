@@ -65,8 +65,10 @@ class Experiment:
         """
         self.log('Added a ' + target + ' "' + itemName + '"')
         if target == 'component':
-            itemInfo.location = self.parseLocation(itemInfo.location)
-            self.components[itemName] = itemInfo
+            location = self.parseLocation(itemInfo.location)
+            if location:
+                itemInfo.location = location
+                self.components[itemName] = itemInfo
         elif target == 'plate':
             self.plates[itemName] = itemInfo
         elif target == 'volume':
@@ -185,18 +187,21 @@ class Experiment:
                 plateName = self.plates[plateAndWells[0]].name
                 plateDms = self.plates[plateAndWells[0]].dimensions
                 plateLocation = self.plates[plateAndWells[0]].location
+
+                if plateAndWells[1]:
+                    wells =  ParseWells(plateAndWells[1], plateDms)
+                    for well in wells:
+                        if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
+                            print('aiaiaiaiaiaiaiai!!!!')
+                        w = Well({'Plate' : plateName, 'Location' : well}) #todo: append well only if there are no same wells registered; otherwise error
+                        #todo: error handling, return problems if error in definition section
+                        loc.append(w)
+                        self.wells.append(w)
+#                    else:
+#                        self.errorLog('Error. No wells in location "' + str(location) + '"')
+
             else:
                 self.errorLog('Error. No plate in location "' + str(location) + '"')
-            if plateAndWells[1]:
-                wells =  ParseWells(plateAndWells[1], plateDms)
-                for well in wells:
-                    if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
-                        print('aiaiaiaiaiaiaiai!!!!')
-                    w = Well({'Plate' : plateName, 'Location' : well})
-                    loc.append(w)
-                    self.wells.append(w)
-            else:
-                self.errorLog('Error. No wells in location "' + str(location) + '"')
         return loc
 
     def splitAmount(self, volume):
@@ -371,35 +376,40 @@ class Experiment:
 
             transferLine = self.createTransfer(source, destination, volume, method, originalLine)
             if transferLine:
+                newTr = False
 
                 if type == 'transfer':
                     if len(transferLine['src']) == len(transferLine['dst']):
                         newTr = zip(transferLine['src'], transferLine['dst'])
 
-                if type == 'spread':
+                elif type == 'spread':
                     newTr = zip(cycle(transferLine['src']), transferLine['dst'])
 
                 transfer = []
-                for tr in newTr:
-                    trLine = deepcopy(transferLine)
-                    trLine['src'] = tr[0]
-                    trLine['dst'] = tr[1]
-                    transfer.append(trLine)
-                self.transactionList.append(transfer)
 
-                if len(transferInfo) > 4:
-                    options = transferInfo[4].split(',')
-                    for option in options:
-                        a = option.lower()
-                        if a.startswith('mix'):
-                            mixoptions = a.split(':')
-                            if len(mixoptions) == 2:
-                                transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dest.location}
-                                self.transactionList.append([transaction])
-                            else:
-                                self.log('Error. Wrong mixing options in line "' + originalLine + '"')
-                self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+                if newTr:
+                    for tr in newTr:
+                        trLine = deepcopy(transferLine)
+                        trLine['src'] = tr[0]
+                        trLine['dst'] = tr[1]
+                        transfer.append(trLine)
+                    self.transactionList.append(transfer)
 
+                    if len(transferInfo) > 4:
+                        options = transferInfo[4].split(',')
+                        for option in options:
+                            a = option.lower()
+                            if a.startswith('mix'):
+                                mixoptions = a.split(':')
+                                if len(mixoptions) == 2:
+                                    transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dest.location}
+                                    self.transactionList.append([transaction])
+                                else:
+                                    self.log('Error. Wrong mixing options in line "' + originalLine + '"')
+                    self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+
+                else:
+                    self.errorLog('Error in line "' + originalLine + '"')
         else:
             self.errorLog('Error. Not enough parameters in line "' + originalLine + '". Please correct your script.')
 
@@ -736,8 +746,14 @@ def LineToList(line, configFileName, experiment):
                     PlateFileParse(plateFile, experiment, plateNicknames={}, plateIndexes={})
 
             elif command['name'] == 'volume':
-                volumeInfo = {'name': line[1], 'amount' : line[2]}
-                experiment.add(command['name'], volumeInfo['name'], Volume(volumeInfo))
+                if len(line) == 3:
+                    if line[2].isdigit():
+                        volumeInfo = {'name': line[1], 'amount' : line[2]}
+                        experiment.add(command['name'], volumeInfo['name'], Volume(volumeInfo))
+                    else:
+                        experiment.errorLog('Error. Volume value should be a digit in line "' + ' '.join(line) + '"')
+                else:
+                    experiment.errorLog('Error. Please correct the volume info in line "' + ' '.join(line) + '"')
 
             elif command['name'] == 'recipe':
                 recipe = Recipe(line[1])

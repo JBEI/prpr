@@ -162,28 +162,63 @@ function createPlates() {
 }
 
 function fillWell(wellId) {
-    $('#well' + wellId).toggleClass('parpar-well-filled');
+    well = $('#well' + wellId);
 
-    var wellLoc = '(' + wellId.toString().substr(0,1) + ',' + wellId.toString().substr(1,1) + ')';
+    if (well.hasClass('parpar-well-taken')) {}
 
-    if ($('#well' + wellId).hasClass('parpar-well-filled')) {
-
-        wellArray.push(wellId);
-    }
     else {
-        ind = wellArray.indexOf(wellId);
-        console.log('array index', ind);
-        wellArray.splice(ind,1);
-    }
-    $('#loc').remove();
+        well.toggleClass('parpar-well-filled');
 
-    $('#wellInfo').append('<span class="input-xlarge uneditable-input" id="loc">' + wellArray.sort() + '</span>');
+        var wellLoc = '(' + wellId.toString().substr(0,1) + ',' + wellId.toString().substr(1,1) + ')';
+
+        if (well.hasClass('parpar-well-filled')) {
+
+            wellArray.push(wellId);
+        }
+        else {
+            ind = wellArray.indexOf(wellId);
+            wellArray.splice(ind,1);
+        }
+
+        if ($('#reagentName').val() != "") {
+            reagentName = $('#reagentName').val();
+        }
+        else {
+            reagentName = 'Reagent' + rID;
+        }
+
+        $('#loc').remove();
+
+        $('#wellInfo').append('<div id="loc">' +
+                                    '<div class="hidden" id="reagentLocation">' +
+                                        wellArray.sort() +
+                                    '</div>' +
+                                    '<input type="text" class="input-xlarge" id="reagentName" value="' + reagentName + '">' +
+                                    '</input>' +
+                              '</div>');
+    }
 }
 
 function addNew() {
-    console.log(rID);
-    var test = '<div id="reagent' + rID + '">' + '<form><input type="text" placeholder="reagent' + rID + '" class="span2" /></form>' + '</div>'
-    console.log(test);
-    $('#wellInfo').append(test);
-    rID++;
+    if ($('#reagentName').val() != "") {
+        $('#reagents').append('<div class="btn" id="reagent' + rID +
+            '" value="' + $('#reagentLocation').text() + '">' +
+            $('#reagentName').val() + '</div> ');
+        rID++;
+        wellArray = [];
+        $('.parpar-well-filled').addClass('parpar-well-taken').removeClass('parpar-well-filled');
+        $('#loc').remove();
+        $('#wellInfo').append('<div id="loc">' +
+            '<input type="text" class="input-xlarge" id="reagentName" value="" />' +
+            '</div>')
+    }
+}
+
+function clearAll() {
+    $('#reagents').children().remove();
+    $('#loc').remove();
+    $('#wellInfo').append('<div id="loc">' +
+        '<input type="text" class="input-xlarge" id="reagentName" value="" />' +
+        '</div>');
+    $('.parpar-well').removeClass('parpar-well-taken').removeClass('parpar-well-filled');
 }
