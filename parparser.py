@@ -39,6 +39,7 @@ class Experiment:
         db.insert('Experiments', [self.ID, self.robotTips, self.maxVolume])
         self.log('Experiment ID: ' + str(self.ID))
         self.errorLogger = []
+        self.templates = {}
 
     def addName(self, name):
         self.name = name
@@ -61,7 +62,7 @@ class Experiment:
     def add(self, target, itemName, itemInfo):
         """
         usage: add(target, name, info)
-        target: component|plate|volume|recipe
+        target: component|plate|volume|recipe|template
         """
         self.log('Added a ' + target + ' "' + itemName + '"')
         if target == 'component':
@@ -75,6 +76,8 @@ class Experiment:
             self.volumes[itemName] = itemInfo
         elif target == 'recipe':
             self.recipes[itemName] = itemInfo
+        elif target == 'template':
+            self.templates[itemName] = itemInfo
 
     def parseLocation(self, location):
         """
@@ -466,6 +469,30 @@ class Recipe:
     def addSubrecipe(self, name, info):
         self.subrecipes[name] = info
 
+class Template:
+    def __init__(self, templateInfo):
+        self.name = templateInfo['name']
+        self.variables = templateInfo['variables']
+        self.info = []
+
+    def addInfo(self, info):
+        self.info.append(info)
+
+    def addValues(self, values):
+        if len(self.variables) == len(values):
+            readyTemplate = self.info
+            for v in range(0, len(values)):
+                for i in range(0, len(readyTemplate)):
+                    readyTemplate[i] = readyTemplate[i].replace(self.variables[v], values[v])
+            from tempfile import TemporaryFile
+            templateFile = TemporaryFile(mode='r+')
+            templateFile.writelines(readyTemplate)
+            templateFile.seek(0)
+            line = templateFile.readline()
+            while line != '':
+                splitline = line.split()
+                LineToList(splitline, templateFile, experiment)
+                line = templateFile.readline()
 
 class DBHandler:
     def __init__(self):
@@ -486,7 +513,11 @@ class DBHandler:
         for item in items:
             list.append(str(item))
         values = ', '.join(list)
-        self.crsr.execute('INSERT INTO ' + destination + ' Values(' + values + ');')
+        message = 'INSERT INTO ' + destination + ' Values(' + values + ');'
+        try:
+            self.crsr.execute(message)
+        except sqlite3.IntegrityError:
+            pass
         self.conn.commit()
 
     def update(self, destination, items, filter = ''):
@@ -718,7 +749,20 @@ def ParseRecipe(configFileName, recipeName, experiment):
         else:
             LineToList(line, configFileName, experiment)
 
-    
+def ParseTemplate(configFileName, templateName, experiment):
+    line = configFileName.readline()
+    command = ''
+    template = experiment.templates[templateName]
+    if line.strip():
+        test = CheckCommand(line.split()[0])
+        if test:
+            command = test['name']
+    if command != 'endtemplate':
+        template.addInfo(line)
+        ParseTemplate(configFileName, templateName, experiment)
+    else:
+        LineToList(line.split(), configFileName, experiment)
+
 def LineToList(line, configFileName, experiment):
     if line:
         command = CheckCommand(line[0])
@@ -775,6 +819,17 @@ def LineToList(line, configFileName, experiment):
                     experiment.log('Added a nickname "' + plateNickname + '" to the plate name "' + plateName + '"')
                 else:
                     experiment.errorLog('Error. Wrong parameter count in line "' + ' '.join(line) + '"')
+
+            elif command['name'] == 'template':
+                templateInfo = {'name' : line[1], 'variables' : line[2:]}
+                template = Template(templateInfo)
+                experiment.add(command['name'], template.name, template)
+                ParseTemplate(configFileName, template.name, experiment)
+
+            elif command['name'] == 'use':
+                templateName = line[1]
+                values = line[2:]
+                experiment.templates[templateName].addValues(values)
 
             elif command['name'] == 'make':
                 experiment.make(line)

@@ -17,10 +17,15 @@ def CheckCommand(command):
             'comment'       : ['COMMENT', '%']
         },
         'action' : {
+            'use'           : ['USE'],
             'make'          : ['MAKE', 'PREPARE_LIST'],
             'spread'        : ['SPREAD', 'DISTRIBUTE', 'DIST_REAGENT'],
             'transfer'      : ['TRANSFER', 'TRANSFER_LOCATIONS'],
             'message'       : ['MESSAGE', 'PROMPT']
+        },
+        'function' : {
+            'template'      : ['TEMPLATE'],
+            'endtemplate'   : ['ENDTEMPLATE']
         }
     }
 
