@@ -36,7 +36,6 @@ body {
 
 .grid-tube {
     background: url("../../static/img/tube.png") repeat;
-    /*-webkit-transform: scale(1, 3);*/
 }
 
 .wells24 {
