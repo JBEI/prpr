@@ -56,14 +56,14 @@ def CreateTables():
     crsr.execute('insert into Experiments values(0, "", "");')
 
     DatabaseDisconnect()
-    
+
 def UpdateMethods():
     methodFile = open('methodsInfo.txt', 'r')
     f = methodFile.readlines()
 
     for method in f:
         try:
-            message = 'INSERT INTO Methods VALUES("' + method.strip() + '");'
+            message = 'INSERT INTO Methods VALUES("' + str(method.strip()) + '");'
             DatabaseConnect()
             crsr.execute(message)
             DatabaseDisconnect()

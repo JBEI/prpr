@@ -17,19 +17,19 @@ maxAm = 150
 
 @route('/')
 def parpar():
-    return template('pages' + os.sep + 'page.html', file = '', btn = '', text = '', alerterror = [], alertsuccess = [], tables = GetDefaultTables(), version = __version__)
+    return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[], tables=GetDefaultTables(), version=__version__)
 
 @route('/preview')
 def preview():
-    return template('pages' + os.sep + 'page_dev.html', version = __version__)
+    return template('pages' + os.sep + 'page_dev.html', version=__version__)
 
-@route('/disclamer')
-def disclamer():
-    return template('pages' + os.sep + 'disclamer.html', version = __version__)
+@route('/disclaimer')
+def disclaimer():
+    return template('pages' + os.sep + 'disclaimer.html', version=__version__)
     
 @route('/copyright')
 def copyright():
-    return template('pages' + os.sep + 'copyright.html', version = __version__)
+    return template('pages' + os.sep + 'copyright.html', version=__version__)
 
 @post('/table')
 def table():
@@ -100,7 +100,7 @@ def config():
         writefile = open(dirname + filename, "w")
         if getconfig.startswith('TABLE'):
             getconfig = '\n'.join(getconfig.split('\n')[1:]) #removing the extra 'TABLE' from the config file
-        list = ['TABLE ', tablename ,'\n', '\n', getconfig] #adding the chosen/uploaded table to the config file.
+        list = ['TABLE ', tablename, '\n', '\n', getconfig] #adding the chosen/uploaded table to the config file.
         writefile.writelines( ''.join(list) )
         writefile.close()
         readfile = open(dirname + filename, "r")

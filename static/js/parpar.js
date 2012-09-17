@@ -6,7 +6,7 @@
  */
 
 function clicked() {
-    var selection = $('#tables option:selected').val();
+    var selection = $('#tables').find('option:selected').val();
     if (selection == 'select') {
         $('#preview').remove();
         $('#table').append('<input type="file" name="data" id="data" class="span3" onchange="AppendUploadButton()"/>');
@@ -55,10 +55,10 @@ function UploadTable() {
 }
 
 function CallPython() {
-    var data = $('#tables option:selected').val();
+    var data = $('#tables').find('option:selected').val();
     $('#tablerow').children().remove();
     $.post('table', data, function(data) {
-        $('#platename').html($('#tables option:selected').val());
+        $('#platename').html($('#tables').find('option:selected').val());
         ParseTableData(data);
     });
 }
@@ -70,8 +70,7 @@ function ParseTableData(data) {
         for (var i=1; i <= 30; i++) {
             $('#row' + j).append('<div class="parpar-grid grid-empty" id="' + i + '"></div>');
         }
-        $('#row' + j).children('#1').removeClass('grid-empty').addClass('grid-system').append('<div class="rotate">system</div>');
-        $('#row' + j).children('#1').attr({'rel' : 'tooltip', 'title' : 'Wash station'});
+        $('#row' + j).children('#1').removeClass('grid-empty').addClass('grid-system').append('<div class="rotate">system</div>').attr({'rel' : 'tooltip', 'title' : 'Wash station'});
     }
     var tableList = $.parseJSON(data);
     for (var x = 0; x < tableList.length; x++) {
@@ -81,8 +80,7 @@ function ParseTableData(data) {
         var site = arr[1][1]+1;
         var plate = arr[2];
 
-        $("#row" + site).children("#" + grid).append('<div id="plate-nickname">' + name + '</div><div id="plate-name">' + plate + '</div>');
-        $("#row" + site).children("#" + grid).addClass('grid-active');
+        $("#row" + site).children("#" + grid).append('<div id="plate-nickname">' + name + '</div><div id="plate-name">' + plate + '</div>').addClass('grid-active');
 
         if (plate.substring(0, 2) == '24') {
             $("#row" + site).children("#" + grid).addClass('wells24');
@@ -98,8 +96,7 @@ function ParseTableData(data) {
         }
         if (plate.substring(0, 4) == 'Tube') {
             $("#row" + site).siblings().children("#" + (grid)).addClass('grid-active');
-            $("*").children("#" + grid).attr({'rel' : 'tooltip', 'title' : name + '<br />' + plate});
-            $("*").children("#" + grid).addClass('grid-tube');
+            $("*").children("#" + grid).attr({'rel' : 'tooltip', 'title' : name + '<br />' + plate}).addClass('grid-tube');
         }
         if (plate.substring(0, 4) == 'REMP') {
             SetPlateSize(grid, site)
@@ -117,8 +114,7 @@ function ParseTableData(data) {
             $("#row" + site).children("#" + grid).addClass('grid-plate');
         }
         if ($("#row" + site).children("#" + grid).css('width') == '13px') {
-            $("#row" + site).children("#" + grid).children('#plate-name').remove();
-            $("#row" + site).children("#" + grid).children('#plate-nickname').addClass('rotate');
+            $("#row" + site).children("#" + grid).children('#plate-name').remove().children('#plate-nickname').addClass('rotate');
         }
         $("#row" + site).children("#" + grid).attr({'rel' : 'tooltip', 'title' : name + '<br />' + plate});
         $("[rel=tooltip]").tooltip({'placement' : 'bottom', 'trigger' : 'hover'});

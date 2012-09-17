@@ -154,7 +154,7 @@ class Experiment:
                     int(well)
                     well = int(well)
                     if well > rowsMax*colsMax:
-                        self.errorLog('Error. Well "' + well + '" in location "' + location + '" is out of range')
+                        self.errorLog('Error. Well "' + str(well) + '" in location "' + location + '" is out of range')
                     else:
                         if well <= rowsMax:
                             newCol = 1
@@ -540,7 +540,7 @@ class DBHandler:
                 message += ' WHERE ExpID=' + expID
             self.crsr.execute(message)
             id = self.crsr.fetchone()
-            if id == None:
+            if id is None:
                 return 1
             else:
                 return id[0] + 1
@@ -859,6 +859,9 @@ def ParseConfigFile(experiment):
 def ParseFile(filename, experiment):
     """
     ParseFile reads the file string by string
+    Usage:
+    filename - full path to the file in relation to current folder
+    experiment - an oblect of a class Experiment()
     """
     global expName
     global setList
