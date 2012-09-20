@@ -197,7 +197,6 @@ class Experiment:
                         if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
                             print('aiaiaiaiaiaiaiai!!!!')
                         w = Well({'Plate' : plateName, 'Location' : well}) #todo: append well only if there are no same wells registered; otherwise error
-                        #todo: error handling, return problems if error in definition section
                         loc.append(w)
                         self.wells.append(w)
 #                    else:

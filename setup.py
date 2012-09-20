@@ -81,13 +81,13 @@ def UpdatePlates():
         dimensions = data[1]
         size = dimensions.split('x')
         try:
-            message = 'INSERT INTO Plates VALUES("' + name + '",' + size[1] + ',' + size[0] + ');'
+            message = 'INSERT INTO Plates VALUES("' + name + '",' + size[0] + ',' + size[1] + ');'
             DatabaseConnect()
             crsr.execute(message)
         except sqlite3.IntegrityError:
             DatabaseConnect()
             crsr.execute(message)
-            message = 'UPDATE Plates SET Rows = ' + size[1] + ', Columns = ' + size[0] + '  WHERE FactoryName = ' + '"' + name + '"'
+            message = 'UPDATE Plates SET Rows = ' + size[0] + ', Columns = ' + size[1] + '  WHERE FactoryName = ' + '"' + name + '"'
         DatabaseDisconnect()
 
 def CreateFolders():
@@ -95,9 +95,15 @@ def CreateFolders():
     for directory in dirs:
         if not os.path.exists(directory):
             os.mkdir(directory)
+            os.chmod(directory, 777)
 
-CreateFolders()
-CreateTables()
-UpdatePlates()
-UpdateMethods()
-print('Done!')
+def setup():
+    CreateFolders()
+    CreateTables()
+    UpdatePlates()
+    UpdateMethods()
+    os.chmod('parpar.db', 777)
+    print('Done!')
+
+if __name__ == '__main__':
+    setup()

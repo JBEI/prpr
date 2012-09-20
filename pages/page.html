@@ -15,6 +15,7 @@
             if (alertError.length > 0) {
                 errors = removeDuplicates(alertError);
                 for (var err in errors) {
+                    //noinspection JSUnfilteredForInLoop
                     $('#form').before('<div class="alert alert-error">' +
                             '<button class="close" data-dismiss="alert">×</button>' +
                             alertError[err] + '</div>');
@@ -24,6 +25,7 @@
             if (alertSuccess.length > 0) {
                 results = removeDuplicates(alertSuccess);
                 for (var success in results) {
+                    //noinspection JSUnfilteredForInLoop
                     $('#form').before('<div class="alert alert-success">' +
                             '<button class="close" data-dismiss="alert">×</button>' +
                             alertSuccess[success] + '</div>');
