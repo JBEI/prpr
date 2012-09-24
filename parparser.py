@@ -15,7 +15,7 @@ from copy import deepcopy
 #todo: switch to postgres
 
 class Experiment:
-    def __init__(self, maxVolume, tips, db):
+    def __init__(self, maxVolume, tips, db, userMethods=''):
         """
         New experiment with parameters:
         robotTips - maximum amount of tips the robot has
@@ -40,7 +40,10 @@ class Experiment:
         self.log('Experiment ID: ' + str(self.ID))
         self.errorLogger = []
         self.templates = {}
-        self.addMethods(db.getMethods())
+        if userMethods:
+            self.addMethods(userMethods)
+        else:
+            self.addMethods(db.getMethods())
 
     def addName(self, name):
         self.name = name

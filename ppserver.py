@@ -75,11 +75,16 @@ def config():
     successList = []
     getconfig = request.forms.get('text', '').strip()
     preselected = request.forms.get('tableselect')
+    customMethods = request.forms.get('methods', '').strip().split(',')
+    print('dfdfdfv.....', customMethods)
     data = request.files.data
     print('filelength', len(request.files))
     if getconfig != '':
         db=DBHandler()
-        experiment = Experiment(maxVolume=150,tips=8,db=db)
+        if customMethods != ['']:
+            experiment = Experiment(maxVolume=150,tips=8,db=db,userMethods=customMethods)
+        else:
+            experiment = Experiment(maxVolume=150,tips=8,db=db)
         expID = experiment.ID
 
 
@@ -95,6 +100,7 @@ def config():
             else:
                 errorList.append("Please select or upload the table file for your configuration script.")
                 return template('pages' + os.sep + 'page.html', file = '', btn = '', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
+
         dirname = 'incoming' + os.sep
         filename = 'config_' + expID + '.par'
         writefile = open(dirname + filename, "w")
@@ -105,20 +111,23 @@ def config():
         writefile.close()
         readfile = open(dirname + filename, "r")
         ParseFile(readfile, experiment)
-        print('testindex__', experiment.testindex)
+
         if len(experiment.errorLogger):
             for item in experiment.errorLogger:
                 errorList.append(item)
             return template('pages' + os.sep + 'page.html', file = '', btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
+
         elif experiment.testindex:
             parpar = ParPar(expID)
             file = 'config' + str(expID) + '.esc'
             log = 'experiment' + str(expID) + '.log'
             successList.append("Your configuration file has been successfully processed.")
             return template('pages' + os.sep + 'page.html', file = file, btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
+
         else:
             errorList.append("Your configuration file doesn't contain any actions. Please refer to PaR-PaR howto guide.")
             return template('pages' + os.sep + 'page.html', file = '', btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
+
     else:
         errorList.append("Your configuration file doesn't contain any actions. Please refer to PaR-PaR howto guide.")
         return template('pages' + os.sep + 'page.html', file = '', btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)

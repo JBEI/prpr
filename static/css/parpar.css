@@ -78,3 +78,8 @@ body {
     overflow: hidden;
     color: #000000;
 }
+
+.method {
+    margin: 4px 2px;
+    padding: 4px 6px;
+}

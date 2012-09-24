@@ -30,7 +30,7 @@
                             '<button class="close" data-dismiss="alert">×</button>' +
                             alertSuccess[success] + '</div>');
                 }
-                $('#script').append('<div class="span4" id="result">' +
+                $('#methods').before('<div class="span4" id="result">' +
                         '<div class="span3"><h4>Result</h4></div>' +
                         '   <div class="span3 well">' +
                         '       <form action="/download/{{file}}">' +
@@ -57,9 +57,9 @@
     <div class="span1 inline pull-right"><a href="mailto:nstawski@lbl.gov?subject=PaR-PaR%20v.{{version}}%20feedback" class="label label-info">Version {{version}}</a></div>
     <div class="span12">
         <div class="row" id="script">
+            <span class="pull-right"><a href="#" id="methodsToggle" onclick="$('#methods').removeClass('hidden');">Setup custom methods</a></span>
             <div class="span8">
                 <h4>Script</h4>
-
                 <div id="myModal" class="modal hide fade in parpar-modal">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal">×</button>
@@ -84,7 +84,16 @@
                 </div>
                 <textarea class="input-xlarge span8" id="textarea" rows="30" name="text">{{text}}</textarea>
                 <button class="btn pull-right" type="submit" name="upload" >&nbsp;Prepare robot file&nbsp;</button>
+                <textarea class="hidden" id="methodsList" name="methods"></textarea>
                 </form>
+            </div>
+            <div id="methods" class="span4 hidden">
+                <div class="span3">
+                    <h5>Custom methods</h5>
+                    <div class="input-append" id="newMethod">
+                        <input class="span3" id="userMethod" size="16" type="text"><button class="btn" type="button" onclick="customizeMethods();">Add new</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
