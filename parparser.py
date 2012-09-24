@@ -40,6 +40,7 @@ class Experiment:
         self.log('Experiment ID: ' + str(self.ID))
         self.errorLogger = []
         self.templates = {}
+        self.addMethods(db.getMethods())
 
     def addName(self, name):
         self.name = name
@@ -67,9 +68,12 @@ class Experiment:
         self.log('Added a ' + target + ' "' + itemName + '"')
         if target == 'component':
             location = self.parseLocation(itemInfo.location)
+            method = self.checkMethod(itemInfo.method)
+            if method:
+                itemInfo.method = method
             if location:
                 itemInfo.location = location
-                self.components[itemName] = itemInfo
+            self.components[itemName] = itemInfo
         elif target == 'plate':
             self.plates[itemName] = itemInfo
         elif target == 'volume':
@@ -78,6 +82,22 @@ class Experiment:
             self.recipes[itemName] = itemInfo
         elif target == 'template':
             self.templates[itemName] = itemInfo
+
+    def addMethods(self, methods):
+        if methods[0] == None:
+            self.errorLog('Error. No default method specified.')
+        else:
+            self.methods = methods
+
+    def checkMethod(self, method):
+        if method in self.methods:
+            return method
+        else:
+            if method != '' and method != 'Error' and method != 'None' and method != 'empty':
+                self.errorLog('Error. No such method on file: "' + str(method) + '"')
+                return 'Error'
+            else:
+                return self.methods[0]
 
     def parseLocation(self, location):
         """
@@ -257,14 +277,14 @@ class Experiment:
                 comp = self.components[component]
             else:
                 if ':' in component:
-                    comp = Component({'name' : component, 'location' : component})
+                    comp = Component({'name' : component, 'location' : component, 'method' : self.methods[0]})
                     self.add('component', component, comp)
             method = ''
             methodError = False
             if transferMethod == 'DEFAULT':
-                method = comp.method
+                method = self.methods[0]
             else:
-                m = DBHandler.checkIfMethodExists(transferMethod)
+                m = self.checkMethod(transferMethod)
                 if m:
                     method = m
                 else:
@@ -295,7 +315,7 @@ class Experiment:
                 recipe = []
                 if line[1] not in self.components:
                     if ':' in line[1]:
-                        dest = Component({'name' : line[1], 'location' : line[1]})
+                        dest = Component({'name' : line[1], 'location' : line[1], 'method' : self.methods[0]})
                         self.add('component', dest.name, dest)
                     else:
                         self.errorLog('Error. Wrong component "' + line[1] + '". Please correct the error and try again.')
@@ -368,7 +388,7 @@ class Experiment:
             self.testindex += 1
             source = transferInfo[0]
             if transferInfo[1] not in self.components:
-                dest = Component({'name' : transferInfo[1], 'location' : transferInfo[1]})
+                dest = Component({'name' : transferInfo[1], 'location' : transferInfo[1], 'method' : self.methods[0]})
                 self.add('component', dest.name, dest)
             else:
                 dest = self.components[transferInfo[1]]
@@ -438,13 +458,15 @@ class Well:
         self.location = dict['Location']
 
 class Component:
-    method = 'LC_W_Bot_Bot'
+#    method = 'LC_W_Bot_Bot'
     def __init__(self, dict):
         self.name = dict['name']
         self.location = dict['location']
         self.shortLocation = dict['location']
         if 'method' in dict:
             self.method = dict['method']
+        else:
+            self.method = 'empty'
 
 class Plate:
     def __init__(self, plateName, factoryName, plateLocation):
@@ -646,6 +668,21 @@ class DBHandler:
         self.crsr.close()
         self.conn.close()
 
+    def getMethods(self):
+        methods = []
+        message = 'SELECT Method FROM DefaultMethod'
+        default = DBHandler.db(message)[0][0]
+        print('default', default)
+        methods.append(default)
+
+        message = 'SELECT Method FROM Methods'
+        list = DBHandler.db(message)
+        for row in list:
+            methods.append(row[0])
+        self.conn.commit()
+        print(methods)
+        return methods
+
     @staticmethod
     def checkIfMethodExists(method):
         """
@@ -773,7 +810,7 @@ def LineToList(line, configFileName, experiment):
             elif command['name'] == 'component':
                 componentInfo = {'name' : line[1], 'location' : line[2]}
                 if len(line) > 3:
-                    componentInfo['method'] = line[3]
+                    componentInfo['method'] = experiment.checkMethod(line[3])
                 experiment.add(command['name'], componentInfo['name'], Component(componentInfo))
 
             elif command['name'] == 'table':
@@ -881,8 +918,14 @@ if __name__ == '__main__':
     print('Experiment ID: ', experiment.ID)
     ParseConfigFile(experiment)
 
-    parpar = ParPar(experiment.ID)
-    print('Robot Config:')
-    for element in parpar.robotConfig:
-        print(element)
-    print('Done. Check config.')
+    if not len(experiment.errorLogger):
+        parpar = ParPar(experiment.ID)
+        print('Robot Config:')
+        for element in parpar.robotConfig:
+            print(element)
+        print('Done. Check config.')
+
+    else:
+        print('Experiment terminated with errors.')
+        for line in experiment.errorLogger:
+            print(line)

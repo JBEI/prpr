@@ -25,6 +25,7 @@ def CreateTables():
 
     #Methods
     crsr.execute('create table Methods(Method UNIQUE)')
+    crsr.execute('create table DefaultMethod(Method Unique)')
 
     #Wells
     crsr.execute('create table Wells(ExpID, WellID, Plate, Location, PRIMARY KEY(ExpID, WellID, Plate, Location))')
@@ -63,8 +64,11 @@ def UpdateMethods():
 
     for method in f:
         try:
-            message = 'INSERT INTO Methods VALUES("' + str(method.strip()) + '");'
             DatabaseConnect()
+            if f.index(method) == 0:
+                message = 'INSERT INTO DefaultMethod VALUES("' + str(method.strip()) + '");'
+            else:
+                message = 'INSERT INTO Methods VALUES("' + str(method.strip()) + '");'
             crsr.execute(message)
             DatabaseDisconnect()
         except sqlite3.IntegrityError:
