@@ -76,11 +76,10 @@ def config():
     getconfig = request.forms.get('text', '').strip()
     preselected = request.forms.get('tableselect')
     customMethods = request.forms.get('methods', '').strip().split(',')
-    print('dfdfdfv.....', customMethods)
     data = request.files.data
-    print('filelength', len(request.files))
     if getconfig != '':
         db=DBHandler()
+        global experiment
         if customMethods != ['']:
             experiment = Experiment(maxVolume=150,tips=8,db=db,userMethods=customMethods)
         else:

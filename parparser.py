@@ -502,7 +502,7 @@ class Template:
     def addInfo(self, info):
         self.info.append(info)
 
-    def addValues(self, values):
+    def addValues(self, values, experiment):
         if len(self.variables) == len(values):
             readyTemplate = self.info
             for v in range(0, len(values)):
@@ -868,7 +868,7 @@ def LineToList(line, configFileName, experiment):
             elif command['name'] == 'use':
                 templateName = line[1]
                 values = line[2:]
-                experiment.templates[templateName].addValues(values)
+                experiment.templates[templateName].addValues(values, experiment)
 
             elif command['name'] == 'make':
                 experiment.make(line)
