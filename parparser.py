@@ -873,9 +873,9 @@ def LineToList(line, configFileName, experiment):
                 ParseProtocol(configFileName, protocol.name, experiment)
 
             elif command['name'] == 'use':
-                templateName = line[1]
+                protocolName = line[1]
                 values = line[2:]
-                experiment.templates[templateName].addValues(values, experiment)
+                experiment.protocols[protocolName].addValues(values, experiment)
 
             elif command['name'] == 'make':
                 experiment.make(line)
