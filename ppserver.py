@@ -81,6 +81,7 @@ def config():
         db=DBHandler()
         global experiment
         if customMethods != ['']:
+
             experiment = Experiment(maxVolume=150,tips=8,db=db,userMethods=customMethods)
         else:
             experiment = Experiment(maxVolume=150,tips=8,db=db)

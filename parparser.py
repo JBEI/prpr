@@ -40,28 +40,15 @@ class Experiment:
         self.log('Experiment ID: ' + str(self.ID))
         self.errorLogger = []
         self.templates = {}
-        if userMethods:
-            self.addMethods(userMethods)
-        else:
-            self.addMethods(db.getMethods())
+        self.addMethods(userMethods, db.getMethods())
 
     def addName(self, name):
         self.name = name
         self.log('Experiment name: ' + str(self.name))
 
-    def addDocString(self, filename):
-        line = filename.readline().split()
-        if line:
-            self.docString.append(' '.join(line))
-            c = CheckCommand(line[0])
-            if c:
-                if c['name'] == '"""':
-                    return
-            else:
-                self.addDocString(filename)
-
-        else:
-            self.addDocString(filename)
+    def addDocString(self, line):
+        print('line', line)
+        self.docString.append(line)
 
     def add(self, target, itemName, itemInfo):
         """
@@ -86,9 +73,12 @@ class Experiment:
         elif target == 'template':
             self.templates[itemName] = itemInfo
 
-    def addMethods(self, methods):
-        if methods[0] == None:
-            self.errorLog('Error. No default method specified.')
+    def addMethods(self, userMethods, methods):
+        if userMethods:
+            if userMethods[0]:
+                self.methods = userMethods + methods
+            else:
+                self.methods = methods + userMethods[1:]
         else:
             self.methods = methods
 
@@ -802,6 +792,23 @@ def ParseTemplate(configFileName, templateName, experiment):
     else:
         LineToList(line.split(), configFileName, experiment)
 
+def ParseDocstring(fileName, experiment):
+    line = fileName.readline().split()
+    if line:
+        c = CheckCommand(line[0])
+        if c:
+            if c['name'] == '"""':
+                return
+            else:
+                experiment.addDocString(' '.join(line))
+                ParseDocstring(fileName, experiment)
+        else:
+            experiment.addDocString(' '.join(line))
+            ParseDocstring(fileName, experiment)
+    else:
+        experiment.addDocString(' '.join(line))
+        ParseDocstring(fileName, experiment)
+
 def LineToList(line, configFileName, experiment):
     if line:
         command = CheckCommand(line[0])
@@ -845,8 +852,8 @@ def LineToList(line, configFileName, experiment):
 
             elif command['name'] == '"""':
                 if not experiment.dosStringAdded:
+                    ParseDocstring(configFileName, experiment)
                     experiment.dosStringAdded = True
-                    experiment.addDocString(configFileName)
                 else:
                     experiment.log('Docstring already added for this experiment.')
 

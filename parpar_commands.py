@@ -9,7 +9,7 @@ def CheckCommand(command):
         'definition' : {
             'name'          : ['NAME'],
             'table'         : ['TABLE'],
-            '"""'           : ['"""', '""""""','DOC', 'ENDDOC'],
+            '"""'           : ['"""', '"""""', '""""""', '"""""""', '""""""""','DOC', 'ENDDOC'],
             'plate'         : ['PLATE'],
             'component'     : ['COMPONENT', 'REAGENT'],
             'volume'        : ['VOLUME', 'AMOUNT'],

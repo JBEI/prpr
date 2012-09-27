@@ -144,7 +144,7 @@ function removeDuplicates(arr) {
     return out;
 }
 
-var methods = [];
+var methods = [''];
 function customizeMethods() {
     var method = $('#userMethod').val();
     if (method) {
@@ -153,9 +153,6 @@ function customizeMethods() {
             methods.push(method);
             var me = method;
             $('#newMethod').after().append('<div class="label method" id="' + me + '" onclick="makeDefault(\'' + me + '\')">' + me + '<i class="icon-remove icon-white pull-right" onclick="removeMethod(\'' + me + '\');"></i></div>');
-            if ($('.method').length == 1) {
-                makeDefault(me);
-            }
             $('#userMethod').val('');
             $('#methodsList').val(methods);
         }
@@ -168,8 +165,6 @@ function removeMethod(method) {
     if (e.stopPropagation) e.stopPropagation();
     methods = $('#methodsList').val().split(',');
     var ind = methods.indexOf(method);
-    console.log(methods, method)
-    console.log('///....', ind);
     methods.splice(ind,1);
     $('#' + method).remove();
     if (methods.length > 0) {
@@ -187,7 +182,6 @@ function makeDefault(method) {
     $('#' + method).addClass('label-info');
     $('#' + method).append('<i class="icon-star icon-white pull-right" id="parpar-default"></i>');
     var ind = methods.indexOf(method);
-    console.log('///', ind);
     methods.splice(ind,1);
     methods.unshift(method);
     $('#methodsList').val(methods);
