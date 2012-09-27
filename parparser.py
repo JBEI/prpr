@@ -503,10 +503,12 @@ class Protocol:
             protocolFile.writelines(readyProtocol)
             protocolFile.seek(0)
             line = protocolFile.readline()
+            experiment.addComment('------ BEGIN PROTOCOL ' + self.name + ', variables: ' + ' '.join(self.variables) + '; values: ' + ' '.join(values)+ ' ------')
             while line != '':
                 splitline = line.split()
                 LineToList(splitline, protocolFile, experiment)
                 line = protocolFile.readline()
+            experiment.addComment('------ END PROTOCOL ' + self.name + ' ------')
 
 class DBHandler:
     def __init__(self):

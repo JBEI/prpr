@@ -1,0 +1,98 @@
+parpar_script ::= 	[<name> <EOL>]
+					<table> <EOL>
+					[<documentation_string> <EOL>]
+					[<definitions>]
+					<actions>
+
+<name> ::= 'NAME' <any_text>
+
+<table> ::= 'TABLE' <table_name>
+
+<table_name> ::= <name>'.ewt'
+
+<name> ::= 1*<letter>*<number>
+
+<letter> ::= 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' | '_'
+
+<number> ::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'   
+
+<documentation_string> ::= '"""' <EOL>
+<any_text> <EOL>
+'"""'
+
+<definitions> ::= *(<plate> | <component> | <volume> | <recipe> | <protocol>) <EOL>
+
+<plate> ::= 'PLATE' <plate_nickname> <plate_name>
+
+<plate_nickname> ::= <name>
+
+<plate_name> ::= <name>
+
+<component> ::= 'COMPONENT' <component_name> <location> <component_method>
+
+<component_name> ::= <name>
+
+<location> ::= (<plate_nickname> | <plate_name>)':'<wells>[','1*<location>]
+
+<wells> ::= 1*(<well>) ['+'1*1<number_of_wells>] | 1*<well> ['-'1*1<number_of_wells>]
+
+<well> ::= 1*1(<row><column>) | <well_number>
+
+<well_number> ::= <numeric_value>
+
+<numeric_value> ::= 1*<number>
+
+<component_method> ::= [<method_name>]
+
+<method_name> ::= <default_method> | <custom_method>
+
+<default_method> ::= 'LC_W_Bot_Bot' | 'LC_W_Bot_Lev' | 'LC_W_Bot_Air' | 'LC_W_Lev_Bot' | 'LC_W_Lev_lev' | 'LC_W_Lev_Air'
+
+<custom_method> ::= <name>
+
+<volume> ::= 'VOLUME' <volume_nickname> <volume_value>
+
+<volume_nickname> ::= <name>
+
+<volume_value> ::= <numeric_value>
+
+<recipe> ::= 	'RECIPE' <recipe_name> <EOL>
+				1*(<recipe_string>) <EOL>
+
+<recipe_string> ::= <string_name>':' (<component_name> | <component_location> | (<plate_name> | <plate_nickname>)':'<wells>) (<volume_nickname> | <volume_value>)
+
+<recipe_name> ::= <name>
+
+<string_name> ::= <name>
+
+<protocol> ::= 	'PROTOCOL' <protocol_name> <protocol_varibles> <EOL>
+				*<protocol_line><EOL>
+				'ENDPROTOCOL'
+
+<protocol_name> ::= <name>
+
+<protocol_variables> ::= <name>
+
+<protocol_line> ::= (<plate> | <component> | <volume> | <recipe>) | (<make_recipe> | <spread> | <transfer>)
+
+<actions> ::= *(<make_recipe> | <spread> | <transfer> | <use>) <EOL>
+
+<make_recipe> ::= 'MAKE' (<recipe_name> | <recipe_name>':'1*<string_name>) <location> <method> <options>
+
+<method> ::= <method_name> | 'DEFAULT'
+
+<options> ::= <option>[','1*<option>]
+
+<option> ::= 'MIX:'<volume_value>'x'<times>
+
+<times> ::= <numeric_value>
+
+<spread> ::= 'SPREAD' (<component_name> | <location>) <destination> (<volume_nickname> | <volume_value>) <method> <options>
+
+<transfer> ::= 'TRANSFER' (<component_name> | <location>) <destination> (<volume_nickname> | <volume_value>) <method> <options>
+
+<use> ::= 'USE' <protocol_name> <variable_values>
+
+<protocol_name> ::= <name>
+
+<variable_values ::= *(<component_name> | <location> | <volume_nickname> | <volume_value> | <method> | <option> | <recipe_name)
