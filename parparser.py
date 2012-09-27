@@ -39,7 +39,7 @@ class Experiment:
         db.insert('Experiments', [self.ID, self.robotTips, self.maxVolume])
         self.log('Experiment ID: ' + str(self.ID))
         self.errorLogger = []
-        self.templates = {}
+        self.protocols = {}
         self.addMethods(userMethods, db.getMethods())
 
     def addName(self, name):
@@ -53,7 +53,7 @@ class Experiment:
     def add(self, target, itemName, itemInfo):
         """
         usage: add(target, name, info)
-        target: component|plate|volume|recipe|template
+        target: component|plate|volume|recipe|protocol
         """
         self.log('Added a ' + target + ' "' + itemName + '"')
         if target == 'component':
@@ -70,8 +70,8 @@ class Experiment:
             self.volumes[itemName] = itemInfo
         elif target == 'recipe':
             self.recipes[itemName] = itemInfo
-        elif target == 'template':
-            self.templates[itemName] = itemInfo
+        elif target == 'protocol':
+            self.protocols[itemName] = itemInfo
 
     def addMethods(self, userMethods, methods):
         if userMethods:
@@ -483,10 +483,10 @@ class Recipe:
     def addSubrecipe(self, name, info):
         self.subrecipes[name] = info
 
-class Template:
-    def __init__(self, templateInfo):
-        self.name = templateInfo['name']
-        self.variables = templateInfo['variables']
+class Protocol:
+    def __init__(self, protocolInfo):
+        self.name = protocolInfo['name']
+        self.variables = protocolInfo['variables']
         self.info = []
 
     def addInfo(self, info):
@@ -494,19 +494,19 @@ class Template:
 
     def addValues(self, values, experiment):
         if len(self.variables) == len(values):
-            readyTemplate = self.info
+            readyProtocol = self.info
             for v in range(0, len(values)):
-                for i in range(0, len(readyTemplate)):
-                    readyTemplate[i] = readyTemplate[i].replace(self.variables[v], values[v])
+                for i in range(0, len(readyProtocol)):
+                    readyProtocol[i] = readyProtocol[i].replace(self.variables[v], values[v])
             from tempfile import TemporaryFile
-            templateFile = TemporaryFile(mode='r+')
-            templateFile.writelines(readyTemplate)
-            templateFile.seek(0)
-            line = templateFile.readline()
+            protocolFile = TemporaryFile(mode='r+')
+            protocolFile.writelines(readyProtocol)
+            protocolFile.seek(0)
+            line = protocolFile.readline()
             while line != '':
                 splitline = line.split()
-                LineToList(splitline, templateFile, experiment)
-                line = templateFile.readline()
+                LineToList(splitline, protocolFile, experiment)
+                line = protocolFile.readline()
 
 class DBHandler:
     def __init__(self):
@@ -767,7 +767,7 @@ def ParseRecipe(configFileName, recipeName, experiment):
         if not CheckCommand(line[0]):
             if unsplitline[0] != '#':
                 lineName = line[0][0:-1]
-                uncutLine = line[1:] #everything except the line name
+                uncutLine = line[1:]
                 experiment.recipes[recipeName].lineCounter += 1
                 lineNo = experiment.recipes[recipeName].lineCounter
                 recipeLine = []
@@ -778,17 +778,17 @@ def ParseRecipe(configFileName, recipeName, experiment):
         else:
             LineToList(line, configFileName, experiment)
 
-def ParseTemplate(configFileName, templateName, experiment):
+def ParseProtocol(configFileName, protocolName, experiment):
     line = configFileName.readline()
     command = ''
-    template = experiment.templates[templateName]
+    protocol = experiment.protocols[protocolName]
     if line.strip():
         test = CheckCommand(line.split()[0])
         if test:
             command = test['name']
-    if command != 'endtemplate':
-        template.addInfo(line)
-        ParseTemplate(configFileName, templateName, experiment)
+    if command != 'endprotocol':
+        protocol.addInfo(line)
+        ParseProtocol(configFileName, protocolName, experiment)
     else:
         LineToList(line.split(), configFileName, experiment)
 
@@ -866,11 +866,11 @@ def LineToList(line, configFileName, experiment):
                 else:
                     experiment.errorLog('Error. Wrong parameter count in line "' + ' '.join(line) + '"')
 
-            elif command['name'] == 'template':
-                templateInfo = {'name' : line[1], 'variables' : line[2:]}
-                template = Template(templateInfo)
-                experiment.add(command['name'], template.name, template)
-                ParseTemplate(configFileName, template.name, experiment)
+            elif command['name'] == 'protocol':
+                protocolInfo = {'name' : line[1], 'variables' : line[2:]}
+                protocol = Protocol(protocolInfo)
+                experiment.add(command['name'], protocol.name, protocol)
+                ParseProtocol(configFileName, protocol.name, experiment)
 
             elif command['name'] == 'use':
                 templateName = line[1]
@@ -918,7 +918,7 @@ def ParseFile(filename, experiment):
         LineToList(oneline, filename, experiment)
         line = filename.readline()
     logname = 'logs/experiment' + experiment.ID + '.log'
-    SaveToFile(experiment.logger, logname) #save log
+    SaveToFile(experiment.logger, logname)
     db = DBHandler()
     db.updateExperiment(experiment)
 

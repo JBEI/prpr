@@ -24,8 +24,8 @@ def CheckCommand(command):
             'message'       : ['MESSAGE', 'PROMPT']
         },
         'function' : {
-            'template'      : ['TEMPLATE', 'PROTOCOL'],
-            'endtemplate'   : ['ENDTEMPLATE', 'ENDPROTOCOL']
+            'protocol'      : ['TEMPLATE', 'PROTOCOL'],
+            'endprotocol'   : ['ENDTEMPLATE', 'ENDPROTOCOL']
         }
     }
 
