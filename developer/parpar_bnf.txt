@@ -1,8 +1,8 @@
 parpar_script ::= 	[<name> <EOL>]
-					<table> <EOL>
-					[<documentation_string> <EOL>]
-					[<definitions>]
-					<actions>
+			<table> <EOL>
+			[<documentation_string> <EOL>]
+			[<definitions>]
+			<actions>
 
 <name> ::= 'NAME' <any_text>
 
@@ -16,9 +16,9 @@ parpar_script ::= 	[<name> <EOL>]
 
 <number> ::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'   
 
-<documentation_string> ::= '"""' <EOL>
-<any_text> <EOL>
-'"""'
+<documentation_string> ::= 	'"""' <EOL>
+				<any_text> <EOL>
+				'"""'
 
 <definitions> ::= *(<plate> | <component> | <volume> | <recipe> | <protocol>) <EOL>
 
@@ -57,7 +57,7 @@ parpar_script ::= 	[<name> <EOL>]
 <volume_value> ::= <numeric_value>
 
 <recipe> ::= 	'RECIPE' <recipe_name> <EOL>
-				1*(<recipe_string>) <EOL>
+		1*(<recipe_string>) <EOL>
 
 <recipe_string> ::= <string_name>':' (<component_name> | <component_location> | (<plate_name> | <plate_nickname>)':'<wells>) (<volume_nickname> | <volume_value>)
 
@@ -66,8 +66,8 @@ parpar_script ::= 	[<name> <EOL>]
 <string_name> ::= <name>
 
 <protocol> ::= 	'PROTOCOL' <protocol_name> <protocol_varibles> <EOL>
-				*<protocol_line><EOL>
-				'ENDPROTOCOL'
+		*<protocol_line><EOL>
+		'ENDPROTOCOL'
 
 <protocol_name> ::= <name>
 
