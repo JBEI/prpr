@@ -152,7 +152,7 @@ function customizeMethods() {
         if (methods.indexOf(method) == -1) {
             methods.push(method);
             var me = method;
-            $('#newMethod').after().append('<div class="label method" id="' + me + '" onclick="makeDefault(\'' + me + '\')">' + me + '<i class="icon-remove icon-white pull-right" onclick="removeMethod(\'' + me + '\');"></i></div>');
+            $('#newMethod').after('<div class="label method" id="' + me + '" onclick="makeDefault(\'' + me + '\')">' + me + '<i class="icon-remove icon-white pull-right" onclick="removeMethod(\'' + me + '\');"></i></div>');
             $('#userMethod').val('');
             $('#methodsList').val(methods);
         }

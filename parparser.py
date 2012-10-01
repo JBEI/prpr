@@ -41,6 +41,7 @@ class Experiment:
         self.errorLogger = []
         self.protocols = {}
         self.addMethods(userMethods, db.getMethods())
+        self.group = {} #note: group{name:[component1],[component2]}
 
     def addName(self, name):
         self.name = name
@@ -72,6 +73,8 @@ class Experiment:
             self.recipes[itemName] = itemInfo
         elif target == 'protocol':
             self.protocols[itemName] = itemInfo
+        elif target == 'group':
+            self.groups[itemName] = itemInfo
 
     def addMethods(self, userMethods, methods):
         if userMethods:
@@ -376,10 +379,35 @@ class Experiment:
         originalLine = ' '.join(splitLine)
         transferInfo = splitLine[1:]
 
+        def CheckMultiplier(componentInfo):
+            """
+            Checks for additional actions on components
+            """
+            pipe = componentInfo.split('|')
+            times = componentInfo.split('*')
+            pipe.insert(0,'|')
+            times.insert(0,'*')
+            if len(pipe) > 2:
+                return pipe
+            elif len(times) > 2:
+                return times
+            else:
+                return componentInfo
+
         if len(transferInfo) >= 4:
             self.addComment('------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
             self.testindex += 1
-            source = transferInfo[0]
+
+            #check the source for multipliers
+            check = CheckMultiplier(transferInfo[0])
+            mult = ()
+            if len(check) == 3:
+                mult = (check[0], check[2])
+                source = check[1]
+            else:
+                source = check
+            print('---', transferInfo[0], mult)
+
             if transferInfo[1] not in self.components:
                 dest = Component({'name' : transferInfo[1], 'location' : transferInfo[1], 'method' : self.methods[0]})
                 self.add('component', dest.name, dest)
