@@ -87,9 +87,11 @@ parpar_script ::= 	[<name> <EOL>]
 
 <times> ::= <numeric_value>
 
-<spread> ::= 'SPREAD' (<component_name> | <location>) <destination> (<volume_nickname> | <volume_value>) <method> <options>
+<spread> ::= 'SPREAD' (<component_name> | <location>)[<modifier>] <destination> (<volume_nickname> | <volume_value>) <method> <options>
 
-<transfer> ::= 'TRANSFER' (<component_name> | <location>) <destination> (<volume_nickname> | <volume_value>) <method> <options>
+<transfer> ::= 'TRANSFER' (<component_name> | <location>)[<modifier>] <destination> (<volume_nickname> | <volume_value>) <method> <options>
+
+<modifier> ::= '|'<number> | '*'<number>
 
 <use> ::= 'USE' <protocol_name> <variable_values>
 
