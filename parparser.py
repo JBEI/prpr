@@ -54,7 +54,7 @@ class Experiment:
     def add(self, target, itemName, itemInfo):
         """
         usage: add(target, name, info)
-        target: component|plate|volume|recipe|protocol
+        target: component|plate|volume|recipe|protocol|group
         """
         self.log('Added a ' + target + ' "' + itemName + '"')
         if target == 'component':
@@ -302,7 +302,6 @@ class Experiment:
                 else:
                     location = comp.location
 
-                print('!!!!!', location)
                 return {'src' : location, 'dst' : destination, 'volume' : self.splitAmount(volume), 'method' : method, 'type' : 'transfer'}
             else:
                 if not methodError:
@@ -422,7 +421,6 @@ class Experiment:
                 source = check[1]
             else:
                 source = check
-            print('---', transferInfo[0], modifier)
 
             if transferInfo[1] not in self.components:
                 dest = Component({'name' : transferInfo[1], 'location' : transferInfo[1], 'method' : self.methods[0]})
@@ -434,7 +432,6 @@ class Experiment:
             method = transferInfo[3]
 
             transferLine = self.createTransfer(source, modifier, destination, volume, method, originalLine)
-            print ('......', transferLine)
             if transferLine:
                 newTr = False
 
