@@ -267,7 +267,7 @@ class Experiment:
             self.log('Error. No ' + target + ' "' + itemName + '" defined.')
             self.errorLog('Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
 
-    def createTransfer(self, component, destination, volume, transferMethod, line):
+    def createTransfer(self, component, modifier, destination, volume, transferMethod, line):
         if component in self.components or ':' in component:
             if component in self.components:
                 comp = self.components[component]
@@ -288,7 +288,22 @@ class Experiment:
                     self.log('Wrong method "' + transferMethod + '"')
                     self.errorLog('Error. Wrong method "' + transferMethod + '" in line "' + line + '"')
             if method:
-                return {'src' : comp.location, 'dst' : destination, 'volume' : self.splitAmount(volume), 'method' : method, 'type' : 'transfer'}
+                location = []
+                if modifier:
+                    times = int(modifier[1])
+                    if modifier[0] == '|':
+                        for well in comp.location:
+                            for i in range (0, times):
+                                location.append(well)
+                    if modifier[0] == '*':
+                        for i in range (0, times):
+                            for well in comp.location:
+                                location.append(well)
+                else:
+                    location = comp.location
+
+                print('!!!!!', location)
+                return {'src' : location, 'dst' : destination, 'volume' : self.splitAmount(volume), 'method' : method, 'type' : 'transfer'}
             else:
                 if not methodError:
                     self.errorLog('Error. No method defined in line "' + line + '"')
@@ -342,7 +357,8 @@ class Experiment:
                                 volume = el[0][1]
                                 destination = el[1]
                                 transferMethod = line[2]
-                                transaction = self.createTransfer(component, destination, volume, transferMethod, originalLine)
+                                modifier = ()
+                                transaction = self.createTransfer(component, modifier, destination, volume, transferMethod, originalLine)
                                 if transaction:
                                     transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
                                     transferString.append(transaction)
@@ -400,13 +416,13 @@ class Experiment:
 
             #check the source for multipliers
             check = CheckMultiplier(transferInfo[0])
-            mult = ()
+            modifier = ()
             if len(check) == 3:
-                mult = (check[0], check[2])
+                modifier = (check[0], check[2])
                 source = check[1]
             else:
                 source = check
-            print('---', transferInfo[0], mult)
+            print('---', transferInfo[0], modifier)
 
             if transferInfo[1] not in self.components:
                 dest = Component({'name' : transferInfo[1], 'location' : transferInfo[1], 'method' : self.methods[0]})
@@ -417,7 +433,8 @@ class Experiment:
             volume = transferInfo[2]
             method = transferInfo[3]
 
-            transferLine = self.createTransfer(source, destination, volume, method, originalLine)
+            transferLine = self.createTransfer(source, modifier, destination, volume, method, originalLine)
+            print ('......', transferLine)
             if transferLine:
                 newTr = False
 
