@@ -41,7 +41,7 @@ class Experiment:
         self.errorLogger = []
         self.protocols = {}
         self.addMethods(userMethods, db.getMethods())
-        self.group = {} #note: group{name:[component1],[component2]}
+        self.groups = {} #note: group{name:[component1, component2]}
 
     def addName(self, name):
         self.name = name
