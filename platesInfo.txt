@@ -25,6 +25,7 @@ DiTi 50ul MCA 384,16x24
 Wash Station Cleaner deep,8x1
 Wash Station Waste,8x1
 Balance Mettler Active,1x1
+Trough 25ml,1x1
 Trough 100ml,1x1
 Trough 300ml MCA,1x1
 Tube 13*100mm 16 Pos,16x1
@@ -48,3 +49,4 @@ Trough 125ml MCA96,1x1
 Trough 250ml MCA96,1x1
 Trough 60ml MCA384,16x24
 Wash Block MCA96,8x12
+48 Well DeepWell,8x6

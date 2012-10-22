@@ -203,21 +203,23 @@ class Experiment:
         for line in newLoc:
             plateAndWells = line.split(':')
             if plateAndWells[0]:
-                plateName = self.plates[plateAndWells[0]].name
-                plateDms = self.plates[plateAndWells[0]].dimensions
-                plateLocation = self.plates[plateAndWells[0]].location
+                if plateAndWells[0] in self.plates:
+                    plateName = self.plates[plateAndWells[0]].name
+                    plateDms = self.plates[plateAndWells[0]].dimensions
+                    plateLocation = self.plates[plateAndWells[0]].location
 
-                if plateAndWells[1]:
-                    wells =  ParseWells(plateAndWells[1], plateDms)
-                    for well in wells:
-                        if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
-                            print('aiaiaiaiaiaiaiai!!!!')
-                        w = Well({'Plate' : plateName, 'Location' : well}) #todo: append well only if there are no same wells registered; otherwise error
-                        loc.append(w)
-                        self.wells.append(w)
+                    if plateAndWells[1]:
+                        wells =  ParseWells(plateAndWells[1], plateDms)
+                        for well in wells:
+                            if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
+                                print('aiaiaiaiaiaiaiai!!!!')
+                            w = Well({'Plate' : plateName, 'Location' : well}) #todo: append well only if there are no same wells registered; otherwise error
+                            loc.append(w)
+                            self.wells.append(w)
 #                    else:
 #                        self.errorLog('Error. No wells in location "' + str(location) + '"')
-
+                else:
+                    self.errorLog('Error. No such plate in the system "' + str(plateAndWells[0]) + '"')
             else:
                 self.errorLog('Error. No plate in location "' + str(location) + '"')
         return loc
@@ -269,6 +271,7 @@ class Experiment:
 
     def createTransfer(self, component, modifier, destination, volume, transferMethod, line):
         if component in self.components or ':' in component:
+#            if component in self.groups: #better parse groups
             if component in self.components:
                 comp = self.components[component]
             else:
@@ -302,7 +305,9 @@ class Experiment:
                 else:
                     location = comp.location
 
-                return {'src' : location, 'dst' : destination, 'volume' : self.splitAmount(volume), 'method' : method, 'type' : 'transfer'}
+                transferDict = {'src' : location, 'dst' : destination, 'volume' : self.splitAmount(volume), 'method' : method, 'type' : 'transfer'}
+                return transferDict
+
             else:
                 if not methodError:
                     self.errorLog('Error. No method defined in line "' + line + '"')
@@ -428,6 +433,8 @@ class Experiment:
             else:
                 dest = self.components[transferInfo[1]]
             destination = dest.location
+            print('dest___...___', dest.__dict__)
+            print('destination______', destination)
             volume = transferInfo[2]
             method = transferInfo[3]
 
@@ -441,6 +448,8 @@ class Experiment:
 
                 elif type == 'spread':
                     newTr = zip(cycle(transferLine['src']), transferLine['dst'])
+
+                print('newtr__', newTr)
 
                 transfer = []
 

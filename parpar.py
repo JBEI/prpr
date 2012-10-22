@@ -112,6 +112,7 @@ class ParPar:
         print('Translation log location: ' + logname)
 
     def message(self, message):
+        self.addWash()
         command = 'UserPrompt("' + message + '",0,-1);'
         self.config(command)
 
