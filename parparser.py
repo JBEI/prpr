@@ -960,7 +960,7 @@ def ParseFile(filename, experiment):
     ParseFile reads the file string by string
     Usage:
     filename - full path to the file in relation to current folder
-    experiment - an oblect of a class Experiment()
+    experiment - an object of a class Experiment()
     """
     global expName
     global setList
