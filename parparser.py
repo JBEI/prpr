@@ -225,6 +225,7 @@ class Experiment:
         return loc
 
     def splitAmount(self, volume):
+        print (volume)
         maxVolume = int(self.maxVolume)
         if volume in self.volumes:
             amount = self.volumes[volume].amount

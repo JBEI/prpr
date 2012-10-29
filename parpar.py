@@ -209,24 +209,40 @@ class ParPar:
         """
         Creating the aspirate / dispense strings from the list of transfers
         """
+
+        totalTips = sum([x['volume'][1] for x in transferList])
+        trsNeeded = int(totalTips / self.maxTips)
+        trs = 1
+        if trsNeeded > 1:
+            trs = trsNeeded + 1
+
+        print('__******__', totalTips)
+
+        trList = []
+        for n in range(0, trs):
+            trList.append([])
+
         tr = self.splitTransaction(transferList)
         for element in tr:
             for command in commandsList:
 
-                trList = []
-                z = max([x['volume'][1] for x in element])
-                for n in range(0, z+1):
-                    trList.append([])
-
+#                trList = []
+#                z = max([x['volume'][1] for x in element])
+#                for n in range(0, z+1):
+#                    trList.append([])
                 tipNumber = 1
                 for e in element:
                     method = e['method']
+                    print('___volume___', e['volume'], command)
                     if command == 'Aspirate':
                         wellInfo = e['source']
                     elif command == 'Dispense':
                         wellInfo = e['destination']
+                    tip = tipNumber
                     for i in range(0, e['volume'][1]):
-                        trList[i].append({ 'command' : command, 'tipNumber' : tipNumber, 'wellInfo' : wellInfo, 'volume' : e['volume'][0], 'method' : method })
+#                        if len(element) < self.maxTips:
+
+                        trList[i].append({ 'command' : command, 'tipNumber' : tip, 'wellInfo' : wellInfo, 'volume' : e['volume'][0], 'method' : method })
                     if len(e['volume']) == 3:
                         trList[e['volume'][1]].append({ 'command' : command, 'tipNumber' : tipNumber, 'wellInfo' : wellInfo, 'volume' : e['volume'][2], 'method' : method })
                     tipNumber += 1
