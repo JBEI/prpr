@@ -163,7 +163,7 @@ class ParPar:
                                     gridAndSite = plateInfo['location']
                                     volume = volumesLine[0]
                                     tipsEncoding = volumesLine[1]
-                                    action = element['command']
+                                    action = previousElement['command']
                                     if action == 'Aspirate' or action == 'Dispense':
                                         method = element['method']
                                         self.command(action, tipsEncoding, gridAndSite, wellenc, method, volume)
@@ -211,42 +211,38 @@ class ParPar:
         """
 
         totalTips = sum([x['volume'][1] for x in transferList])
-        trsNeeded = int(totalTips / self.maxTips)
+        trsNeeded = totalTips / self.maxTips
         trs = 1
         if trsNeeded > 1:
-            trs = trsNeeded + 1
+            trs = int(trsNeeded) + 1
 
-        print('__******__', totalTips)
-
-        trList = []
-        for n in range(0, trs):
-            trList.append([])
-
+        trList = {'Aspirate' : [[] for n in range(0, max([x['volume'][1] for x in transferList]))],
+                       'Dispense' :  [[] for n in range(0, max([x['volume'][1] for x in transferList]))]}
         tr = self.splitTransaction(transferList)
         for element in tr:
             for command in commandsList:
-
-#                trList = []
-#                z = max([x['volume'][1] for x in element])
-#                for n in range(0, z+1):
-#                    trList.append([])
                 tipNumber = 1
                 for e in element:
                     method = e['method']
-                    print('___volume___', e['volume'], command)
                     if command == 'Aspirate':
                         wellInfo = e['source']
                     elif command == 'Dispense':
                         wellInfo = e['destination']
-                    tip = tipNumber
-                    for i in range(0, e['volume'][1]):
-#                        if len(element) < self.maxTips:
 
-                        trList[i].append({ 'command' : command, 'tipNumber' : tip, 'wellInfo' : wellInfo, 'volume' : e['volume'][0], 'method' : method })
+                    for x in range(0, e['volume'][1]):
+                        trList[command][x].append({ 'command' : command, 'wellInfo' : wellInfo, 'volume' : e['volume'][0], 'method' : method }) #, 'tipNumber' : tip
+
                     if len(e['volume']) == 3:
-                        trList[e['volume'][1]].append({ 'command' : command, 'tipNumber' : tipNumber, 'wellInfo' : wellInfo, 'volume' : e['volume'][2], 'method' : method })
-                    tipNumber += 1
-                self.transactions.append(trList)
+                        trList[command][e['volume'][1]].append({ 'command' : command, 'wellInfo' : wellInfo, 'volume' : e['volume'][2], 'method' : method })
+
+        aspirate = self.splitTransaction([j for i in trList['Aspirate'] for j in i])
+        dispense = self.splitTransaction([j for i in trList['Dispense'] for j in i])
+
+        for el in range (0, len(aspirate)):
+            for l in range(0, len(aspirate[el])):
+                aspirate[el][l]['tipNumber'] = l + 1
+                dispense[el][l]['tipNumber'] = l + 1
+            self.transactions.append([aspirate[el] + dispense[el]])
 
     def parseCommand(self, transferList):
         tr = self.splitTransaction(transferList)

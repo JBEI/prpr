@@ -225,7 +225,6 @@ class Experiment:
         return loc
 
     def splitAmount(self, volume):
-        print (volume)
         maxVolume = int(self.maxVolume)
         if volume in self.volumes:
             amount = self.volumes[volume].amount
@@ -434,8 +433,6 @@ class Experiment:
             else:
                 dest = self.components[transferInfo[1]]
             destination = dest.location
-            print('dest___...___', dest.__dict__)
-            print('destination______', destination)
             volume = transferInfo[2]
             method = transferInfo[3]
 
@@ -449,8 +446,6 @@ class Experiment:
 
                 elif type == 'spread':
                     newTr = zip(cycle(transferLine['src']), transferLine['dst'])
-
-                print('newtr__', newTr)
 
                 transfer = []
 
@@ -719,7 +714,6 @@ class DBHandler:
         methods = []
         message = 'SELECT Method FROM DefaultMethod'
         default = DBHandler.db(message)[0][0]
-        print('default', default)
         methods.append(default)
 
         message = 'SELECT Method FROM Methods'
@@ -727,7 +721,6 @@ class DBHandler:
         for row in list:
             methods.append(row[0])
         self.conn.commit()
-        print(methods)
         return methods
 
     @staticmethod
