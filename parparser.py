@@ -305,7 +305,9 @@ class Experiment:
                 else:
                     location = comp.location
 
-                transferDict = {'src' : location, 'dst' : destination, 'volume' : self.splitAmount(volume), 'method' : method, 'type' : 'transfer'}
+                volumeInfo = [self.splitAmount(x) for x in volume.split(',')]
+
+                transferDict = {'src' : location, 'dst' : destination, 'volume' : volumeInfo, 'method' : method, 'type' : 'transfer'}
                 return transferDict
 
             else:
@@ -365,6 +367,7 @@ class Experiment:
                                 transaction = self.createTransfer(component, modifier, destination, volume, transferMethod, originalLine)
                                 if transaction:
                                     transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
+                                    transaction['volume'] = transaction['volume'][0]
                                     transferString.append(transaction)
                             if transferString:
                                 self.transactionList.append(transferString)
@@ -442,18 +445,23 @@ class Experiment:
 
                 if type == 'transfer':
                     if len(transferLine['src']) == len(transferLine['dst']):
-                        newTr = zip(transferLine['src'], transferLine['dst'])
+                        newTr = enumerate(zip(transferLine['src'], transferLine['dst']))
 
                 elif type == 'spread':
-                    newTr = zip(cycle(transferLine['src']), transferLine['dst'])
+                    newTr = enumerate(zip(cycle(transferLine['src']), transferLine['dst']))
 
                 transfer = []
 
                 if newTr:
-                    for tr in newTr:
+                    vol = transferLine['volume']
+                    for i, tr in newTr:
                         trLine = deepcopy(transferLine)
                         trLine['src'] = tr[0]
                         trLine['dst'] = tr[1]
+                        if len(vol) == 1:
+                            trLine['volume'] = vol[0]
+                        else:
+                            trLine['volume'] = vol[i]
                         transfer.append(trLine)
                     self.transactionList.append(transfer)
 
