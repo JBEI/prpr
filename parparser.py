@@ -226,16 +226,12 @@ class Experiment:
 
     def splitAmount(self, volume):
         maxVolume = int(self.maxVolume)
-        if volume in self.volumes:
-            amount = self.volumes[volume].amount
-        else:
-            amount = volume
-        if amount.isdigit():
-            splitAmount = amount.split('.')
+        if volume.isdigit():
+            splitAmount = volume.split('.')
             if len(splitAmount) > 1: # works for small volumes only
-                amount = float(amount)
+                amount = float(volume)
             else:
-                amount = int(amount)
+                amount = int(volume)
             if amount < maxVolume:
                 return amount, 1
             else:
@@ -305,7 +301,12 @@ class Experiment:
                 else:
                     location = comp.location
 
-                volumeInfo = [self.splitAmount(x) for x in volume.split(',')]
+                if volume in self.volumes:
+                    amount = self.volumes[volume].amount
+                else:
+                    amount = volume
+
+                volumeInfo = [self.splitAmount(x) for x in amount.split(',')]
 
                 transferDict = {'src' : location, 'dst' : destination, 'volume' : volumeInfo, 'method' : method, 'type' : 'transfer'}
                 return transferDict
@@ -429,16 +430,16 @@ class Experiment:
                 source = check[1]
             else:
                 source = check
-
             if transferInfo[1] not in self.components:
                 dest = Component({'name' : transferInfo[1], 'location' : transferInfo[1], 'method' : self.methods[0]})
                 self.add('component', dest.name, dest)
+                dst = self.components[dest.name]
+
             else:
-                dest = self.components[transferInfo[1]]
-            destination = dest.location
+                dst = self.components[transferInfo[1]]
+            destination = dst.location
             volume = transferInfo[2]
             method = transferInfo[3]
-
             transferLine = self.createTransfer(source, modifier, destination, volume, method, originalLine)
             if transferLine:
                 newTr = False
@@ -451,7 +452,6 @@ class Experiment:
                     newTr = enumerate(zip(cycle(transferLine['src']), transferLine['dst']))
 
                 transfer = []
-
                 if newTr:
                     vol = transferLine['volume']
                     for i, tr in newTr:
@@ -461,7 +461,10 @@ class Experiment:
                         if len(vol) == 1:
                             trLine['volume'] = vol[0]
                         else:
-                            trLine['volume'] = vol[i]
+                            try:
+                                trLine['volume'] = vol[i]
+                            except IndexError:
+                                self.errorLog('Error in line "' + originalLine + '". The number of volumes in "' + volume + '" is less than number of source wells.')
                         transfer.append(trLine)
                     self.transactionList.append(transfer)
 
@@ -668,7 +671,7 @@ class DBHandler:
                     for volume in experiment.volumes:
                         v = experiment.volumes[volume]
                         volumeName = '"' + v.name + '"'
-                        volumeValue = v.amount
+                        volumeValue = '"' + v.amount + '"'
                         self.insert('Volumes', [expID, volumeName, volumeValue])
 
                 elif element == experiment.recipes:
@@ -892,11 +895,11 @@ def LineToList(line, configFileName, experiment):
 
             elif command['name'] == 'volume':
                 if len(line) == 3:
-                    if line[2].isdigit():
-                        volumeInfo = {'name': line[1], 'amount' : line[2]}
-                        experiment.add(command['name'], volumeInfo['name'], Volume(volumeInfo))
-                    else:
-                        experiment.errorLog('Error. Volume value should be a digit in line "' + ' '.join(line) + '"')
+#                    if line[2].isdigit():
+                    volumeInfo = {'name': line[1], 'amount' : line[2]}
+                    experiment.add(command['name'], volumeInfo['name'], Volume(volumeInfo))
+#                    else:
+#                        experiment.errorLog('Error. Volume value should be a digit in line "' + ' '.join(line) + '"')
                 else:
                     experiment.errorLog('Error. Please correct the volume info in line "' + ' '.join(line) + '"')
 
