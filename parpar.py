@@ -216,8 +216,8 @@ class ParPar:
         if trsNeeded > 1:
             trs = int(trsNeeded) + 1
 
-        trList = {'Aspirate' : [[] for n in range(0, max([x['volume'][1] for x in transferList]))],
-                       'Dispense' :  [[] for n in range(0, max([x['volume'][1] for x in transferList]))]}
+        trList = {'Aspirate' : [[] for n in range(0, max([x['volume'][1] + 1 for x in transferList]))],
+                       'Dispense' :  [[] for n in range(0, max([x['volume'][1] + 1 for x in transferList]))]}
         tr = self.splitTransaction(transferList)
         for element in tr:
             for command in commandsList:
