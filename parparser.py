@@ -109,6 +109,15 @@ class Experiment:
                 if '-' in well:
                     wellsList = well.split('-')
                     direction = 'horizontal'
+                elif '~' in well:
+                    tempWellsList = well.split('~')
+                    startWellCoords = GetWellCoordinates(tempWellsList[0], plateDimensions, str(location))
+                    endWellCoords = GetWellCoordinates(tempWellsList[1], plateDimensions, str(location))
+                    wellsAmount = (endWellCoords[0] - startWellCoords[0]) * plateDimensions[0] + endWellCoords[1] - startWellCoords[1] + 1
+                    print('(', endWellCoords[0], '-', startWellCoords[0], ') *', plateDimensions[0], '-', endWellCoords[1], '+', startWellCoords[1])
+                    print(startWellCoords, endWellCoords, plateDimensions, wellsAmount)
+                    wellsList = (tempWellsList[0], wellsAmount)
+                    direction = 'vertical'
                 if wellsList[0]:
                     startWell = wellsList[0]
                     rowsMax = plateDimensions[0]
@@ -475,7 +484,7 @@ class Experiment:
                             if a.startswith('mix'):
                                 mixoptions = a.split(':')
                                 if len(mixoptions) == 2:
-                                    transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dest.location}
+                                    transaction = {'type' : 'command', 'action' : 'mix', 'options' : mixoptions[1], 'location' : dst.location}
                                     self.transactionList.append([transaction])
                                 else:
                                     self.log('Error. Wrong mixing options in line "' + originalLine + '"')
