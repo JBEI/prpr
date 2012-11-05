@@ -1,4 +1,4 @@
-parpar_script ::= 	[<name> <EOL>]
+prpr_script ::= 	[<name> <EOL>]
 			<table> <EOL>
 			[<documentation_string> <EOL>]
 			[<definitions>]

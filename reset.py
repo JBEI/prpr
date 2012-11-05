@@ -3,11 +3,11 @@ __contact__ = 'me@ninastawski.com'
 
 import os
 
-def resetParpar():
+def resetPrpr():
     """
-    Removes all files from working directories, invokes parpar setup
+    Removes all files from working directories, invokes prpr setup
     """
-    os.remove('parpar.db')
+    os.remove('prpr.db')
     dirs = ['esc', 'incoming', 'logs', 'tables']
     for dir in dirs:
         files = os.listdir(dir)
@@ -17,4 +17,4 @@ def resetParpar():
     setup.setup()
 
 if __name__ == '__main__':
-    resetParpar()
+    resetPrpr()

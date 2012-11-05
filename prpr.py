@@ -5,7 +5,7 @@ __version__ = '0.3'
 import os
 import sqlite3
 
-class ParPar:
+class Prpr:
     wash = 'Wash(255,1,1,1,0,"2",500,"1.0",500,20,70,30,1,1,1000);'
     def __init__(self, ID):
         self.expID = ID
@@ -305,7 +305,7 @@ class ParPar:
 
 class DatabaseHandler:
     def __init__(self, expID):
-        self.conn = sqlite3.connect('parpar.db')
+        self.conn = sqlite3.connect('prpr.db')
         self.crsr = self.conn.cursor()
         self.expID = str(expID)
         self.maxTips = self.getMaxTips()
@@ -381,7 +381,7 @@ class DatabaseHandler:
 
     @staticmethod
     def db(request):
-        conn = sqlite3.connect('parpar.db')
+        conn = sqlite3.connect('prpr.db')
         c = conn.cursor()
         c.execute(request)
         q = c.fetchall()
@@ -392,7 +392,7 @@ class DatabaseHandler:
 
 
 if __name__ == '__main__':
-    parpar = ParPar(310)
+    prpr = Prpr(310)
     print('Robot Config:')
-    for element in parpar.robotConfig:
+    for element in prpr.robotConfig:
         print(element)

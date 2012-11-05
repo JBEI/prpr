@@ -1,8 +1,8 @@
 /**
- * parpar.js, a part of PaR-PaR, a biology-friendly language for liquid-transferring robots
+ * prpr.js, a part of PR-PR, a biology-friendly language for liquid-transferring robots
  * Author: Nina Stawski, nstawski@lbl.gov, me@ninastawski.com
  * Copyright 2012, Lawrence Berkeley National Laboratory
- * http://github.com/JBEI/parpar/blob/master/license.txt
+ * http://github.com/JBEI/prpr/blob/master/license.txt
  */
 
 function clicked() {
@@ -68,7 +68,7 @@ function ParseTableData(data) {
         $('#tablerow').append('<div id="row' + j + '"></div>');
 
         for (var i=1; i <= 30; i++) {
-            $('#row' + j).append('<div class="parpar-grid grid-empty" id="' + i + '"></div>');
+            $('#row' + j).append('<div class="prpr-grid grid-empty" id="' + i + '"></div>');
         }
         $('#row' + j).children('#1').removeClass('grid-empty').addClass('grid-system').append('<div class="rotate">system</div>').attr({'rel' : 'tooltip', 'title' : 'Wash station'});
     }
@@ -178,9 +178,9 @@ function removeMethod(method) {
 function makeDefault(method) {
     console.log(methods);
     $('.method').removeClass('label-info');
-    $('#parpar-default').remove();
+    $('#prpr-default').remove();
     $('#' + method).addClass('label-info');
-    $('#' + method).append('<i class="icon-star icon-white pull-right" id="parpar-default"></i>');
+    $('#' + method).append('<i class="icon-star icon-white pull-right" id="prpr-default"></i>');
     var ind = methods.indexOf(method);
     methods.splice(ind,1);
     methods.unshift(method);

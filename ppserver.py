@@ -5,8 +5,8 @@ __version__ = '0.3'
 import bottle
 from bottle import *
 import os
-#from parpar import *
-from parparser import *
+#from prpr import *
+from prparser import *
 from tempfile import TemporaryFile
 
 
@@ -16,7 +16,7 @@ robotTips = 8
 maxAm = 150
 
 @route('/')
-def parpar():
+def prpr():
     return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[], tables=GetDefaultTables(), version=__version__)
 
 @route('/preview')
@@ -66,7 +66,7 @@ def plates():
 
 @post('/sample')
 def sample():
-    config = open('parpar_sample.par', 'r')
+    config = open('prpr_sample.par', 'r')
     return config.readlines()
 
 @post('/getconfig')
@@ -118,18 +118,18 @@ def config():
             return template('pages' + os.sep + 'page.html', file = '', btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
 
         elif experiment.testindex:
-            parpar = ParPar(expID)
+            prpr = Prpr(expID)
             file = 'config' + str(expID) + '.esc'
             log = 'experiment' + str(expID) + '.log'
             successList.append("Your configuration file has been successfully processed.")
             return template('pages' + os.sep + 'page.html', file = file, btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
 
         else:
-            errorList.append("Your configuration file doesn't contain any actions. Please refer to PaR-PaR howto guide.")
+            errorList.append("Your configuration file doesn't contain any actions. Please refer to PR-PR howto guide.")
             return template('pages' + os.sep + 'page.html', file = '', btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
 
     else:
-        errorList.append("Your configuration file doesn't contain any actions. Please refer to PaR-PaR howto guide.")
+        errorList.append("Your configuration file doesn't contain any actions. Please refer to PR-PR howto guide.")
         return template('pages' + os.sep + 'page.html', file = '', btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
 
 @route('/static/:path#.+#', name='static')

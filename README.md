@@ -1,4 +1,4 @@
-PaR-PaR alpha v.03
+PR-PR alpha v.03
 ==================
 
 Simple web mode:
@@ -13,17 +13,17 @@ Simple console mode:
 	python3 setup.py
 	python3 ppserver.py your_config_file.par
 
-PaR-PaR google group:
+PR-PR google group:
 ------------------
 
-https://groups.google.com/forum/#!forum/par-par
+https://groups.google.com/forum/#!forum/PR-PR
 
 
 
-Advanced PaR-PaR setup and installation
+Advanced PR-PR setup and installation
 ==================
 
-PaR-PaR has certain customizable parts you can change to your liking to make it work with your Tecan robot.
+PR-PR has certain customizable parts you can change to your liking to make it work with your Tecan robot.
 Currently, there are two customizations supported: plate names and liquid classes (methods).
 
 

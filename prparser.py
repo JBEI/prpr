@@ -6,9 +6,9 @@ import sys
 import os
 import argparse
 import sqlite3
-from parpar import *
+from prpr import *
 from shutil import copyfile
-from parpar_commands import *
+from prpr_commands import *
 from itertools import cycle
 from copy import deepcopy
 
@@ -579,7 +579,7 @@ class Protocol:
 
 class DBHandler:
     def __init__(self):
-        self.conn = sqlite3.connect('parpar.db')
+        self.conn = sqlite3.connect('prpr.db')
         self.crsr = self.conn.cursor()
 
     def createExperiment(self, experiment):
@@ -756,7 +756,7 @@ class DBHandler:
 
     @staticmethod
     def db(request):
-        conn = sqlite3.connect('parpar.db')
+        conn = sqlite3.connect('prpr.db')
         c = conn.cursor()
         c.execute(request)
         q = c.fetchall()
@@ -996,9 +996,9 @@ if __name__ == '__main__':
     ParseConfigFile(experiment)
 
     if not len(experiment.errorLogger):
-        parpar = ParPar(experiment.ID)
+        prpr = Prpr(experiment.ID)
         print('Robot Config:')
-        for element in parpar.robotConfig:
+        for element in prpr.robotConfig:
             print(element)
         print('Done. Check config.')
 
