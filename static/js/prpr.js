@@ -1,5 +1,5 @@
 /**
- * prpr.js, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-transferring robots
+ * prpr.js, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-handling robots
  * Author: Nina Stawski, nstawski@lbl.gov, me@ninastawski.com
  * Copyright 2012, Lawrence Berkeley National Laboratory
  * http://github.com/JBEI/prpr/blob/master/license.txt
