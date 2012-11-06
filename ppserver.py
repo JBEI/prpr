@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 __author__ = 'Nina Stawski'
-__version__ = '0.3'
+__version__ = '0.32'
 
 import bottle
 from bottle import *
