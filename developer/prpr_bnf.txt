@@ -97,4 +97,4 @@ prpr_script ::= 	[<name> <EOL>]
 
 <protocol_name> ::= <name>
 
-<variable_values ::= *(<component_name> | <location> | <volume_nickname> | <volume_value> | <method> | <option> | <recipe_name)
+<variable_values ::= *(<component_name> | <location> | <volume_nickname> | <volume_value> | <method> | <option> | <recipe_name>)
