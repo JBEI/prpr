@@ -2,7 +2,7 @@ NAME 	BreakfastDrinks
 TABLE     BreakfastDrinks.ewt
 
 """
-Recipe for breakfast drinks.
+Recipe for breakfast drinks
 """
 
 #         alias        name

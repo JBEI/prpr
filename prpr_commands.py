@@ -1,5 +1,5 @@
 __author__ = 'Nina Stawski'
-__version__ = '0.3'
+__version__ = '0.32'
 
 def CheckCommand(command):
     """
