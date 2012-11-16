@@ -1,0 +1,108 @@
+//-
+   Author: Nina Stawski
+   Contact: me@ninastawski.com
+extends layout
+
+block script
+    script
+        $(document).ready(function () {
+
+            var tablesList = {{!tables}};
+            for (var i = 0; i < tablesList.length; i++) {
+                $('#tables').append('<option value="' + tablesList[i] + '">' + tablesList[i] + '</option>')
+            }
+
+            var alertError = {{!alerterror}};
+            var alertSuccess = {{!alertsuccess}};
+
+            if (alertError.length > 0) {
+                errors = removeDuplicates(alertError);
+                for (var err in errors) {
+                    //noinspection JSUnfilteredForInLoop
+                    $('#form').before('<div class="alert alert-error">' +
+                            '<button class="close" data-dismiss="alert">×</button>' +
+                            alertError[err] + '</div>');
+                }
+            }
+
+            if (alertSuccess.length > 0) {
+                results = removeDuplicates(alertSuccess);
+                for (var success in results) {
+                    //noinspection JSUnfilteredForInLoop
+                    $('#form').before('<div class="alert alert-success">' +
+                            '<button class="close" data-dismiss="alert">×</button>' +
+                            alertSuccess[success] + '</div>');
+                }
+                $('#methods').before('<div class="span4" id="result">' +
+                        '<div class="span3"><h4>Result</h4></div>' +
+                        '   <div class="span3 well">' +
+                        '       <form action="/download/{{file}}">' +
+                        '           <button class="btn {{btn}}">Download</button> {{file}}' +
+                        '       </form>' +
+                        '   </div>' +
+                        '</div>');
+            }
+        })
+
+block content
+    .span8
+        h2 Welcome to
+            img(src="static/img/favicon.ico", alt="PR-PR favicon")
+            |  PR-PR!
+
+        p A new simple way to make your experiments faster.<br/>Write your code in the window below, add a table file and click 'Prepare robot file'.<br/>The resulting file will be available for you to download on the right.
+        p
+            a(href="/copyright") Copyright
+            | &nbsp;&nbsp;::&nbsp;&nbsp;
+            a(href="/disclaimer") Disclamer
+            | &nbsp;&nbsp;::&nbsp;&nbsp;
+            a(href="http://pubs.acs.org/doi/abs/10.1021/sb300075t") Paper
+            | &nbsp;&nbsp;::&nbsp;&nbsp;
+            a(href="https://github.com/JBEI/prpr") Get code
+
+        p
+            a(href="static/pdf/PR-PR-v0.33-howto.pdf") PR-PR Howto guide (PDF)
+            | &nbsp;&nbsp;::&nbsp;&nbsp;
+            a#sampleScript(onclick="LoadSampleScript()") Load sample script
+
+    .span1.inline.pull-right
+        a.label.label-info(href="mailto:nstawski@lbl.gov?subject=PR-PR%20v.{{version}}%20feedback") Version {{version}}
+
+    .span12
+        .row#script
+            span.pull-right
+                a#methodsToggle(onclick="$('#methods').removeClass('hidden');") Setup custom methods
+            .span8
+                h4 Script
+
+                #myModal.modal.hide.fade.prpr-modal
+                    .modal-header
+                        button.close(type="button", data-dismiss="modal") ×
+                        h3#platename Plate file name
+                    .modal-body
+                        #tablerow
+                    .modal-footer
+                        a.btn(data-dismiss="modal") Close
+
+                form#form(action="/getconfig", method="post", enctype="multipart/form-data")
+                    .controls#table
+                        select#tables.span3(name="tableselect", onchange="clicked();")
+                            option(value="select") Select table file
+                        input#data.span3(type="file", name="data", onchange="AppendUploadButton()")
+                    textarea#textarea.input-large.span8(rows="30", name="text") {{text}}
+                    button.btn.pull-right(type="submit", name="upload") Prepare robot file
+
+                    textarea#methodsList.hidden(name="methods")
+            #methods.span4.hidden
+                .span3
+                    h5 Custom methods
+                    .input-append#newMethod
+                        input#userMethod.span3(size="16", type="text")
+                        button.button(type="button", onclick="customizeMethods();") Add new
+
+
+    .span12
+        footer
+            p If you have questions or comments, email <a href="mailto:nstawski@lbl.gov?subject=PR-PR%20v.{{version}}%20feedback">Nina Stawski</a>
+            p
+                small(style="color:gray") This programming language was previously known as "PaR-PaR", which is not associated with PaR Systems, Inc. which claims ownership of the "PaR" mark.
