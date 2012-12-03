@@ -1,0 +1,80 @@
+//-
+   Author: Nina Stawski
+   Contact: me@ninastawski.com
+extends layout
+block style
+    link(href='static/css/prpr-mf.css', rel='stylesheet')
+block script
+    script(src='static/js/jsPlumb.min.js')
+    script
+        $(document).ready(function () {
+            var counter = 0;
+            var grid = [45,45]
+            $('#wellSrc').draggable({
+                helper: "clone",
+                grid: grid
+            });
+            $('#field').droppable({
+                accept: "#wellSrc",
+                drop: function(event, ui) {
+                    var clone = $('#wellSrc').clone(false);
+                    var top = ui.helper.position()['top'];
+                    var left = ui.helper.position()['left'];
+                    clone.attr('id', counter).css({'top' : top, 'left' : left, 'position' : 'absolute'}).addClass('mf-well').appendTo('#field');
+                    $('#' + counter).draggable({
+                        drag: function(event, ui) {
+                            jsPlumb.repaintEverything();
+                        },
+                        stop: function(event, ui) {
+                            jsPlumb.repaintEverything();
+                        },
+                        grid: grid
+                    });
+                    jsPlumb.addEndpoint('' + counter + '', {
+                            anchor: [0.5,0.5,0,-1],
+                            maxConnections: 20,
+                            connector: "Straight"
+                        },
+                        {
+                            isSource:true,
+                            isTarget:true
+                        });
+                    counter += 1;
+                }
+        });
+        jsPlumb.bind("dblclick", function(connection, originalEvent) {
+            jsPlumb.detach({
+                source: connection.sourceId,
+                target: connection.targetId
+            });
+            });
+        jsPlumb.importDefaults({
+            PaintStyle: { lineWidth : 5, strokeStyle : "#456" }
+        });
+        });
+
+        function getConnectionInfos() {
+            var connections = jsPlumb.getConnections();
+            for (i = 0; i < connections.length; i++) {
+                var connection = connections[i];
+                console.log(connection.sourceId, connection.targetId);
+            }
+            console.log(jsPlumb.getConnections());
+        };
+
+        function getPositionString() {
+            var position = '';
+            $('.mf-well').each(function() {
+                var id = this.id;
+                var top = $('#' + id).position()['top'];
+                var left = $('#' + id).position()['left'];
+                position += (id + ':' + top + ',' + left + ';');
+            });
+            console.log(position);
+        };
+
+block content
+    #source
+        .prpr-well.x4x6.mf#wellSrc
+
+    .wells#field(style="height: 800px; border: 1px solid #456;")

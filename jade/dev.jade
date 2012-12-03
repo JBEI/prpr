@@ -1,0 +1,51 @@
+//-
+   Author: Nina Stawski
+   Contact: me@ninastawski.com
+extends layout
+
+block script
+    script
+        function createGrid(width, height) {
+            for (var i = 1; i <= height; i++) {
+                $('#microfluidic-table').append('<div id="row' + i + '" class="mfrow"></div>');
+                    for (var j = 1; j<= width; j++) {
+                        var gridType = "";
+                        if (i == 1) { gridType += 'mf-top ' };
+                        if (i == height) { gridType += 'mf-bottom '};
+                        if (j == 1) { gridType += 'mf-left ' };
+                        if (j == width) { gridType += 'mf-right '};
+                        $('#row' + i).append('<div id="' + i + '' + j + '" class="mfgrid ' + gridType + '"></div>');
+                }
+            }
+        };
+
+block style
+    style
+        .mfrow {
+            height: 20px;
+        }
+        .mfgrid {
+            height: 20px;
+            width: 20px;
+            border: 1px solid #eee;
+            display: inline-block;
+            margin: 0;
+            padding: 0;
+        }
+        .mf-top {
+            border-top: white;
+        }
+        .mf-bottom {
+            border-bottom: white;
+        }
+        .mf-left {
+            border-left: white;
+        }
+        .mf-right {
+            border-right: white;
+        }
+
+block content
+    #microfluidic-table
+        script
+            createGrid(21,21);

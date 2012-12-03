@@ -19,7 +19,8 @@ block script
                 errors = removeDuplicates(alertError);
                 for (var err in errors) {
                     //noinspection JSUnfilteredForInLoop
-                    $('#form').before('<div class="alert alert-error">' +
+                                                //-                    $('#form').before('<div class="alert alert-error">' +
+                    $('#result').append('<div class="alert alert-error">' +
                             '<button class="close" data-dismiss="alert">×</button>' +
                             alertError[err] + '</div>');
                 }
@@ -29,80 +30,99 @@ block script
                 results = removeDuplicates(alertSuccess);
                 for (var success in results) {
                     //noinspection JSUnfilteredForInLoop
-                    $('#form').before('<div class="alert alert-success">' +
-                            '<button class="close" data-dismiss="alert">×</button>' +
-                            alertSuccess[success] + '</div>');
+                    $('#result').append('<form action="/download/{{file}}" class="form-inline">' +
+                            '<div class="alert alert-success ">' +
+                            alertSuccess[success] +
+                            '&nbsp;&nbsp;&nbsp;&nbsp;' +
+                            '<button class="btn {{btn}}">Download&nbsp;{{file}}</button>' +
+                            '</div></form>');
                 }
-                $('#methods').before('<div class="span4" id="result">' +
-                        '<div class="span3"><h4>Result</h4></div>' +
-                        '   <div class="span3 well">' +
-                        '       <form action="/download/{{file}}">' +
-                        '           <button class="btn {{btn}}">Download</button> {{file}}' +
-                        '       </form>' +
-                        '   </div>' +
-                        '</div>');
             }
         })
 
 block content
-    .span8
-        h2 Welcome to
-            img(src="static/img/favicon.ico", alt="PR-PR favicon")
-            |  PR-PR!
+    .row
+        .span7
+            h2 Welcome to
+                nobr
+                    img(src="static/img/favicon.ico", alt="PR-PR favicon")>
+                    | PR-PR!
+        .span5
+            .pull-right
+                a.label.label-info(href="mailto:nstawski@lbl.gov?subject=PR-PR%20v.{{version}}%20feedback") Version {{version}}
+            .pull-right
+                a(href="http://pubs.acs.org/doi/abs/10.1021/sb300075t") Paper
+                | &nbsp;&nbsp;::&nbsp;&nbsp;
+                a(href="/copyright") Copyright
+                | &nbsp;&nbsp;::&nbsp;&nbsp;
+                a(href="/disclaimer") Disclaimer
+                | &nbsp;&nbsp;::&nbsp;&nbsp;
+                a(href="https://github.com/JBEI/prpr") Get code
+                | &nbsp;&nbsp;::&nbsp;&nbsp;
 
-        p A new simple way to make your experiments faster.<br/>Write your code in the window below, add a table file and click 'Prepare robot file'.<br/>The resulting file will be available for you to download on the right.
-        p
-            a(href="/copyright") Copyright
-            | &nbsp;&nbsp;::&nbsp;&nbsp;
-            a(href="/disclaimer") Disclamer
-            | &nbsp;&nbsp;::&nbsp;&nbsp;
-            a(href="http://pubs.acs.org/doi/abs/10.1021/sb300075t") Paper
-            | &nbsp;&nbsp;::&nbsp;&nbsp;
-            a(href="https://github.com/JBEI/prpr") Get code
-
-        p
-            a(href="static/pdf/PR-PR-v0.33-howto.pdf") PR-PR Howto guide (PDF)
-            | &nbsp;&nbsp;::&nbsp;&nbsp;
-            a#sampleScript(onclick="LoadSampleScript()") Load sample script
-
-    .span1.inline.pull-right
-        a.label.label-info(href="mailto:nstawski@lbl.gov?subject=PR-PR%20v.{{version}}%20feedback") Version {{version}}
-
-    .span12
-        .row#script
-            span.pull-right
-                a#methodsToggle(onclick="$('#methods').removeClass('hidden');") Setup custom methods
-            .span8
-                h4 Script
-
-                #myModal.modal.hide.fade.prpr-modal
-                    .modal-header
-                        button.close(type="button", data-dismiss="modal") ×
-                        h3#platename Plate file name
-                    .modal-body
-                        #tablerow
-                    .modal-footer
-                        a.btn(data-dismiss="modal") Close
-
-                form#form(action="/getconfig", method="post", enctype="multipart/form-data")
-                    .controls#table
-                        select#tables.span3(name="tableselect", onchange="clicked();")
-                            option(value="select") Select table file
-                        input#data.span3(type="file", name="data", onchange="AppendUploadButton()")
-                    textarea#textarea.input-large.span8(rows="30", name="text") {{text}}
-                    button.btn.pull-right(type="submit", name="upload") Prepare robot file
-
-                    textarea#methodsList.hidden(name="methods")
-            #methods.span4.hidden
-                .span3
-                    h5 Custom methods
-                    .input-append#newMethod
-                        input#userMethod.span3(size="16", type="text")
-                        button.button(type="button", onclick="customizeMethods();") Add new
-
-
-    .span12
-        footer
-            p If you have questions or comments, email <a href="mailto:nstawski@lbl.gov?subject=PR-PR%20v.{{version}}%20feedback">Nina Stawski</a>
+    .row
+        .span7
+            p A new simple way to do your experiments faster.<br/>Write your code in the window below, add a table file and click 'Prepare robot file'.<br/>The resulting file will be available for you to download on the right.
+        .span3.pull-right
             p
-                small(style="color:gray") This programming language was previously known as "PaR-PaR", which is not associated with PaR Systems, Inc. which claims ownership of the "PaR" mark.
+                a(href="static/pdf/PR-PR-v0.33-howto.pdf").pull-right
+                    h5
+                        img(src="static/img/question.svg")
+                        | &nbsp;&nbsp;PR-PR Howto guide (PDF)
+    form#form(action="/getconfig", method="post", enctype="multipart/form-data")
+        .row
+            .span8
+                ol
+                    li#device
+                        h4 Select output device
+                        .controls#device
+                            select#devices.span3(name="deviceselect", onchange="selectDevice();")
+                                option(value="freedomevo") Tecan Freedom Evo
+                                //-option(value="microfluidics") Microfluidics
+                            a#methodsToggle.btn.btn-link(onclick="$('#methods').toggleClass('hidden');") Setup custom methods
+                        .row
+                            #methods.hidden
+                                .span7
+                                    h5 Custom methods
+                                    .input-append#newMethod
+                                        input#userMethod(size="16", type="text")
+                                        button.btn(type="button", onclick="customizeMethods();") Add
+                    li#microfluidics.hidden
+                        h4 Upload microfluidics table
+                        .controls#mftable
+                            select#mftables.span3(name="mftableselect", onchange="selectClicked('mftable');")
+                                option(value="select") Upload table file
+                                //-option(value="selecblablat") bla
+                            input#mfdata.span3(type="file", name="mfdata", onchange="mfAppendUploadButton()")
+                    li#tablefile
+                        h4 Select/upload table file
+                        .controls#table
+                            select#tables.span3(name="tableselect", onchange="selectClicked('table');")
+                                option(value="select") Select table file
+                            input#data.span3(type="file", name="data", onchange="AppendUploadButton()")
+                    li#script
+                        h4 Write script &nbsp;&nbsp;
+                            small: a#sampleScript(onclick="LoadSampleScript()") load example
+        .row
+            .span12
+                #result
+                textarea#textarea.input-large.span12(rows="30", name="text") {{text}}
+                button.btn.pull-right(type="submit", name="upload") Prepare robot file
+
+            #myModal.modal.hide.fade.prpr-modal
+                .modal-header
+                    button.close(type="button", data-dismiss="modal") ×
+                    h3#platename Plate file name
+                .modal-body
+                    #tablerow
+                .modal-footer
+                    a.btn(data-dismiss="modal") Close
+            textarea#methodsList.hidden(name="methods")
+
+
+
+
+    footer
+        p If you have questions or comments, email <a href="mailto:nstawski@lbl.gov?subject=PR-PR%20v.{{version}}%20feedback">Nina Stawski</a>
+        p
+            small(style="color:gray") This programming language was previously known as "PaR-PaR", which is not associated with PaR Systems, Inc. which claims ownership of the "PaR" mark.

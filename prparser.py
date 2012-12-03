@@ -15,13 +15,14 @@ from copy import deepcopy
 #todo: switch to postgres
 
 class Experiment:
-    def __init__(self, maxVolume, tips, db, userMethods=''):
+    def __init__(self, maxVolume, tips, db, platform, userMethods=''):
         """
         New experiment with parameters:
         robotTips - maximum amount of tips the robot has
         maxVolume - maximum capacity of a tip
         """
         self.name = ''
+        self.platform = platform
         self.components = {}
         self.plates = {}
         self.volumes = {}

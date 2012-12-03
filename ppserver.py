@@ -23,6 +23,14 @@ def prpr():
 def preview():
     return template('pages' + os.sep + 'page_dev.html', version=__version__)
 
+@route('/dev')
+def dev():
+    return template('pages' + os.sep + 'dev.html', version=__version__)
+
+@route('/mf')
+def mf():
+    return template('pages' + os.sep + 'dev-mf.html', version=__version__)
+
 @route('/disclaimer')
 def disclaimer():
     return template('pages' + os.sep + 'disclaimer.html', version=__version__)
@@ -73,21 +81,24 @@ def sample():
 def config():
     errorList = []
     successList = []
+    platform = request.forms.get('deviceselect', '').strip()
     getconfig = request.forms.get('text', '').strip()
     preselected = request.forms.get('tableselect')
     customMethods = request.forms.get('methods', '').strip().split(',')
-    data = request.files.data
     if getconfig != '':
         db=DBHandler()
         global experiment
         if customMethods != ['']:
 
-            experiment = Experiment(maxVolume=150,tips=8,db=db,userMethods=customMethods)
+            experiment = Experiment(maxVolume=150,tips=8,db=db,platform=platform,userMethods=customMethods)
         else:
-            experiment = Experiment(maxVolume=150,tips=8,db=db)
+            experiment = Experiment(maxVolume=150,tips=8,platform=platform,db=db)
         expID = experiment.ID
 
-
+        if platform == 'microfluidics':
+            data = request.files.mfdata
+        else:
+            data = request.files.data
         if data != '':
             raw = data.file.read()
             tablename = 'tables' + os.sep + 'tables_' + expID + '.ewt'

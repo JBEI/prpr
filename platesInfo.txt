@@ -5,6 +5,7 @@
 96 Well DeepWell,8x12
 96 Well Microplate,8x12
 96 Well RT-PCR,8x12
+96 Well No Skirt,8x12
 Adapter 96 DiTi 1to1 MCA384,8x12
 Adapter 96 DiTi MCA384,8x12
 Adapter 96 Fixed 15ul MCA384,8x12

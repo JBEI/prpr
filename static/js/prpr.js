@@ -5,17 +5,43 @@
  * http://github.com/JBEI/prpr/blob/master/license.txt
  */
 
-function clicked() {
-    var selection = $('#tables').find('option:selected').val();
+function selectDevice() {
+    var selection = $('#device').find('option:selected').val();
+    if (selection == 'freedomevo') {
+        $('#microfluidics').addClass('hidden');
+        $('#tablefile').removeClass('hidden');
+        $('#methodsToggle').removeClass('hidden');
+    }
+    if (selection == 'microfluidics') {
+        $('#microfluidics').removeClass('hidden');
+        $('#tablefile').addClass('hidden');
+        $('#methodsToggle').addClass('hidden');
+    }
+}
+
+function selectClicked(selectID) {
+    var selection = $('#' + selectID).find('option:selected').val();
+    var preview,filename,changeFunction,clickFunction;
+    if(selectID == 'table'){
+        preview = 'preview'
+        filename = 'data'
+        changeFunction = 'AppendUploadButton();'
+        clickFunction = 'CallPython();'
+    }
+    if(selectID == 'mftable'){
+        preview = 'mfpreview'
+        filename = 'mfdata'
+        changeFunction = 'mfAppendUploadButton();'
+        clickFunction = 'mfCallPython();'
+    }
     if (selection == 'select') {
-        $('#preview').remove();
-        $('#table').append('<input type="file" name="data" id="data" class="span3" onchange="AppendUploadButton()"/>');
+        $('#' + preview).remove();
+        $('#' + selectID).append('<input type="file" name="data" id="data" class="span3" onchange="' + changeFunction + '"/>');
     }
     else {
-        $('#data').remove();
-        $('#preview').remove();
-        $('#uploadFile').remove();
-        $('#table').append('<button id="preview" class="btn btn-info pull-right" data-toggle="modal" href="#myModal" onclick="CallPython();">Preview table layout</button>');
+        $('#' + filename).remove();
+        $('#' + preview).remove();
+        $('#' + selectID).append('<button id="' + preview + '" class="btn btn-info pull-right" data-toggle="modal" href="#myModal" onclick="' + clickFunction + '">Preview table layout</button>');
     }
 }
 
