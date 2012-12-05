@@ -72,6 +72,14 @@ def plates():
     print(plateNicknames, plateIndexes)
     return tojs
 
+@post('/mfplates')
+def mfplates():
+    position = request.forms.get('position', '')
+    wells = request.forms.get('wells', '')
+    mywells = json_loads(wells)
+    mydata = position + '\n' + '\n'.join(mywells)
+    return mydata
+
 @post('/sample')
 def sample():
     config = open('prpr_sample.par', 'r')

@@ -54,12 +54,41 @@ block script
         });
 
         function getConnectionInfos() {
+            var wells = [];
             var connections = jsPlumb.getConnections();
             for (i = 0; i < connections.length; i++) {
                 var connection = connections[i];
-                console.log(connection.sourceId, connection.targetId);
+                var src = connection.sourceId;
+                var dst = connection.targetId;
+                if (wells[src]) {
+                    wells[src].push(dst);
+                }
+                else {
+                    wells[src] = [dst];
+                };
+                if (wells[dst]) {
+                    wells[dst].push(src);
+                }
+                else {
+                    wells[dst] = [src];
+                };
             }
-            console.log(jsPlumb.getConnections());
+            var connections = [];
+            for (var i = 0; i < Object.keys(wells).length; i++) {
+                var well = Object.keys(wells)[i];
+                if(wells[well]) {
+                    var wellinfo = well + ':';
+                    for (var k = 0; k < wells[well].length; k++) {
+                        var conn = wells[well][k];
+                        wellinfo += conn;
+                        if (k != wells[well].length - 1) {
+                            wellinfo += ',';
+                        }
+                    }
+                    connections.push(wellinfo);
+                }
+            };
+            return connections;
         };
 
         function getPositionString() {
@@ -70,11 +99,34 @@ block script
                 var left = $('#' + id).position()['left'];
                 position += (id + ':' + top + ',' + left + ';');
             });
+            return position ;
+        };
+
+        function getMFTableFile() {
+            var position = getPositionString();
+            var wells = getConnectionInfos();
             console.log(position);
+            console.log(wells, Object.keys(wells));
+            var formData = new FormData();
+            formData.append("position", position);
+            formData.append("wells", JSON.stringify(wells));
+            $.ajax({
+                url: 'mfplates',
+                type: 'POST',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(data) {
+                    $('#result').html(data);
+                }
+            });
         };
 
 block content
     #source
         .prpr-well.x4x6.mf#wellSrc
+        .pull-right.btn(onclick="getMFTableFile();") Download table file
 
-    .wells#field(style="height: 800px; border: 1px solid #456;")
+    .wells#field(style="height: 400px; border: 1px solid #456;")
+    textarea#result
