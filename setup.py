@@ -3,6 +3,7 @@ __version__ = '0.32'
 
 import sqlite3
 import os
+import stat
 
 def DatabaseConnect():
     global conn
@@ -99,14 +100,14 @@ def CreateFolders():
     for directory in dirs:
         if not os.path.exists(directory):
             os.mkdir(directory)
-            os.chmod(directory, 777)
+            os.chmod(directory, stat.S_IRWXU|stat.S_IRWXG|stat.S_IRWXO)
 
 def setup():
     CreateFolders()
     CreateTables()
     UpdatePlates()
     UpdateMethods()
-    os.chmod('prpr.db', 777)
+    os.chmod('prpr.db', stat.S_IRWXU|stat.S_IRWXG|stat.S_IRWXO)
     print('Done!')
 
 if __name__ == '__main__':
