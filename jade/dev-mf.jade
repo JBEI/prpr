@@ -4,16 +4,23 @@
 extends layout
 block style
     link(href='static/css/prpr-mf.css', rel='stylesheet')
+
 block script
     script(src='static/js/jsPlumb.min.js')
     script
+        var grid = [45,45]
+        var renamed = [];
+        $(document).bind('touchmove', function(e) {
+            e.preventDefault();
+        }, false);
         $(document).ready(function () {
+            //$('#field').selectable( {distance : 30} );
             var counter = 0;
-            var grid = [45,45]
             $('#wellSrc').draggable({
                 helper: "clone",
                 grid: grid
             });
+
             $('#field').droppable({
                 accept: "#wellSrc",
                 drop: function(event, ui) {
@@ -21,38 +28,24 @@ block script
                     var top = ui.helper.position()['top'];
                     var left = ui.helper.position()['left'];
                     clone.attr('id', counter).css({'top' : top, 'left' : left, 'position' : 'absolute'}).addClass('mf-well').appendTo('#field');
-                    $('#' + counter).draggable({
-                        drag: function(event, ui) {
-                            jsPlumb.repaintEverything();
-                        },
-                        stop: function(event, ui) {
-                            jsPlumb.repaintEverything();
-                        },
-                        grid: grid
-                    });
-                    jsPlumb.addEndpoint('' + counter + '', {
-                            anchor: [0.5,0.5,0,-1],
-                            maxConnections: 20,
-                            connector: "Straight"
-                        },
-                        {
-                            isSource:true,
-                            isTarget:true
-                        });
+                    makeDraggable(counter);
+                    addEndpoint(counter);
                     counter += 1;
                 }
         });
+
         jsPlumb.bind("dblclick", function(connection, originalEvent) {
             jsPlumb.detach({
                 source: connection.sourceId,
                 target: connection.targetId
             });
-            });
-        jsPlumb.importDefaults({
-            PaintStyle: { lineWidth : 5, strokeStyle : "#456" }
-        });
         });
 
+        jsPlumb.importDefaults({
+            PaintStyle: { lineWidth : 5, strokeStyle : "#456" },
+            ConnectorZIndex: 3
+        });
+        });
         function getConnectionInfos() {
             var wells = [];
             var connections = jsPlumb.getConnections();
@@ -60,17 +53,18 @@ block script
                 var connection = connections[i];
                 var src = connection.sourceId;
                 var dst = connection.targetId;
-                if (wells[src]) {
-                    wells[src].push(dst);
+                var source = src;
+                //if (renamed.match(src)) {
+                    //var source = renamed[src];
+                //}
+                //else {
+                    //var source = src;
+                //};
+                if (wells[source]) {
+                    wells[source].push(dst);
                 }
                 else {
-                    wells[src] = [dst];
-                };
-                if (wells[dst]) {
-                    wells[dst].push(src);
-                }
-                else {
-                    wells[dst] = [src];
+                    wells[source] = [dst];
                 };
             }
             var connections = [];
@@ -105,8 +99,6 @@ block script
         function getMFTableFile() {
             var position = getPositionString();
             var wells = getConnectionInfos();
-            console.log(position);
-            console.log(wells, Object.keys(wells));
             var formData = new FormData();
             formData.append("position", position);
             formData.append("wells", JSON.stringify(wells));
@@ -118,15 +110,113 @@ block script
                 contentType: false,
                 processData: false,
                 success: function(data) {
-                    $('#result').html(data);
+                    $('#mffile').attr('action', '/download/' + data).submit();
                 }
             });
+        };
+        function mfAppendLoadButton() {
+            $('#loadButton').remove();
+            $('#mfdata').after('<div class="btn" id="loadButton" onClick="loadMFTable()">Load the plate</div>');
+        };
+        function loadMFTable() {
+            var file = $('#mfdata')[0].files[0];
+            var formData = new FormData();
+            formData.append("file", file);
+            $('#field').children().remove();
+            $.ajax({
+                url: 'mfparse',
+                type: 'POST',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(data) {
+                    //ParseMFData(data);
+                    var mfplate = JSON.parse(data);
+                    var views = mfplate[0];
+                    parseViews(views);
+                    jsPlumb.repaintEverything();
+                    var connections = mfplate.slice(1);
+                    parseConnections(connections);
+                }
+            });
+        };
+        function addEndpoint(element) {
+            $('#' + element).append('<div class="mf-label" onClick="renameWell(' + element + ');">' + element + '<i class="icon-pencil icon-white"></i></div>');
+            jsPlumb.addEndpoint('' + element + '', {
+                    anchor: [[0.5,0.5,0,-1], "Continuous"],
+                    maxConnections: 20,
+                    connector: "Straight" //-["StateMachine", {curviness:0}]
+                },
+                {
+                    isSource:true,
+                    isTarget:true
+                });
+        };
+
+        function makeDraggable(element) {
+            $('#' + element).draggable({
+                        drag: function(event, ui) {
+                            jsPlumb.repaintEverything();
+                        },
+                        stop: function(event, ui) {
+                            jsPlumb.repaintEverything();
+                        },
+                        grid: grid
+                    });
+        };
+        function parseViews(string) {
+            var views = string.split(';').slice(0,-1);
+            for (var i = 0; i < views.length; i++){
+                var element = views[i].split(':');
+                var id = element[0];
+                var coords = element[1].split(',');
+                var top = coords[0];
+                var left = coords[1];
+                $('#field').append('<div class="mf-well prpr-well x4x6 mf" id="' + id + '" style=""></div>');
+                addEndpoint(id);
+                makeDraggable(id);
+                $('#' + id).css({'top' : top + 'px', 'left' : left + 'px', 'position' : 'absolute'});
+            };
+        };
+
+        function parseConnections(list) {
+            for (var i = 0; i < list.length; i++) {
+                var element = list[i].split(':');
+                var src = jsPlumb.getEndpoints(element[0])[0];
+                var dstList = element[1].split(',');
+                for (var j = 0; j < dstList.length; j++) {
+                    var dst = jsPlumb.getEndpoints(dstList[j])[0];
+                    jsPlumb.connect({source:src, target:dst});
+                };
+            };
+        };
+
+        function renameWell(elementID) {
+            $('#' + elementID).children('.mf-label').remove();
+            $('#' + elementID).append('<input type="text" class="input-mf" value="' + elementID + '" onBlur="applyIDChanges(' + elementID + ')"></input>');
+        };
+
+        function applyIDChanges(id) {
+            var newid = $('#' + id).children().eq(0).val();
+            //var top = $('#' + id).position()['top'];
+            //var left = $('#' + id).position()['left'];
+            //jsPlumb.setIdChanged(id, newid);
+            $('#' + id).attr('id', newid);
+            $('#' + newid).children('.input-mf').remove();
+            $('#' + newid).append('<div class="mf-label" onClick="renameWell(' + newid + ');">' + newid + '<i class="icon-pencil icon-white"></i></div>');
+            //$('#' + newid).css({'top' : top + 'px', 'left' : left + 'px', 'position' : 'absolute'});
+            //renamed[id] = newid;
+            //makeDraggable(newid);
         };
 
 block content
     #source
         .prpr-well.x4x6.mf#wellSrc
-        .pull-right.btn(onclick="getMFTableFile();") Download table file
+        form#mffile.pull-right
+            .btn(onclick="getMFTableFile();") Download table file
 
     .wells#field(style="height: 400px; border: 1px solid #456;")
-    textarea#result
+    //-textarea#result
+    .pull-right
+        input#mfdata.span3(type="file", name="mfdata", onchange="mfAppendLoadButton()")

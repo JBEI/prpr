@@ -563,12 +563,15 @@ class Protocol:
     def addValues(self, values, experiment):
         if len(self.variables) == len(values):
             readyProtocol = self.info
-            for v in range(0, len(values)):
-                for i in range(0, len(readyProtocol)):
-                    readyProtocol[i] = readyProtocol[i].replace(self.variables[v], values[v])
+            newProtocol = []
+            for i in range(0, len(readyProtocol)):
+                mystring = readyProtocol[i]
+                newProtocol.append(mystring)
+                for v in range(0, len(values)):
+                    newProtocol[i] = newProtocol[i].replace(self.variables[v], values[v])
             from tempfile import TemporaryFile
             protocolFile = TemporaryFile(mode='r+')
-            protocolFile.writelines(readyProtocol)
+            protocolFile.writelines(newProtocol)
             protocolFile.seek(0)
             line = protocolFile.readline()
             experiment.addComment('------ BEGIN PROTOCOL ' + self.name + ', variables: ' + ' '.join(self.variables) + '; values: ' + ' '.join(values)+ ' ------')

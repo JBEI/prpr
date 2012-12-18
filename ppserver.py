@@ -8,6 +8,8 @@ import os
 #from prpr import *
 from prparser import *
 from tempfile import TemporaryFile
+import glob
+from prpr_mf import *
 
 
 global robotTips
@@ -77,8 +79,21 @@ def mfplates():
     position = request.forms.get('position', '')
     wells = request.forms.get('wells', '')
     mywells = json_loads(wells)
+    directory = 'tables'
     mydata = position + '\n' + '\n'.join(mywells)
-    return mydata
+    fileCounter = len(glob.glob1(directory,"tables_mf_*"))
+    tablename = 'tables_mf_' + str(fileCounter) + '.mfp'
+    tablefile = open(directory + os.sep + tablename, "wb")
+    tablefile.write(bytes(mydata, 'UTF-8'))
+    tablefile.close()
+    return tablename
+
+@post('/mfparse')
+def mfparse():
+    a = request.body.read().decode().split('\n')[4:-2]
+    a[-1] = a[-1].strip()
+    tojs = json_dumps(a)
+    return tojs
 
 @post('/sample')
 def sample():
@@ -160,6 +175,8 @@ def download(filename):
     print(filename)
     if filename.startswith('config'):
         root = 'esc'
+    elif filename.startswith('tables_mf_'):
+        root = 'tables'
     else:
         root = 'logs'
     return static_file(filename, root, download=filename)
