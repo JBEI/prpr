@@ -138,6 +138,7 @@ def config():
         dirname = 'incoming' + os.sep
         filename = 'config_' + expID + '.par'
         writefile = open(dirname + filename, "w")
+
         if getconfig.startswith('TABLE'):
             getconfig = '\n'.join(getconfig.split('\n')[1:]) #removing the extra 'TABLE' from the config file
         list = ['TABLE ', tablename, '\n', '\n', getconfig] #adding the chosen/uploaded table to the config file.
