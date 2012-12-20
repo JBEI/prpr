@@ -21,7 +21,7 @@ def CreateTables():
     DatabaseConnect()
 
     #Experiment info
-    crsr.execute('create table Experiments(ExpID UNIQUE, maxTips, maxVolume)')
+    crsr.execute('create table Experiments(ExpID UNIQUE, maxTips, maxVolume, Platform)')
     crsr.execute('create table ExperimentInfo(ExpID UNIQUE, Name, Comment)')
 
     #Methods
@@ -55,7 +55,7 @@ def CreateTables():
     crsr.execute('create table CommandLocations(ExpID, ActionID, trOrder, Location, PRIMARY KEY(ExpID, ActionID, Location));')
 
     #Updating experiments
-    crsr.execute('insert into Experiments values(0, "", "");')
+    crsr.execute('insert into Experiments values(0, "", "", "");')
 
     DatabaseDisconnect()
 

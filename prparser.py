@@ -37,7 +37,7 @@ class Experiment:
         self.ID = str(db.selectMax('Experiments'))
         self.robotTips = tips
         self.maxVolume = maxVolume
-        db.insert('Experiments', [self.ID, self.robotTips, self.maxVolume])
+        db.insert('Experiments', [self.ID, self.robotTips, self.maxVolume, '"' + self.platform + '"'])
         self.log('Experiment ID: ' + str(self.ID))
         self.errorLogger = []
         self.protocols = {}
@@ -592,8 +592,9 @@ class DBHandler:
         expID = experiment.ID
         maxTips = experiment.robotTips
         maxVolume = experiment.maxVolume
+        platform = experiment.platform
 
-        self.insert('Experiments', [expID, maxTips, maxVolume])
+        self.insert('Experiments', [expID, maxTips, maxVolume, '"' + platform + '"'])
 
     def insert(self, destination, items):
         list = []
@@ -995,7 +996,7 @@ def ParseFile(filename, experiment):
 
 if __name__ == '__main__':
     global experiment
-    experiment = Experiment(maxVolume=150,tips=8,db=DBHandler())
+    experiment = Experiment(maxVolume=150,tips=8,db=DBHandler(),platform="freedomevo")
     print('Experiment ID: ', experiment.ID)
     ParseConfigFile(experiment)
 
