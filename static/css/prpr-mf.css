@@ -1,0 +1,33 @@
+.prpr-well {
+    border: 1px solid #001E96;
+    background: #70B1C9;
+    display: inline-block;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    -ms-border-radius: 50%;
+    -o-border-radius: 50%;
+    border-radius: 50%;
+}
+
+.mf-label {
+    position: absolute;
+    width: 40px;
+    left: 2px;
+    top: -4px;
+    z-index: 2000;
+    color: white;
+    text-shadow: -1px -1px 0 #445566, 1px -1px 0 #445566, -1px 1px 0 #445566, 1px 1px 0 #445566;
+}
+
+.mf {
+    height: 40px;
+    width: 40px;
+    margin: 3px;
+}
+
+.input-mf {
+    width: 26px;
+    z-index: 6000;
+    position: absolute;
+    top: -20px;
+}
