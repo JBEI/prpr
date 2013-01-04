@@ -3,9 +3,30 @@
    Contact: me@ninastawski.com
 extends layout
 
+block style
+    link(href='static/css/prpr-mf.css', rel='stylesheet')
+
 block script
+    script(src='static/js/jsPlumb.min.js')
+    script(src='static/js/prpr-mf.js')
     script
+        var grid = [45,45]
+        var renamed = [];
         $(document).ready(function () {
+            $(document).bind('touchmove', function(e) {
+                e.preventDefault();
+            }, false);
+            //$('#field').selectable( {distance : 30} );
+            jsPlumb.bind("dblclick", function(connection, originalEvent) {
+                jsPlumb.detach({
+                    source: connection.sourceId,
+                    target: connection.targetId
+                });
+            });
+            jsPlumb.importDefaults({
+                PaintStyle: { lineWidth : 5, strokeStyle : "#456" },
+                ConnectorZIndex: 3
+            });
 
             var tablesList = {{!tables}};
             for (var i = 0; i < tablesList.length; i++) {
@@ -78,7 +99,7 @@ block content
                         .controls#device
                             select#devices.span3(name="deviceselect", onchange="selectDevice();")
                                 option(value="freedomevo") Tecan Freedom Evo
-                                //-option(value="microfluidics") Microfluidics
+                                option(value="microfluidics") Microfluidics
                             a#methodsToggle.btn.btn-link(onclick="$('#methods').toggleClass('hidden');") Setup custom methods
                         .row
                             #methods.hidden
@@ -92,8 +113,8 @@ block content
                         .controls#mftable
                             select#mftables.span3(name="mftableselect", onchange="selectClicked('mftable');")
                                 option(value="select") Upload table file
-                                //-option(value="selecblablat") bla
-                            input#mfdata.span3(type="file", name="mfdata", onchange="mfAppendUploadButton()")
+                                option(value="mfcreatenew") Create new
+                            input#mfdata.span3(type="file", name="mfdata", onchange="mfAppendLoadButton()")
                     li#tablefile
                         h4 Select/upload table file
                         .controls#table

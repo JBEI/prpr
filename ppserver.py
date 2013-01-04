@@ -19,33 +19,40 @@ maxAm = 150
 
 @route('/')
 def prpr():
-    return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[], tables=GetDefaultTables(), version=__version__)
+    return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[],
+        tables=GetDefaultTables(), version=__version__)
+
 
 @route('/preview')
 def preview():
     return template('pages' + os.sep + 'page_dev.html', version=__version__)
 
+
 @route('/dev')
 def dev():
     return template('pages' + os.sep + 'dev.html', version=__version__)
+
 
 @route('/mf')
 def mf():
     return template('pages' + os.sep + 'dev-mf.html', version=__version__)
 
+
 @route('/disclaimer')
 def disclaimer():
     return template('pages' + os.sep + 'disclaimer.html', version=__version__)
-    
+
+
 @route('/copyright')
 def copyright():
     return template('pages' + os.sep + 'copyright.html', version=__version__)
+
 
 @post('/table')
 def table():
     plateIndexes = {}
     plateNicknames = {}
-    experiment=False
+    experiment = False
     tablename = request.body.read().decode()
     tabledirname = 'default_tables' + os.sep
     plateFile = open(tabledirname + tablename, "r")
@@ -56,6 +63,7 @@ def table():
         plates.append([key, [plateIndexes[key][0], plateIndexes[key][1]], plateNicknames[key]])
         tojs = json_dumps(plates)
     return tojs
+
 
 @post('/plates')
 def plates():
@@ -74,6 +82,7 @@ def plates():
     print(plateNicknames, plateIndexes)
     return tojs
 
+
 @post('/mfplates')
 def mfplates():
     position = request.forms.get('position', '')
@@ -81,12 +90,13 @@ def mfplates():
     mywells = json_loads(wells)
     directory = 'tables'
     mydata = position + '\n' + '\n'.join(mywells)
-    fileCounter = len(glob.glob1(directory,"tables_mf_*"))
+    fileCounter = len(glob.glob1(directory, "tables_mf_*"))
     tablename = 'tables_mf_' + str(fileCounter) + '.mfp'
     tablefile = open(directory + os.sep + tablename, "wb")
     tablefile.write(bytes(mydata, 'UTF-8'))
     tablefile.close()
     return tablename
+
 
 @post('/mfparse')
 def mfparse():
@@ -95,10 +105,12 @@ def mfparse():
     tojs = json_dumps(a)
     return tojs
 
+
 @post('/sample')
 def sample():
     config = open('prpr_sample.par', 'r')
     return config.readlines()
+
 
 @post('/getconfig')
 def config():
@@ -109,13 +121,12 @@ def config():
     preselected = request.forms.get('tableselect')
     customMethods = request.forms.get('methods', '').strip().split(',')
     if getconfig != '':
-        db=DBHandler()
+        db = DBHandler()
         global experiment
         if customMethods != ['']:
-
-            experiment = Experiment(maxVolume=150,tips=8,db=db,platform=platform,userMethods=customMethods)
+            experiment = Experiment(maxVolume=150, tips=8, db=db, platform=platform, userMethods=customMethods)
         else:
-            experiment = Experiment(maxVolume=150,tips=8,platform=platform,db=db)
+            experiment = Experiment(maxVolume=150, tips=8, platform=platform, db=db)
         expID = experiment.ID
 
         if platform == 'microfluidics':
@@ -133,7 +144,8 @@ def config():
                 tablename = 'default_tables' + os.sep + preselected
             else:
                 errorList.append("Please select or upload the table file for your configuration script.")
-                return template('pages' + os.sep + 'page.html', file = '', btn = '', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
+                return template('pages' + os.sep + 'page.html', file='', btn='', text=getconfig, alerterror=errorList,
+                    alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
 
         dirname = 'incoming' + os.sep
         filename = 'config_' + expID + '.par'
@@ -142,7 +154,7 @@ def config():
         if getconfig.startswith('TABLE'):
             getconfig = '\n'.join(getconfig.split('\n')[1:]) #removing the extra 'TABLE' from the config file
         list = ['TABLE ', tablename, '\n', '\n', getconfig] #adding the chosen/uploaded table to the config file.
-        writefile.writelines( ''.join(list) )
+        writefile.writelines(''.join(list))
         writefile.close()
         readfile = open(dirname + filename, "r")
         ParseFile(readfile, experiment)
@@ -150,26 +162,32 @@ def config():
         if len(experiment.errorLogger):
             for item in experiment.errorLogger:
                 errorList.append(item)
-            return template('pages' + os.sep + 'page.html', file = '', btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
+            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig,
+                alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
 
         elif experiment.testindex:
             prpr = Prpr(expID)
             file = 'config' + str(expID) + '.esc'
             log = 'experiment' + str(expID) + '.log'
             successList.append("Your configuration file has been successfully processed.")
-            return template('pages' + os.sep + 'page.html', file = file, btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
+            return template('pages' + os.sep + 'page.html', file=file, btn='btn-success', text=getconfig,
+                alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
 
         else:
             errorList.append("Your configuration file doesn't contain any actions. Please refer to PR-PR howto guide.")
-            return template('pages' + os.sep + 'page.html', file = '', btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
+            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig,
+                alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
 
     else:
         errorList.append("Your configuration file doesn't contain any actions. Please refer to PR-PR howto guide.")
-        return template('pages' + os.sep + 'page.html', file = '', btn = 'btn-success', text = getconfig, alerterror = errorList, alertsuccess = successList, tables = GetDefaultTables(), version = __version__)
+        return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig,
+            alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
+
 
 @route('/static/:path#.+#', name='static')
 def static(path):
     return static_file(path, root='static')
+
 
 @route('/download/<filename>')
 def download(filename):
@@ -182,10 +200,12 @@ def download(filename):
         root = 'logs'
     return static_file(filename, root, download=filename)
 
+
 @route('/get/<filename>')
 def download(filename):
     print(filename)
     return static_file(filename, root='tables', download=filename)
+
 
 def GetDefaultTables():
     """
@@ -194,7 +214,7 @@ def GetDefaultTables():
     tablesDir = os.listdir('default_tables')
     tables = []
     for name in tablesDir:
-        if not name.startswith('.'):
+        if not name.startswith('.') and name.endswith('.ewt'):
             tables.append(name)
     tables.sort()
     jsonTables = json_dumps(tables)

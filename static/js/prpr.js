@@ -12,35 +12,48 @@ function selectDevice() {
         $('#tablefile').removeClass('hidden');
         $('#methodsToggle').removeClass('hidden');
     }
-    if (selection == 'microfluidics') {
+    else if (selection == 'microfluidics') {
         $('#microfluidics').removeClass('hidden');
         $('#tablefile').addClass('hidden');
         $('#methodsToggle').addClass('hidden');
     }
+    ;
 }
 
 function selectClicked(selectID) {
     var selection = $('#' + selectID).find('option:selected').val();
-    var preview,filename,changeFunction,clickFunction;
-    if(selectID == 'table'){
+    var preview, filename, changeFunction, clickFunction;
+    if (selectID == 'table') {
         preview = 'preview'
         filename = 'data'
         changeFunction = 'AppendUploadButton();'
         clickFunction = 'CallPython();'
     }
-    if(selectID == 'mftable'){
+    else if (selectID == 'mftable') {
         preview = 'mfpreview'
         filename = 'mfdata'
-        changeFunction = 'mfAppendUploadButton();'
-        clickFunction = 'mfCallPython();'
+        changeFunction = 'mfAppendLoadButton();'
+        clickFunction = 'loadMFTable();'
     }
+    ;
     if (selection == 'select') {
         $('#' + preview).remove();
-        $('#' + selectID).append('<input type="file" name="data" id="data" class="span3" onchange="' + changeFunction + '"/>');
+        $('#' + selectID).append('<input type="file" name="' + filename + '" id="' + filename + '" class="span3" onchange="' + changeFunction + '"/>');
     }
-    else {
+    else if (selection == 'mfcreatenew') {
         $('#' + filename).remove();
         $('#' + preview).remove();
+        $('#loadButton').remove();
+        $('#' + selectID).append('<button id="' + preview + '" class="btn btn-info pull-right" data-toggle="modal" href="#myModal">Edit table layout</button>');
+        resetMFField();
+        $('#myModal').modal('show');
+        setupDroppableWells(0);
+    }
+    else {
+        console.log(selectID, selection)
+        $('#' + filename).remove();
+        $('#' + preview).remove();
+        $('#loadButton').remove();
         $('#' + selectID).append('<button id="' + preview + '" class="btn btn-info pull-right" data-toggle="modal" href="#myModal" onclick="' + clickFunction + '">Preview table layout</button>');
     }
 }
@@ -56,7 +69,7 @@ function LoadSampleScript() {
     $('#uploadFile').remove();
     $('#table').append('<button id="preview" class="btn btn-info pull-right" data-toggle="modal" href="#myModal" onclick="CallPython();">Preview table layout</button>');
     $('#tables').val('BreakfastDrinks.ewt');
-    $.post('sample', function(data) {
+    $.post('sample', function (data) {
         $('#textarea').val(data);
     });
 }
@@ -67,13 +80,13 @@ function UploadTable() {
     formData.append("file", file);
     $('#tablerow').children().remove();
     $.ajax({
-        url: 'plates',
-        type: 'POST',
-        data: formData,
-        cache: false,
-        contentType: false,
-        processData: false,
-        success: function(data) {
+        url:'plates',
+        type:'POST',
+        data:formData,
+        cache:false,
+        contentType:false,
+        processData:false,
+        success:function (data) {
             $('#platename').html(file.name);
             ParseTableData(data);
         }
@@ -83,27 +96,27 @@ function UploadTable() {
 function CallPython() {
     var data = $('#tables').find('option:selected').val();
     $('#tablerow').children().remove();
-    $.post('table', data, function(data) {
+    $.post('table', data, function (data) {
         $('#platename').html($('#tables').find('option:selected').val());
         ParseTableData(data);
     });
 }
 
 function ParseTableData(data) {
-    for (var j=1; j <= 3; j++) {
+    for (var j = 1; j <= 3; j++) {
         $('#tablerow').append('<div id="row' + j + '"></div>');
 
-        for (var i=1; i <= 30; i++) {
+        for (var i = 1; i <= 30; i++) {
             $('#row' + j).append('<div class="prpr-grid grid-empty" id="' + i + '"></div>');
         }
-        $('#row' + j).children('#1').removeClass('grid-empty').addClass('grid-system').append('<div class="rotate">system</div>').attr({'rel' : 'tooltip', 'title' : 'Wash station'});
+        $('#row' + j).children('#1').removeClass('grid-empty').addClass('grid-system').append('<div class="rotate">system</div>').attr({'rel':'tooltip', 'title':'Wash station'});
     }
     var tableList = $.parseJSON(data);
     for (var x = 0; x < tableList.length; x++) {
         var arr = tableList[x];
         var name = arr[0];
         var grid = arr[1][0];
-        var site = arr[1][1]+1;
+        var site = arr[1][1] + 1;
         var plate = arr[2];
 
         $("#row" + site).children("#" + grid).append('<div id="plate-nickname">' + name + '</div><div id="plate-name">' + plate + '</div>').addClass('grid-active');
@@ -122,7 +135,7 @@ function ParseTableData(data) {
         }
         if (plate.substring(0, 4) == 'Tube') {
             $("#row" + site).siblings().children("#" + (grid)).addClass('grid-active');
-            $("*").children("#" + grid).attr({'rel' : 'tooltip', 'title' : name + '<br />' + plate}).addClass('grid-tube');
+            $("*").children("#" + grid).attr({'rel':'tooltip', 'title':name + '<br />' + plate}).addClass('grid-tube');
         }
         if (plate.substring(0, 4) == 'REMP') {
             SetPlateSize(grid, site)
@@ -142,8 +155,8 @@ function ParseTableData(data) {
         if ($("#row" + site).children("#" + grid).css('width') == '13px') {
             $("#row" + site).children("#" + grid).children('#plate-name').remove().children('#plate-nickname').addClass('rotate');
         }
-        $("#row" + site).children("#" + grid).attr({'rel' : 'tooltip', 'title' : name + '<br />' + plate});
-        $("[rel=tooltip]").tooltip({'placement' : 'bottom', 'trigger' : 'hover'});
+        $("#row" + site).children("#" + grid).attr({'rel':'tooltip', 'title':name + '<br />' + plate});
+        $("[rel=tooltip]").tooltip({'placement':'bottom', 'trigger':'hover'});
     }
 }
 
@@ -156,12 +169,12 @@ function SetPlateSize(grid, site) {
 
 function removeDuplicates(arr) {
     var i,
-        len=arr.length,
-        out=[],
-        obj={};
+        len = arr.length,
+        out = [],
+        obj = {};
 
-    for (i=0;i<len;i++) {
-        obj[arr[i]]=0;
+    for (i = 0; i < len; i++) {
+        obj[arr[i]] = 0;
     }
     for (i in obj) {
         //noinspection JSUnfilteredForInLoop
@@ -191,7 +204,7 @@ function removeMethod(method) {
     if (e.stopPropagation) e.stopPropagation();
     methods = $('#methodsList').val().split(',');
     var ind = methods.indexOf(method);
-    methods.splice(ind,1);
+    methods.splice(ind, 1);
     $('#' + method).remove();
     if (methods.length > 0) {
         makeDefault(methods[0])
@@ -208,7 +221,7 @@ function makeDefault(method) {
     $('#' + method).addClass('label-info');
     $('#' + method).append('<i class="icon-star icon-white pull-right" id="prpr-default"></i>');
     var ind = methods.indexOf(method);
-    methods.splice(ind,1);
+    methods.splice(ind, 1);
     methods.unshift(method);
     $('#methodsList').val(methods);
 }
