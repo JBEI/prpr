@@ -19,9 +19,7 @@ function getConnectionInfos() {
             else {
                 wells[source] = [dst];
             }
-            ;
         }
-        ;
     }
     var cns = [];
     for (var i = 0; i < Object.keys(wells).length; i++) {
@@ -38,9 +36,8 @@ function getConnectionInfos() {
             cns.push(wellinfo);
         }
     }
-    ;
     return cns;
-};
+}
 
 function getPositionString() {
     var position = '';
@@ -52,7 +49,7 @@ function getPositionString() {
         position += (name + ':' + top + ',' + left + ';');
     });
     return position;
-};
+}
 
 function addMFInfo() {
     if ($('#devices').val() == 'microfluidics') {
@@ -60,13 +57,12 @@ function addMFInfo() {
         $('#position').val(position);
         saveConnections();
     }
-    ;
-};
+}
 
 function saveConnections() {
     var wells = getConnectionInfos();
-    $('#wells').val(wells);
-};
+    $('#wells').val(wells.join(';'));
+}
 
 function getMFTableFile() {
     var position = getPositionString();
@@ -85,18 +81,17 @@ function getMFTableFile() {
             $('#mffile').attr('action', '/download/' + data).submit();
         }
     });
-};
+}
 function mfAppendLoadButton() {
     $('#loadButton').remove();
     $('#mfdata').after('<button class="btn btn-info pull-right" id="loadButton"  data-toggle="modal" href="#myModal" onClick="loadMFTable();">View/Edit the plate</button>');
 //    loadMFTable();
-};
+}
 
 function setupDroppableWells() {
-    var grid = [45, 45];
     $('#wellSrc').draggable({
         helper:"clone",
-        grid:grid
+        grid:[45, 45]
     });
     $('#field').droppable({
         accept:"#wellSrc",
@@ -112,7 +107,7 @@ function setupDroppableWells() {
             addMFInfo();
         }
     });
-};
+}
 
 function resetMFField() {
     jsPlumb.deleteEveryEndpoint();
@@ -128,6 +123,10 @@ function resetMFField() {
         '<div onclick="getMFTableFile();" class="btn btn-link">Download table file</div>' +
         '</form>');
     setupDroppableWells();
+    jsPlumb.importDefaults({
+        PaintStyle:{ lineWidth:5, strokeStyle:"#456" },
+        ConnectorZIndex:3
+    });
 };
 
 function loadMFTable() {
@@ -156,16 +155,13 @@ function loadMFTable() {
             addMFInfo();
         }
     });
-};
+}
 
 function addEndpoint(element) {
     var name = $('#' + element).attr('name');
     $('#' + element).append('<div class="mf-label" onClick="renameWell(' + "'" + element + "'" + ');">' + name + '<i class="icon-pencil icon-white"></i></div>');
     jsPlumb.addEndpoint('' + element + '', {
-            anchor:[
-                [0.5, 0.5, 0, -1],
-                "Center"
-            ],
+            anchor:"Center",
             maxConnections:20,
             connector:"Straight" //-["StateMachine", {curviness:0}]
         },
@@ -173,7 +169,13 @@ function addEndpoint(element) {
             isSource:true,
             isTarget:true
         });
-};
+    jsPlumb.bind("dblclick", function (connection, originalEvent) {
+        jsPlumb.detach({
+            source:connection.sourceId,
+            target:connection.targetId
+        });
+    });
+}
 
 function makeDraggable(element) {
     $('#' + element).draggable({
@@ -183,9 +185,9 @@ function makeDraggable(element) {
         stop:function (event, ui) {
             jsPlumb.repaintEverything();
         },
-        grid:grid
+        grid:[45, 45]
     });
-};
+}
 function parseViews(string) {
     var views = string.split(';').slice(0, -1);
     for (var i = 0; i < views.length; i++) {
@@ -198,10 +200,8 @@ function parseViews(string) {
         $('#' + id).css({'top':top + 'px', 'left':left + 'px', 'position':'absolute'});
         addEndpoint(id);
         makeDraggable(id);
-//        jsPlumb.draggable(id, {grid:grid});
     }
-    ;
-};
+}
 
 function parseConnections(list) {
     for (var i = 0; i < list.length; i++) {
@@ -214,23 +214,20 @@ function parseConnections(list) {
                 var dst = jsPlumb.getEndpoints(dstList[j])[0];
                 jsPlumb.connect({source:src, target:dst});
             }
-            ;
         }
-        ;
     }
-    ;
     jsPlumb.repaintEverything();
-};
+}
 
 function renameWell(elementID) {
     var name = $('#' + elementID).attr('name');
     $('#' + elementID).children('.mf-label').remove();
     $('#' + elementID).append('<input type="text" class="input-mf" value="' + name + '" onBlur="applyIDChanges(' + "'" + elementID + "'" + ')"></input>');
-};
+}
 
 function applyIDChanges(id) {
     var newName = $('#' + id).children().eq(0).val();
     $('#' + id).attr('name', newName);
     $('#' + id).children('.input-mf').remove();
     $('#' + id).append('<div class="mf-label" onClick="renameWell(' + "'" + id + "'" + ');">' + newName + '<i class="icon-pencil icon-white"></i></div>');
-};
+}

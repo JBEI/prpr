@@ -26,17 +26,6 @@
             $(document).bind('touchmove', function (e) {
                 e.preventDefault();
             }, false);
-            //$('#field').selectable( {distance : 30} );
-            jsPlumb.bind("dblclick", function (connection, originalEvent) {
-                jsPlumb.detach({
-                    source:connection.sourceId,
-                    target:connection.targetId
-                });
-            });
-            jsPlumb.importDefaults({
-                PaintStyle:{ lineWidth:5, strokeStyle:"#456" },
-                ConnectorZIndex:3
-            });
 
             var tablesList = {
             {

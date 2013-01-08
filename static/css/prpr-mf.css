@@ -31,3 +31,8 @@
     position: absolute;
     top: -20px;
 }
+
+#field {
+    height: 500px;
+    border: 1px solid #eee;
+}

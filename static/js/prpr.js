@@ -20,7 +20,6 @@ function selectDevice() {
         $('#methods').addClass('hide');
         resetMFField();
     }
-    ;
 }
 
 function selectClicked(selectID) {
@@ -39,7 +38,6 @@ function selectClicked(selectID) {
         clickFunction = 'loadMFTable();'
         resetMFField();
     }
-    ;
 
     if (selection == 'select') {
         $('#' + preview).remove();
@@ -61,7 +59,6 @@ function selectClicked(selectID) {
         $('#loadButton').remove();
         $('#' + selectID).append('<button id="' + preview + '" class="btn btn-info pull-right" data-toggle="modal" href="#myModal" onclick="' + clickFunction + '">Preview table layout</button>');
     }
-    ;
 }
 
 function AppendUploadButton() {

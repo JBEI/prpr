@@ -88,8 +88,13 @@ def mfplates():
     position = request.forms.get('position', '')
     wells = request.forms.get('wells', '')
     mywells = json_loads(wells)
+    tablename = createMFPlate(mywells, position)
+    return tablename
+
+
+def createMFPlate(wells, position):
     directory = 'tables'
-    mydata = position + '\n' + '\n'.join(mywells)
+    mydata = position + '\n' + '\n'.join(wells)
     fileCounter = len(glob.glob1(directory, "tables_mf_*"))
     tablename = 'tables_mf_' + str(fileCounter) + '.mfp'
     tablefile = open(directory + os.sep + tablename, "wb")
@@ -146,12 +151,11 @@ def config():
                         alerterror=errorList,
                         alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
         else:
-            print('thi is the test 1 in the mf if')
-            position = request.forms.get('position').strip().split(';')[:-1]
-            wells = request.forms.get('wells').split('/n')
-            print('!!!!!!!!!', wells, position)
+            #note: if the platform is microfluidics
+            position = request.forms.get('position')#.strip().split(';')[:-1]
+            wells = request.forms.get('wells')#.strip().split(';')
+            tablename = 'tables' + os.sep + createMFPlate(wells, position)
 
-        print('thi is the test 2 outside the mf if')
         dirname = 'incoming' + os.sep
         filename = 'config_' + expID + '.par'
         writefile = open(dirname + filename, "w")
