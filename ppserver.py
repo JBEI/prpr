@@ -129,24 +129,29 @@ def config():
             experiment = Experiment(maxVolume=150, tips=8, platform=platform, db=db)
         expID = experiment.ID
 
-        if platform == 'microfluidics':
-            data = request.files.mfdata
-        else:
+        if platform != 'microfluidics':
             data = request.files.data
-        if data != '':
-            raw = data.file.read()
-            tablename = 'tables' + os.sep + 'tables_' + expID + '.ewt'
-            tablefile = open(tablename, "wb")
-            tablefile.write(raw)
-            tablefile.close()
-        else:
-            if preselected != 'select':
-                tablename = 'default_tables' + os.sep + preselected
+            if data != '':
+                raw = data.file.read()
+                tablename = 'tables' + os.sep + 'tables_' + expID + '.ewt'
+                tablefile = open(tablename, "wb")
+                tablefile.write(raw)
+                tablefile.close()
             else:
-                errorList.append("Please select or upload the table file for your configuration script.")
-                return template('pages' + os.sep + 'page.html', file='', btn='', text=getconfig, alerterror=errorList,
-                    alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
+                if preselected != 'select':
+                    tablename = 'default_tables' + os.sep + preselected
+                else:
+                    errorList.append("Please select or upload the table file for your configuration script.")
+                    return template('pages' + os.sep + 'page.html', file='', btn='', text=getconfig,
+                        alerterror=errorList,
+                        alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
+        else:
+            print('thi is the test 1 in the mf if')
+            position = request.forms.get('position').strip().split(';')[:-1]
+            wells = request.forms.get('wells').split('/n')
+            print('!!!!!!!!!', wells, position)
 
+        print('thi is the test 2 outside the mf if')
         dirname = 'incoming' + os.sep
         filename = 'config_' + expID + '.par'
         writefile = open(dirname + filename, "w")

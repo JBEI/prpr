@@ -16,6 +16,9 @@ function selectDevice() {
         $('#microfluidics').removeClass('hidden');
         $('#tablefile').addClass('hidden');
         $('#methodsToggle').addClass('hidden');
+        $('#loadButton').remove();
+        $('#methods').addClass('hide');
+        resetMFField();
     }
     ;
 }
@@ -34,8 +37,10 @@ function selectClicked(selectID) {
         filename = 'mfdata'
         changeFunction = 'mfAppendLoadButton();'
         clickFunction = 'loadMFTable();'
+        resetMFField();
     }
     ;
+
     if (selection == 'select') {
         $('#' + preview).remove();
         $('#' + selectID).append('<input type="file" name="' + filename + '" id="' + filename + '" class="span3" onchange="' + changeFunction + '"/>');
@@ -50,12 +55,13 @@ function selectClicked(selectID) {
         setupDroppableWells(0);
     }
     else {
-        console.log(selectID, selection)
+        console.log(selectID, selection);
         $('#' + filename).remove();
         $('#' + preview).remove();
         $('#loadButton').remove();
         $('#' + selectID).append('<button id="' + preview + '" class="btn btn-info pull-right" data-toggle="modal" href="#myModal" onclick="' + clickFunction + '">Preview table layout</button>');
     }
+    ;
 }
 
 function AppendUploadButton() {
@@ -96,6 +102,7 @@ function UploadTable() {
 function CallPython() {
     var data = $('#tables').find('option:selected').val();
     $('#tablerow').children().remove();
+    $('#mffile').remove();
     $.post('table', data, function (data) {
         $('#platename').html($('#tables').find('option:selected').val());
         ParseTableData(data);

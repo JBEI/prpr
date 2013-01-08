@@ -10,7 +10,7 @@ block script
     script(src='static/js/jsPlumb.min.js')
     script(src='static/js/prpr-mf.js')
     script
-        var grid = [45,45]
+        var grid = [45,45];
         var renamed = [];
         $(document).ready(function () {
             $(document).bind('touchmove', function(e) {
@@ -90,7 +90,7 @@ block content
                     h5
                         img(src="static/img/question.svg")
                         | &nbsp;&nbsp;PR-PR Howto guide (PDF)
-    form#form(action="/getconfig", method="post", enctype="multipart/form-data")
+    form#form(action="/getconfig", method="post", enctype="multipart/form-data", onsubmit="saveConnections();")
         .row
             .span8
                 ol
@@ -124,20 +124,22 @@ block content
                     li#script
                         h4 Write script &nbsp;&nbsp;
                             small: a#sampleScript(onclick="LoadSampleScript()") load example
+                            input#position.hide(name='position', id='position')
+                            input#wells.hide(name='wells', id='wells')
         .row
             .span12
                 #result
                 textarea#textarea.input-large.span12(rows="30", name="text") {{text}}
                 button.btn.pull-right(type="submit", name="upload") Prepare robot file
 
-            #myModal.modal.hide.fade.prpr-modal
+            #myModal.modal.hide.prpr-modal
                 .modal-header
                     button.close(type="button", data-dismiss="modal") ×
                     h3#platename Plate file name
                 .modal-body
                     #tablerow
                 .modal-footer
-                    a.btn(data-dismiss="modal") Close
+                    a.btn.pull-right(data-dismiss="modal", id="button-close-modal") Close popup
             textarea#methodsList.hidden(name="methods")
 
 

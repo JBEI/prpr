@@ -20,7 +20,7 @@
     <script src="static/js/jsPlumb.min.js"></script>
     <script src="static/js/prpr-mf.js"></script>
     <script>
-        var grid = [45, 45]
+        var grid = [45, 45];
         var renamed = [];
         $(document).ready(function () {
             $(document).bind('touchmove', function (e) {
@@ -129,7 +129,7 @@
                 <h5><img src="static/img/question.svg">&nbsp;&nbsp;PR-PR Howto guide (PDF)</h5></a></p>
         </div>
     </div>
-    <form id="form" action="/getconfig" method="post" enctype="multipart/form-data">
+    <form id="form" action="/getconfig" method="post" enctype="multipart/form-data" onsubmit="saveConnections();">
         <div class="row">
             <div class="span8">
                 <ol>
@@ -181,6 +181,8 @@
                     <li id="script">
                         <h4>Write script &nbsp;&nbsp;
                             <small><a id="sampleScript" onclick="LoadSampleScript()">load example</a></small>
+                            <input id="position" name="position" class="hide">
+                            <input id="wells" name="wells" class="hide">
                         </h4>
                     </li>
                 </ol>
@@ -192,7 +194,7 @@
                 <textarea id="textarea" rows="30" name="text" class="input-large span12">{{text}}</textarea>
                 <button type="submit" name="upload" class="btn pull-right">Prepare robot file</button>
             </div>
-            <div id="myModal" class="modal hide fade prpr-modal">
+            <div id="myModal" class="modal hide prpr-modal">
                 <div class="modal-header">
                     <button type="button" data-dismiss="modal" class="close">×</button>
                     <h3 id="platename">Plate file name</h3>
@@ -200,7 +202,8 @@
                 <div class="modal-body">
                     <div id="tablerow"></div>
                 </div>
-                <div class="modal-footer"><a data-dismiss="modal" class="btn">Close</a></div>
+                <div class="modal-footer"><a data-dismiss="modal" id="button-close-modal" class="btn pull-right">Close
+                    popup</a></div>
             </div>
             <textarea id="methodsList" name="methods" class="hidden"></textarea>
         </div>

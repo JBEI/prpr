@@ -12,17 +12,14 @@ function getConnectionInfos() {
         var src = $('#' + connection.sourceId).attr('name');
         var dst = $('#' + connection.targetId).attr('name');
         var source = src;
-        //if (renamed.match(src)) {
-        //var source = renamed[src];
-        //}
-        //else {
-        //var source = src;
-        //};
-        if (wells[source]) {
-            wells[source].push(dst);
-        }
-        else {
-            wells[source] = [dst];
+        if ((src != 'undefined') && (dst != 'undefined')) {
+            if (wells[source]) {
+                wells[source].push(dst);
+            }
+            else {
+                wells[source] = [dst];
+            }
+            ;
         }
         ;
     }
@@ -57,6 +54,20 @@ function getPositionString() {
     return position;
 };
 
+function addMFInfo() {
+    if ($('#devices').val() == 'microfluidics') {
+        var position = getPositionString();
+        $('#position').val(position);
+        saveConnections();
+    }
+    ;
+};
+
+function saveConnections() {
+    var wells = getConnectionInfos();
+    $('#wells').val(wells);
+};
+
 function getMFTableFile() {
     var position = getPositionString();
     var wells = getConnectionInfos();
@@ -77,13 +88,54 @@ function getMFTableFile() {
 };
 function mfAppendLoadButton() {
     $('#loadButton').remove();
-    $('#mfdata').after('<div class="btn" id="loadButton" onClick="loadMFTable()">Load the plate</div>');
+    $('#mfdata').after('<button class="btn btn-info pull-right" id="loadButton"  data-toggle="modal" href="#myModal" onClick="loadMFTable();">View/Edit the plate</button>');
+//    loadMFTable();
 };
+
+function setupDroppableWells() {
+    var grid = [45, 45];
+    $('#wellSrc').draggable({
+        helper:"clone",
+        grid:grid
+    });
+    $('#field').droppable({
+        accept:"#wellSrc",
+        drop:function (event, ui) {
+            var counter = $('.mf-well').length;
+            var clone = $('#wellSrc').clone(false);
+            var top = ui.helper.position()['top'];
+            var left = ui.helper.position()['left'];
+            var id = 'id' + counter;
+            clone.attr({ 'id':id, 'name':id }).css({'top':top, 'left':left, 'position':'absolute'}).addClass('mf-well').appendTo('#field');
+            makeDraggable(id);
+            addEndpoint(id);
+            addMFInfo();
+        }
+    });
+};
+
+function resetMFField() {
+    jsPlumb.deleteEveryEndpoint();
+    jsPlumb.reset();
+    $('#mffile').remove();
+    $('#platename').html('Microfluidics plate');
+    $('#tablerow').html('<div id="field" class="wells">' +
+        '<div id="source">' +
+        '<div id="wellSrc" class="prpr-well x4x6 mf"></div>' +
+        '</div>' +
+        '</div>');
+    $('#button-close-modal').after('<form id="mffile" class="pull-right">' +
+        '<div onclick="getMFTableFile();" class="btn btn-link">Download table file</div>' +
+        '</form>');
+    setupDroppableWells();
+};
+
 function loadMFTable() {
+    resetMFField();
+    $('.modal-body').css('max-height', '900px');
     var file = $('#mfdata')[0].files[0];
     var formData = new FormData();
     formData.append("file", file);
-    $('#field').children().remove();
     $.ajax({
         url:'mfparse',
         type:'POST',
@@ -93,23 +145,26 @@ function loadMFTable() {
         processData:false,
         success:function (data) {
             //ParseMFData(data);
-            jsPlumb.reset();
             var mfplate = JSON.parse(data);
             var views = mfplate[0];
-            parseViews(views);
-            jsPlumb.repaintEverything();
             var connections = mfplate.slice(1);
+            $('#position').val(views);
+            $('#wells').val(connections);
+            parseViews(views);
             parseConnections(connections);
+            $('#loadButton').attr('onClick', '');
+            addMFInfo();
         }
     });
 };
+
 function addEndpoint(element) {
     var name = $('#' + element).attr('name');
     $('#' + element).append('<div class="mf-label" onClick="renameWell(' + "'" + element + "'" + ');">' + name + '<i class="icon-pencil icon-white"></i></div>');
     jsPlumb.addEndpoint('' + element + '', {
             anchor:[
                 [0.5, 0.5, 0, -1],
-                "Continuous"
+                "Center"
             ],
             maxConnections:20,
             connector:"Straight" //-["StateMachine", {curviness:0}]
@@ -140,9 +195,10 @@ function parseViews(string) {
         var top = coords[0];
         var left = coords[1];
         $('#field').append('<div class="mf-well prpr-well x4x6 mf" id="' + id + '" name="' + id + '" style=""></div>');
+        $('#' + id).css({'top':top + 'px', 'left':left + 'px', 'position':'absolute'});
         addEndpoint(id);
         makeDraggable(id);
-        $('#' + id).css({'top':top + 'px', 'left':left + 'px', 'position':'absolute'});
+//        jsPlumb.draggable(id, {grid:grid});
     }
     ;
 };
@@ -163,6 +219,7 @@ function parseConnections(list) {
         ;
     }
     ;
+    jsPlumb.repaintEverything();
 };
 
 function renameWell(elementID) {
