@@ -87,14 +87,15 @@ def plates():
 def mfplates():
     position = request.forms.get('position', '')
     wells = request.forms.get('wells', '')
-    mywells = json_loads(wells)
+    mywells = '\n'.join(json_loads(wells))
     tablename = createMFPlate(mywells, position)
     return tablename
 
 
 def createMFPlate(wells, position):
     directory = 'tables'
-    mydata = position + '\n' + '\n'.join(wells)
+    print('createMFPlate wells:>', wells, 'position:', position)
+    mydata = position + '\n' + wells
     fileCounter = len(glob.glob1(directory, "tables_mf_*"))
     tablename = 'tables_mf_' + str(fileCounter) + '.mfp'
     tablefile = open(directory + os.sep + tablename, "wb")
@@ -135,6 +136,7 @@ def config():
         expID = experiment.ID
 
         if platform != 'microfluidics':
+            print('platform__ other', platform)
             data = request.files.data
             if data != '':
                 raw = data.file.read()
@@ -148,12 +150,13 @@ def config():
                 else:
                     errorList.append("Please select or upload the table file for your configuration script.")
                     return template('pages' + os.sep + 'page.html', file='', btn='', text=getconfig,
-                        alerterror=errorList,
-                        alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
+                        alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
         else:
+            print('platform__ MF')
             #note: if the platform is microfluidics
-            position = request.forms.get('position')#.strip().split(';')[:-1]
-            wells = request.forms.get('wells')#.strip().split(';')
+            position = request.forms.get('position', '')
+            wells = '\n'.join(request.forms.get('wells', '').strip().split(';'))
+            print('!!>', wells)
             tablename = 'tables' + os.sep + createMFPlate(wells, position)
 
         dirname = 'incoming' + os.sep

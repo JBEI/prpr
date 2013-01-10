@@ -103,7 +103,7 @@ block content
                             select#mftables.span3(name="mftableselect", onchange="selectClicked('mftable');")
                                 option(value="select") Upload table file
                                 option(value="mfcreatenew") Create new
-                            input#mfdata.span3(type="file", name="mfdata", onchange="mfAppendLoadButton()")
+                            input#mfdata.span3(type="file", name="mfdata", onchange="loadMFTable('loadButtonOnClick');mfAppendLoadButton()")
                     li#tablefile
                         h4 Select/upload table file
                         .controls#table

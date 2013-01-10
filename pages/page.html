@@ -154,7 +154,8 @@
                                 <option value="select">Upload table file</option>
                                 <option value="mfcreatenew">Create new</option>
                             </select>
-                            <input id="mfdata" type="file" name="mfdata" onchange="mfAppendLoadButton()" class="span3">
+                            <input id="mfdata" type="file" name="mfdata"
+                                   onchange="loadMFTable('loadButtonOnClick');mfAppendLoadButton()" class="span3">
                         </div>
                     </li>
                     <li id="tablefile">

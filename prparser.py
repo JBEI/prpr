@@ -43,6 +43,8 @@ class Experiment:
         self.protocols = {}
         self.addMethods(userMethods, db.getMethods())
         self.groups = {} #note: group{name:[component1, component2]}
+        self.mfWellLocations = {}
+        self.mfWellConnections = {}
 
     def addName(self, name):
         self.name = name
@@ -76,6 +78,30 @@ class Experiment:
             self.protocols[itemName] = itemInfo
         elif target == 'group':
             self.groups[itemName] = itemInfo
+
+    def addMFWellLocations(self, wellLocationString):
+        locations = wellLocationString.split(';')[:-1]
+        for location in locations:
+            wellInfo = location.split(':')
+            well = wellInfo[0]
+            coords = wellInfo[1].split(',')
+            self.mfWellLocations[well] = coords
+
+    def addMFWellConnections(self, wellConnectionString):
+        for welInfo in wellConnectionString:
+            wellConnections = welInfo.strip().split(':')
+            well = wellConnections[0]
+            connections = wellConnections[1].split(',')
+            for connection in connections:
+                if well in self.mfWellConnections:
+                    self.mfWellConnections[well].append(connection)
+                else:
+                    self.mfWellConnections[well] = [connection]
+                if connection in self.mfWellConnections:
+                    self.mfWellConnections[connection].append(well)
+                else:
+                    self.mfWellConnections[connection] = [well]
+        print(self.mfWellConnections)
 
     def addMethods(self, userMethods, methods):
         if userMethods:
@@ -232,8 +258,8 @@ class Experiment:
                                       'Location': well}) #todo: append well only if there are no same wells registered; otherwise error
                             loc.append(w)
                             self.wells.append(w)
-                        #                    else:
-                        #                        self.errorLog('Error. No wells in location "' + str(location) + '"')
+                            #                    else:
+                            #                        self.errorLog('Error. No wells in location "' + str(location) + '"')
                 else:
                     self.errorLog('Error. No such plate in the system "' + str(plateAndWells[0]) + '"')
             else:
@@ -1043,7 +1069,14 @@ def ParseFile(filename, experiment):
 
 
 def mfPlateFileParse(plateFile, experiment):
-    print('yay!')
+    mfTables = plateFile.readlines()
+    print('mfTables', mfTables)
+    locationLine = mfTables[0]
+    connections = mfTables[1:]
+    print('mfPlateFileParse', locationLine, connections)
+    experiment.addMFWellLocations(locationLine)
+    experiment.addMFWellConnections(connections)
+
 
 if __name__ == '__main__':
     global experiment

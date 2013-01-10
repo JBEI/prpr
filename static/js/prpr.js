@@ -41,7 +41,7 @@ function selectClicked(selectID) {
 
     if (selection == 'select') {
         $('#' + preview).remove();
-        $('#' + selectID).append('<input type="file" name="' + filename + '" id="' + filename + '" class="span3" onchange="' + changeFunction + '"/>');
+        $('#' + selectID).append('<input type="file" name="' + filename + '" id="' + filename + '" class="span3" onchange="loadMFTable();' + changeFunction + '"/>');
     }
     else if (selection == 'mfcreatenew') {
         $('#' + filename).remove();
