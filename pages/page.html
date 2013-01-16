@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-<head>
+  <head>
     <meta charset="utf-8">
     <title>PR-PR Laboratory Automation Platform</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,8 +9,7 @@
     <link href="static/css/bootstrap.css" rel="stylesheet">
     <link href="static/css/responsive.css" rel="stylesheet">
     <link href="static/css/prpr.css" rel="stylesheet">
-    <link href="static/css/jquery-ui.css" rel="stylesheet">
-    <!--[if lt IE 9]>
+    <link href="static/css/jquery-ui.css" rel="stylesheet"><!--[if lt IE 9]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
     <script src="static/js/jquery.min.js"></script>
     <script src="static/js/jquery-ui.min.js"></script>
@@ -20,195 +19,158 @@
     <script src="static/js/jsPlumb.min.js"></script>
     <script src="static/js/prpr-mf.js"></script>
     <script>
-        var grid = [45, 45];
-        var renamed = [];
-        $(document).ready(function () {
-            $(document).bind('touchmove', function (e) {
-                e.preventDefault();
-            }, false);
+      var grid = [45,45];
+      var renamed = [];
+      $(document).ready(function () {
+          $(document).bind('touchmove', function(e) {
+              e.preventDefault();
+          }, false);
 
-            var tablesList = {
-            {
-                !tables
-            }
-        };
-        for (var i = 0; i < tablesList.length; i++) {
-            $('#tables').append('<option value="' + tablesList[i] + '">' + tablesList[i] + '</option>')
-        }
+          var tablesList = {{!tables}};
+          for (var i = 0; i < tablesList.length; i++) {
+              $('#tables').append('<option value="' + tablesList[i] + '">' + tablesList[i] + '</option>')
+          }
 
-        var alertError = {
-        {
-            !alerterror
-        }
-        }
-        ;
-        var alertSuccess = {
-        {
-            !alertsuccess
-        }
-        }
-        ;
+          var alertError = {{!alerterror}};
+          var alertSuccess = {{!alertsuccess}};
 
-        if (alertError.length > 0) {
-            errors = removeDuplicates(alertError);
-            for (var err in errors) {
-                //noinspection JSUnfilteredForInLoop
-                //-                    $('#form').before('<div class="alert alert-error">' +
-                $('#result').append('<div class="alert alert-error">' +
-                        '<button class="close" data-dismiss="alert">×</button>' +
-                        alertError[err] + '</div>');
-            }
-        }
+          if (alertError.length > 0) {
+              errors = removeDuplicates(alertError);
+              for (var err in errors) {
+                  //noinspection JSUnfilteredForInLoop
+                                              //-                    $('#form').before('<div class="alert alert-error">' +
+                  $('#result').append('<div class="alert alert-error">' +
+                          '<button class="close" data-dismiss="alert">×</button>' +
+                          alertError[err] + '</div>');
+              }
+          }
 
-        if (alertSuccess.length > 0) {
-            results = removeDuplicates(alertSuccess);
-            for (var success in results) {
-                //noinspection JSUnfilteredForInLoop
-                $('#result').append('<form action="/download/{{file}}" class="form-inline">' +
-                        '<div class="alert alert-success ">' +
-                        alertSuccess[success] +
-                        '&nbsp;&nbsp;&nbsp;&nbsp;' +
-                        '<button class="btn {{btn}}">Download&nbsp;{{file}}</button>' +
-                        '</div></form>');
-            }
-        }
-        })
+          if (alertSuccess.length > 0) {
+              results = removeDuplicates(alertSuccess);
+              for (var success in results) {
+                  //noinspection JSUnfilteredForInLoop
+                  $('#result').append('<form action="/download/{{file}}" class="form-inline">' +
+                          '<div class="alert alert-success ">' +
+                          alertSuccess[success] +
+                          '&nbsp;&nbsp;&nbsp;&nbsp;' +
+                          '<button class="btn {{btn}}">Download&nbsp;{{file}}</button>' +
+                          '</div></form>');
+              }
+          }
+      })
 
     </script>
     <link href="static/css/prpr-mf.css" rel="stylesheet">
     <script>
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-35412836-1']);
-        _gaq.push(['_trackPageview']);
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-35412836-1']);
+      _gaq.push(['_trackPageview']);
 
-        (function () {
-            var ga = document.createElement('script');
-            ga.type = 'text/javascript';
-            ga.async = true;
-            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-            var s = document.getElementsByTagName('script')[0];
-            s.parentNode.insertBefore(ga, s);
-        })();
+      (function() {
+          var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+          ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
     </script>
-</head>
-<body>
-<div class="container">
-    <div class="row">
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
         <div class="span7">
-            <h2>Welcome to
-                <nobr><img src="static/img/favicon.ico" alt="PR-PR favicon">PR-PR!</nobr>
-            </h2>
+          <h2>Welcome to
+            <nobr><img src="static/img/favicon.ico" alt="PR-PR favicon">PR-PR!</nobr>
+          </h2>
         </div>
         <div class="span5">
-            <div class="pull-right"><a href="mailto:nstawski@lbl.gov?subject=PR-PR%20v.{{version}}%20feedback"
-                                       class="label label-info">Version {{version}}</a></div>
-            <div class="pull-right"><a href="http://pubs.acs.org/doi/abs/10.1021/sb300075t">Paper</a>&nbsp;&nbsp;::&nbsp;&nbsp;<a
-                    href="/copyright">Copyright</a>&nbsp;&nbsp;::&nbsp;&nbsp;<a href="/disclaimer">Disclaimer</a>&nbsp;&nbsp;::&nbsp;&nbsp;<a
-                    href="https://github.com/JBEI/prpr">Get code</a>&nbsp;&nbsp;::&nbsp;&nbsp;</div>
+          <div class="pull-right"><a href="mailto:nstawski@lbl.gov?subject=PR-PR%20v.{{version}}%20feedback" class="label label-info">Version {{version}}</a></div>
+          <div class="pull-right"><a href="http://pubs.acs.org/doi/abs/10.1021/sb300075t">Paper</a>&nbsp;&nbsp;::&nbsp;&nbsp;<a href="/copyright">Copyright</a>&nbsp;&nbsp;::&nbsp;&nbsp;<a href="/disclaimer">Disclaimer</a>&nbsp;&nbsp;::&nbsp;&nbsp;<a href="https://github.com/JBEI/prpr">Get code</a>&nbsp;&nbsp;::&nbsp;&nbsp;</div>
         </div>
-    </div>
-    <div class="row">
+      </div>
+      <div class="row">
         <div class="span7">
-            <p>A new simple way to do your experiments faster.<br/>Write your code in the window below, add a table file
-                and click 'Prepare robot file'.<br/>The resulting file will be available for you to download on the
-                right.</p>
+          <p>A new simple way to do your experiments faster.<br/>Write your code in the window below, add a table file and click 'Prepare robot file'.<br/>The resulting file will be available for you to download on the right.</p>
         </div>
         <div class="span3 pull-right">
-            <p><a href="static/pdf/PR-PR-v0.33-howto.pdf" class="pull-right">
-                <h5><img src="static/img/question.svg">&nbsp;&nbsp;PR-PR Howto guide (PDF)</h5></a></p>
+          <p><a href="static/pdf/PR-PR-v0.33-howto.pdf" class="pull-right">
+              <h5><img src="static/img/question.svg">&nbsp;&nbsp;PR-PR Howto guide (PDF)</h5></a></p>
         </div>
+      </div>
+      <form id="form" action="/getconfig" method="post" enctype="multipart/form-data" onsubmit="saveConnections();">
+        <div class="row">
+          <div class="span8">
+            <ol>
+              <li id="device">
+                <h4>Select output device</h4>
+                <div id="device" class="controls">
+                  <select id="devices" name="deviceselect" onchange="selectDevice();" class="span3">
+                    <option value="freedomevo">Tecan Freedom Evo</option>
+                    <option value="microfluidics">Microfluidics</option>
+                  </select><a id="methodsToggle" onclick="$('#methods').toggleClass('hidden');" class="btn btn-link">Setup custom methods</a>
+                </div>
+                <div class="row">
+                  <div id="methods" class="hidden">
+                    <div class="span7">
+                      <h5>Custom methods</h5>
+                      <div id="newMethod" class="input-append">
+                        <input id="userMethod" size="16" type="text">
+                        <button type="button" onclick="customizeMethods();" class="btn">Add</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li id="microfluidics" class="hidden">
+                <h4>Upload microfluidics table</h4>
+                <div id="mftable" class="controls">
+                  <select id="mftables" name="mftableselect" onchange="selectClicked('mftable');" class="span3">
+                    <option value="select">Upload table file</option>
+                    <option value="mfcreatenew">Create new</option>
+                  </select>
+                  <input id="mfdata" type="file" name="mfdata" onchange="loadMFTable('loadButtonOnClick');mfAppendLoadButton()" class="span3">
+                </div>
+              </li>
+              <li id="tablefile">
+                <h4>Select/upload table file</h4>
+                <div id="table" class="controls">
+                  <select id="tables" name="tableselect" onchange="selectClicked('table');" class="span3">
+                    <option value="select">Select table file</option>
+                  </select>
+                  <input id="data" type="file" name="data" onchange="AppendUploadButton()" class="span3">
+                </div>
+              </li>
+              <li id="script">
+                <h4>Write script &nbsp;&nbsp;<small><a id="sampleScript" onclick="LoadSampleScript()">load example</a></small>
+                  <input id="position" name="position" class="hide">
+                  <input id="wells" name="wells" class="hide">
+                </h4>
+              </li>
+            </ol>
+          </div>
+        </div>
+        <div class="row">
+          <div class="span12">
+            <div id="result"></div>
+            <textarea id="textarea" rows="30" name="text" class="input-large span12">{{text}}</textarea>
+            <button type="submit" name="upload" class="btn pull-right">Prepare robot file</button>
+          </div>
+          <div id="myModal" class="modal hide prpr-modal">
+            <div class="modal-header">
+              <button type="button" data-dismiss="modal" class="close">×</button>
+              <h3 id="platename">Plate file name</h3>
+            </div>
+            <div class="modal-body">
+              <div id="tablerow"></div>
+            </div>
+            <div class="modal-footer"><a data-dismiss="modal" id="button-close-modal" class="btn pull-right">Close popup</a></div>
+          </div>
+          <textarea id="methodsList" name="methods" class="hidden"></textarea>
+        </div>
+      </form>
+      <footer>
+        <p>If you have questions or comments, email <a href="mailto:nstawski@lbl.gov?subject=PR-PR%20v.{{version}}%20feedback">Nina Stawski</a></p>
+        <p><small style="color:gray">This programming language was previously known as "PaR-PaR", which is not associated with PaR Systems, Inc. which claims ownership of the "PaR" mark.</small></p>
+      </footer>
+      <script src="static/js/bootstrap.min.js"></script>
     </div>
-    <form id="form" action="/getconfig" method="post" enctype="multipart/form-data" onsubmit="saveConnections();">
-        <div class="row">
-            <div class="span8">
-                <ol>
-                    <li id="device">
-                        <h4>Select output device</h4>
-
-                        <div id="device" class="controls">
-                            <select id="devices" name="deviceselect" onchange="selectDevice();" class="span3">
-                                <option value="freedomevo">Tecan Freedom Evo</option>
-                                <option value="microfluidics">Microfluidics</option>
-                            </select><a id="methodsToggle" onclick="$('#methods').toggleClass('hidden');"
-                                        class="btn btn-link">Setup custom methods</a>
-                        </div>
-                        <div class="row">
-                            <div id="methods" class="hidden">
-                                <div class="span7">
-                                    <h5>Custom methods</h5>
-
-                                    <div id="newMethod" class="input-append">
-                                        <input id="userMethod" size="16" type="text">
-                                        <button type="button" onclick="customizeMethods();" class="btn">Add</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    <li id="microfluidics" class="hidden">
-                        <h4>Upload microfluidics table</h4>
-
-                        <div id="mftable" class="controls">
-                            <select id="mftables" name="mftableselect" onchange="selectClicked('mftable');"
-                                    class="span3">
-                                <option value="select">Upload table file</option>
-                                <option value="mfcreatenew">Create new</option>
-                            </select>
-                            <input id="mfdata" type="file" name="mfdata"
-                                   onchange="loadMFTable('loadButtonOnClick');mfAppendLoadButton()" class="span3">
-                        </div>
-                    </li>
-                    <li id="tablefile">
-                        <h4>Select/upload table file</h4>
-
-                        <div id="table" class="controls">
-                            <select id="tables" name="tableselect" onchange="selectClicked('table');" class="span3">
-                                <option value="select">Select table file</option>
-                            </select>
-                            <input id="data" type="file" name="data" onchange="AppendUploadButton()" class="span3">
-                        </div>
-                    </li>
-                    <li id="script">
-                        <h4>Write script &nbsp;&nbsp;
-                            <small><a id="sampleScript" onclick="LoadSampleScript()">load example</a></small>
-                            <input id="position" name="position" class="hide">
-                            <input id="wells" name="wells" class="hide">
-                        </h4>
-                    </li>
-                </ol>
-            </div>
-        </div>
-        <div class="row">
-            <div class="span12">
-                <div id="result"></div>
-                <textarea id="textarea" rows="30" name="text" class="input-large span12">{{text}}</textarea>
-                <button type="submit" name="upload" class="btn pull-right">Prepare robot file</button>
-            </div>
-            <div id="myModal" class="modal hide prpr-modal">
-                <div class="modal-header">
-                    <button type="button" data-dismiss="modal" class="close">×</button>
-                    <h3 id="platename">Plate file name</h3>
-                </div>
-                <div class="modal-body">
-                    <div id="tablerow"></div>
-                </div>
-                <div class="modal-footer"><a data-dismiss="modal" id="button-close-modal" class="btn pull-right">Close
-                    popup</a></div>
-            </div>
-            <textarea id="methodsList" name="methods" class="hidden"></textarea>
-        </div>
-    </form>
-    <footer>
-        <p>If you have questions or comments, email <a
-                href="mailto:nstawski@lbl.gov?subject=PR-PR%20v.{{version}}%20feedback">Nina Stawski</a></p>
-
-        <p>
-            <small style="color:gray">This programming language was previously known as "PaR-PaR", which is not
-                associated with PaR Systems, Inc. which claims ownership of the "PaR" mark.
-            </small>
-        </p>
-    </footer>
-    <script src="static/js/bootstrap.min.js"></script>
-</div>
-</body>
+  </body>
 </html>

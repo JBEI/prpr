@@ -140,10 +140,8 @@ class Experiment:
                     tempWellsList = well.split('~')
                     startWellCoords = GetWellCoordinates(tempWellsList[0], plateDimensions, str(location))
                     endWellCoords = GetWellCoordinates(tempWellsList[1], plateDimensions, str(location))
-                    wellsAmount = (endWellCoords[0] - startWellCoords[0]) * plateDimensions[0] + endWellCoords[1] -
-                                  startWellCoords[1] + 1
-                    print('(', endWellCoords[0], '-', startWellCoords[0], ') *', plateDimensions[0], '-',
-                        endWellCoords[1], '+', startWellCoords[1])
+                    wellsAmount = (endWellCoords[0] - startWellCoords[0]) * plateDimensions[0] + endWellCoords[1] - startWellCoords[1] + 1
+                    print('(', endWellCoords[0], '-', startWellCoords[0], ') *', plateDimensions[0], '-', endWellCoords[1], '+', startWellCoords[1])
                     print(startWellCoords, endWellCoords, plateDimensions, wellsAmount)
                     wellsList = (tempWellsList[0], wellsAmount)
                     direction = 'vertical'
@@ -162,8 +160,7 @@ class Experiment:
                     elif len(wellsList) == 1:
                         wellsNewlist.append(GetWellCoordinates(wellsList[0], plateDimensions, str(location)))
                     else:
-                        self.errorLog('Error. Can\'t be more than one \'+\'. Correct syntax in ' + str(
-                            location) + ' and run again. \n')
+                        self.errorLog('Error. Can\'t be more than one \'+\'. Correct syntax in ' + str(location) + ' and run again. \n')
                 else:
                     self.errorLog('Error. Well can\'t be empty in locaton "' + str(location) + '"')
 
