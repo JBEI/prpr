@@ -141,431 +141,431 @@ class Experiment:
                     startWellCoords = GetWellCoordinates(tempWellsList[0], plateDimensions, str(location))
                     endWellCoords = GetWellCoordinates(tempWellsList[1], plateDimensions, str(location))
                     wellsAmount = (endWellCoords[0] - startWellCoords[0]) * plateDimensions[0] + endWellCoords[1] -
-                    startWellCoords[1] + 1
-                print('(', endWellCoords[0], '-', startWellCoords[0], ') *', plateDimensions[0], '-',
-                    endWellCoords[1], '+', startWellCoords[1])
-                print(startWellCoords, endWellCoords, plateDimensions, wellsAmount)
-                wellsList = (tempWellsList[0], wellsAmount)
-                direction = 'vertical'
-            if wellsList[0]:
-                startWell = wellsList[0]
-                rowsMax = plateDimensions[0]
-                colsMax = plateDimensions[1]
-                if len(wellsList) == 2:
-                    assert (wellsList[1] != ''), "Well number after '+' can't be empty."
-                    numberWells = int(wellsList[1])
-                    startCoords = GetWellCoordinates(startWell, plateDimensions, str(location))
-                    for i in range(0, numberWells):
-                        addedWells = WellsRename(startCoords, i, plateDimensions, direction)
-                        assert(addedWells[1] <= colsMax), 'Wells locations are out of range'
-                        wellsNewlist.append(addedWells)
-                elif len(wellsList) == 1:
-                    wellsNewlist.append(GetWellCoordinates(wellsList[0], plateDimensions, str(location)))
+                                  startWellCoords[1] + 1
+                    print('(', endWellCoords[0], '-', startWellCoords[0], ') *', plateDimensions[0], '-',
+                        endWellCoords[1], '+', startWellCoords[1])
+                    print(startWellCoords, endWellCoords, plateDimensions, wellsAmount)
+                    wellsList = (tempWellsList[0], wellsAmount)
+                    direction = 'vertical'
+                if wellsList[0]:
+                    startWell = wellsList[0]
+                    rowsMax = plateDimensions[0]
+                    colsMax = plateDimensions[1]
+                    if len(wellsList) == 2:
+                        assert (wellsList[1] != ''), "Well number after '+' can't be empty."
+                        numberWells = int(wellsList[1])
+                        startCoords = GetWellCoordinates(startWell, plateDimensions, str(location))
+                        for i in range(0, numberWells):
+                            addedWells = WellsRename(startCoords, i, plateDimensions, direction)
+                            assert(addedWells[1] <= colsMax), 'Wells locations are out of range'
+                            wellsNewlist.append(addedWells)
+                    elif len(wellsList) == 1:
+                        wellsNewlist.append(GetWellCoordinates(wellsList[0], plateDimensions, str(location)))
+                    else:
+                        self.errorLog('Error. Can\'t be more than one \'+\'. Correct syntax in ' + str(
+                            location) + ' and run again. \n')
                 else:
-                    self.errorLog('Error. Can\'t be more than one \'+\'. Correct syntax in ' + str(
-                        location) + ' and run again. \n')
-            else:
-                self.errorLog('Error. Well can\'t be empty in locaton "' + str(location) + '"')
+                    self.errorLog('Error. Well can\'t be empty in locaton "' + str(location) + '"')
 
-        return wellsNewlist
+            return wellsNewlist
 
-    def WellsRename(startCoords, i, plateDimensions, direction):
-        rowsMax = plateDimensions[0]
-        colsMax = plateDimensions[1]
-        currentNum = startCoords[0] + i
-        if direction == 'vertical':
-            if currentNum <= rowsMax:
-                newCol = startCoords[1]
-                return currentNum, newCol
-            elif currentNum > rowsMax:
-                times = int(currentNum / rowsMax)
-                newCol = startCoords[1] + times
-                newRow = currentNum - (times * rowsMax)
-                if newRow == 0:
-                    return newRow + rowsMax, newCol - 1
-                else:
-                    return newRow, newCol
-        if direction == 'horizontal':
-            if currentNum <= colsMax:
-                newRow = startCoords[1]
-                return newRow, currentNum
-            elif currentNum > colsMax:
-                times = int(currentNum / colsMax)
-                newRow = startCoords[1] + times
-                newCol = currentNum - (times * colsMax)
-                if newCol == 0:
-                    return newRow - 1, newCol + colsMax
-                else:
-                    return newRow, newCol
-
-
-    def GetWellCoordinates(well, plateDimensions, location):
-        """
-        Takes the well coordinates entered by the user and dimensions of the plate and returns the wells plate coordinates
-        """
-        if well:
+        def WellsRename(startCoords, i, plateDimensions, direction):
             rowsMax = plateDimensions[0]
             colsMax = plateDimensions[1]
-            try:
-                int(well)
-                well = int(well)
-                if well > rowsMax * colsMax:
-                    self.errorLog('Error. Well "' + str(well) + '" in location "' + location + '" is out of range')
-                else:
-                    if well <= rowsMax:
-                        newCol = 1
-                        newRow = well
-                    else:
-                        times = int(well / rowsMax)
-                        newCol = times + 1
-                        newRow = well - (times * rowsMax)
+            currentNum = startCoords[0] + i
+            if direction == 'vertical':
+                if currentNum <= rowsMax:
+                    newCol = startCoords[1]
+                    return currentNum, newCol
+                elif currentNum > rowsMax:
+                    times = int(currentNum / rowsMax)
+                    newCol = startCoords[1] + times
+                    newRow = currentNum - (times * rowsMax)
                     if newRow == 0:
                         return newRow + rowsMax, newCol - 1
                     else:
                         return newRow, newCol
-            except ValueError:
-                alphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
-                letterIndex = alphabet.find(well[:1]) + 1
-                if letterIndex > rowsMax:
-                    self.errorLog(
-                        'Error. Well "' + well + '" letter coordinate in location "' + location + '" is out of range')
-                elif int(well[1:]) > colsMax:
-                    self.errorLog(
-                        'Error. Well "' + well + '" number coordinate in location "' + location + '" is out of range')
+            if direction == 'horizontal':
+                if currentNum <= colsMax:
+                    newRow = startCoords[1]
+                    return newRow, currentNum
+                elif currentNum > colsMax:
+                    times = int(currentNum / colsMax)
+                    newRow = startCoords[1] + times
+                    newCol = currentNum - (times * colsMax)
+                    if newCol == 0:
+                        return newRow - 1, newCol + colsMax
+                    else:
+                        return newRow, newCol
+
+
+        def GetWellCoordinates(well, plateDimensions, location):
+            """
+            Takes the well coordinates entered by the user and dimensions of the plate and returns the wells plate coordinates
+            """
+            if well:
+                rowsMax = plateDimensions[0]
+                colsMax = plateDimensions[1]
+                try:
+                    int(well)
+                    well = int(well)
+                    if well > rowsMax * colsMax:
+                        self.errorLog('Error. Well "' + str(well) + '" in location "' + location + '" is out of range')
+                    else:
+                        if well <= rowsMax:
+                            newCol = 1
+                            newRow = well
+                        else:
+                            times = int(well / rowsMax)
+                            newCol = times + 1
+                            newRow = well - (times * rowsMax)
+                        if newRow == 0:
+                            return newRow + rowsMax, newCol - 1
+                        else:
+                            return newRow, newCol
+                except ValueError:
+                    alphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
+                    letterIndex = alphabet.find(well[:1]) + 1
+                    if letterIndex > rowsMax:
+                        self.errorLog(
+                            'Error. Well "' + well + '" letter coordinate in location "' + location + '" is out of range')
+                    elif int(well[1:]) > colsMax:
+                        self.errorLog(
+                            'Error. Well "' + well + '" number coordinate in location "' + location + '" is out of range')
+                    else:
+                        return letterIndex, int(well[1:])
+            else:
+                self.errorLog('Error. No well defined in location "' + location + '"')
+
+        loc = []
+        if '/' in location:
+            newLoc = location.split('/')
+        else:
+            newLoc = [location]
+        for line in newLoc:
+            plateAndWells = line.split(':')
+            if plateAndWells[0]:
+                if plateAndWells[0] in self.plates:
+                    plateName = self.plates[plateAndWells[0]].name
+                    plateDms = self.plates[plateAndWells[0]].dimensions
+                    plateLocation = self.plates[plateAndWells[0]].location
+
+                    if plateAndWells[1]:
+                        wells = ParseWells(plateAndWells[1], plateDms)
+                        for well in wells:
+                            if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
+                                print('aiaiaiaiaiaiaiai!!!!')
+                            w = Well({'Plate': plateName,
+                                      'Location': well}) #todo: append well only if there are no same wells registered; otherwise error
+                            loc.append(w)
+                            self.wells.append(w)
+                            #                    else:
+                            #                        self.errorLog('Error. No wells in location "' + str(location) + '"')
                 else:
-                    return letterIndex, int(well[1:])
-        else:
-            self.errorLog('Error. No well defined in location "' + location + '"')
-
-    loc = []
-    if '/' in location:
-        newLoc = location.split('/')
-    else:
-        newLoc = [location]
-    for line in newLoc:
-        plateAndWells = line.split(':')
-        if plateAndWells[0]:
-            if plateAndWells[0] in self.plates:
-                plateName = self.plates[plateAndWells[0]].name
-                plateDms = self.plates[plateAndWells[0]].dimensions
-                plateLocation = self.plates[plateAndWells[0]].location
-
-                if plateAndWells[1]:
-                    wells = ParseWells(plateAndWells[1], plateDms)
-                    for well in wells:
-                        if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
-                            print('aiaiaiaiaiaiaiai!!!!')
-                        w = Well({'Plate': plateName,
-                                  'Location': well}) #todo: append well only if there are no same wells registered; otherwise error
-                        loc.append(w)
-                        self.wells.append(w)
-                        #                    else:
-                        #                        self.errorLog('Error. No wells in location "' + str(location) + '"')
+                    self.errorLog('Error. No such plate in the system "' + str(plateAndWells[0]) + '"')
             else:
-                self.errorLog('Error. No such plate in the system "' + str(plateAndWells[0]) + '"')
-        else:
-            self.errorLog('Error. No plate in location "' + str(location) + '"')
-    return loc
+                self.errorLog('Error. No plate in location "' + str(location) + '"')
+        return loc
 
 
-def splitAmount(self, volume):
-    maxVolume = int(self.maxVolume)
-    if volume.isdigit():
-        splitAmount = volume.split('.')
-        if len(splitAmount) > 1: # works for small volumes only
-            amount = float(volume)
-        else:
-            amount = int(volume)
-        if amount < maxVolume:
-            return amount, 1
-        else:
-            times = amount / maxVolume
-            left = amount - maxVolume * int(times)
-            if left > 0:
-                tipsNeeded = int(times)
-                newAmount = (maxVolume, tipsNeeded, left)
+    def splitAmount(self, volume):
+        maxVolume = int(self.maxVolume)
+        if volume.isdigit():
+            splitAmount = volume.split('.')
+            if len(splitAmount) > 1: # works for small volumes only
+                amount = float(volume)
             else:
-                tipsNeeded = int(times)
-                newAmount = (maxVolume, tipsNeeded)
-            return newAmount
-    else:
-        self.errorLog('Error, volume "' + volume + '" is not defined. Please correct the error and try again.')
-
-
-def get(self, target, itemName):
-    if target == 'component':
-        item = self.components
-    elif target == 'plate':
-        item = self.plates
-    elif target == 'volume':
-        item = self.volumes
-    elif target == 'recipe':
-        item = self.recipes
-    else:
-        item = False
-    assert item, 'Wrong target name, "' + target + '"'
-    if itemName in item.keys():
-        return item[itemName]
-    else:
-        self.log('Error. No ' + target + ' "' + itemName + '" defined.')
-        self.errorLog(
-            'Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
-
-
-def createTransfer(self, component, modifier, destination, volume, transferMethod, line):
-    if component in self.components or ':' in component:
-    #            if component in self.groups: #better parse groups
-        if component in self.components:
-            comp = self.components[component]
-        else:
-            if ':' in component:
-                comp = Component({'name': component, 'location': component, 'method': self.methods[0]})
-                self.add('component', component, comp)
-        method = ''
-        methodError = False
-        if transferMethod == 'DEFAULT':
-            method = self.methods[0]
-        else:
-            m = self.checkMethod(transferMethod)
-            if m:
-                method = m
+                amount = int(volume)
+            if amount < maxVolume:
+                return amount, 1
             else:
-                methodError = True
-                self.log('Wrong method "' + transferMethod + '"')
-                self.errorLog('Error. Wrong method "' + transferMethod + '" in line "' + line + '"')
-        if method:
-            location = []
-            if modifier:
-                times = int(modifier[1])
-                if modifier[0] == '|':
-                    for well in comp.location:
-                        for i in range(0, times):
-                            location.append(well)
-                if modifier[0] == '*':
-                    for i in range(0, times):
+                times = amount / maxVolume
+                left = amount - maxVolume * int(times)
+                if left > 0:
+                    tipsNeeded = int(times)
+                    newAmount = (maxVolume, tipsNeeded, left)
+                else:
+                    tipsNeeded = int(times)
+                    newAmount = (maxVolume, tipsNeeded)
+                return newAmount
+        else:
+            self.errorLog('Error, volume "' + volume + '" is not defined. Please correct the error and try again.')
+
+
+    def get(self, target, itemName):
+        if target == 'component':
+            item = self.components
+        elif target == 'plate':
+            item = self.plates
+        elif target == 'volume':
+            item = self.volumes
+        elif target == 'recipe':
+            item = self.recipes
+        else:
+            item = False
+        assert item, 'Wrong target name, "' + target + '"'
+        if itemName in item.keys():
+            return item[itemName]
+        else:
+            self.log('Error. No ' + target + ' "' + itemName + '" defined.')
+            self.errorLog(
+                'Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
+
+
+    def createTransfer(self, component, modifier, destination, volume, transferMethod, line):
+        if component in self.components or ':' in component:
+        #            if component in self.groups: #better parse groups
+            if component in self.components:
+                comp = self.components[component]
+            else:
+                if ':' in component:
+                    comp = Component({'name': component, 'location': component, 'method': self.methods[0]})
+                    self.add('component', component, comp)
+            method = ''
+            methodError = False
+            if transferMethod == 'DEFAULT':
+                method = self.methods[0]
+            else:
+                m = self.checkMethod(transferMethod)
+                if m:
+                    method = m
+                else:
+                    methodError = True
+                    self.log('Wrong method "' + transferMethod + '"')
+                    self.errorLog('Error. Wrong method "' + transferMethod + '" in line "' + line + '"')
+            if method:
+                location = []
+                if modifier:
+                    times = int(modifier[1])
+                    if modifier[0] == '|':
                         for well in comp.location:
-                            location.append(well)
+                            for i in range(0, times):
+                                location.append(well)
+                    if modifier[0] == '*':
+                        for i in range(0, times):
+                            for well in comp.location:
+                                location.append(well)
+                else:
+                    location = comp.location
+
+                if volume in self.volumes:
+                    amount = self.volumes[volume].amount
+                else:
+                    amount = volume
+
+                volumeInfo = [self.splitAmount(x) for x in amount.split(',')]
+
+                transferDict = {'src': location, 'dst': destination, 'volume': volumeInfo, 'method': method,
+                                'type': 'transfer'}
+                return transferDict
+
             else:
-                location = comp.location
-
-            if volume in self.volumes:
-                amount = self.volumes[volume].amount
-            else:
-                amount = volume
-
-            volumeInfo = [self.splitAmount(x) for x in amount.split(',')]
-
-            transferDict = {'src': location, 'dst': destination, 'volume': volumeInfo, 'method': method,
-                            'type': 'transfer'}
-            return transferDict
-
+                if not methodError:
+                    self.errorLog('Error. No method defined in line "' + line + '"')
         else:
-            if not methodError:
-                self.errorLog('Error. No method defined in line "' + line + '"')
-    else:
-        self.log('Error. Wrong component "' + component + '".')
-        self.errorLog(
-            'Error. Component "' + component + '" is not defined. Please correct the error and try again.')
-        return False
+            self.log('Error. Wrong component "' + component + '".')
+            self.errorLog(
+                'Error. Component "' + component + '" is not defined. Please correct the error and try again.')
+            return False
 
 
-def make(self, splitLine):
-    originalLine = ' '.join(splitLine)
-    line = splitLine[1:]
-    if len(line) >= 3:
-        self.addComment('------ BEGIN MAKE ' + line[0] + ' in ' + line[1] + ' ------')
-        self.testindex += 1
-        recipeInfo = line[0].split(':')
+    def make(self, splitLine):
+        originalLine = ' '.join(splitLine)
+        line = splitLine[1:]
+        if len(line) >= 3:
+            self.addComment('------ BEGIN MAKE ' + line[0] + ' in ' + line[1] + ' ------')
+            self.testindex += 1
+            recipeInfo = line[0].split(':')
 
-        if recipeInfo[0] in self.recipes:
-            subrecipeError = False
-            recipeName = self.recipes[recipeInfo[0]]
-            recipe = []
-            if line[1] not in self.components:
-                if ':' in line[1]:
-                    dest = Component({'name': line[1], 'location': line[1], 'method': self.methods[0]})
-                    self.add('component', dest.name, dest)
-                else:
-                    self.errorLog(
-                        'Error. Wrong component "' + line[1] + '". Please correct the error and try again.')
-            else:
-                dest = self.components[line[1]]
-            dstLocation = dest.location
-
-            if len(recipeInfo) == 2:
-                subrecipes = recipeInfo[1].split(',')
-                for sub in subrecipes:
-                    if sub in recipeName.subrecipes:
-                        recipe.append(recipeName.subrecipes[sub]['recipe'])
+            if recipeInfo[0] in self.recipes:
+                subrecipeError = False
+                recipeName = self.recipes[recipeInfo[0]]
+                recipe = []
+                if line[1] not in self.components:
+                    if ':' in line[1]:
+                        dest = Component({'name': line[1], 'location': line[1], 'method': self.methods[0]})
+                        self.add('component', dest.name, dest)
                     else:
-                        subrecipeError = True
-                        self.errorLog('Error. No such line "' + str(sub) + '" in recipe "' + recipeInfo[0] + '"')
-            else:
-                recipeLines = sorted(recipeName.subrecipes.values(), key=lambda k: k['line'])
-                for rLine in recipeLines:
-                    recipe.append(rLine['recipe'])
-            if not subrecipeError:
-                if len(recipe) == len(dstLocation):
-                    a = zip(*recipe)
-                    for element in a:
-                        transferString = []
-                        z = zip(element, dstLocation)
-                        for el in z:
-                            component = el[0][0]
-                            volume = el[0][1]
-                            destination = el[1]
-                            transferMethod = line[2]
-                            modifier = ()
-                            transaction = self.createTransfer(component, modifier, destination, volume,
-                                transferMethod, originalLine)
-                            if transaction:
-                                transaction['src'] = transaction['src'][
-                                                     0] #making sure the transaction happens from one well (first if component has multiple wells)
-                                transaction['volume'] = transaction['volume'][0]
-                                transferString.append(transaction)
-                        if transferString:
-                            self.transactionList.append(transferString)
+                        self.errorLog(
+                            'Error. Wrong component "' + line[1] + '". Please correct the error and try again.')
                 else:
-                    self.log('Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
-                    self.errorLog(
-                        'Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
+                    dest = self.components[line[1]]
+                dstLocation = dest.location
 
-                if len(line) > 3:
-                    options = line[3].split(',')
-                    for option in options:
-                        a = option.lower()
-                        if a.startswith('mix'):
-                            mixoptions = a.split(':')
-                            if len(mixoptions) == 2:
-                                transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1],
-                                               'location': dest.location}
-                                self.transactionList.append([transaction])
-                            else:
-                                self.log('Error. Wrong mixing options in line "' + originalLine + '"')
+                if len(recipeInfo) == 2:
+                    subrecipes = recipeInfo[1].split(',')
+                    for sub in subrecipes:
+                        if sub in recipeName.subrecipes:
+                            recipe.append(recipeName.subrecipes[sub]['recipe'])
+                        else:
+                            subrecipeError = True
+                            self.errorLog('Error. No such line "' + str(sub) + '" in recipe "' + recipeInfo[0] + '"')
+                else:
+                    recipeLines = sorted(recipeName.subrecipes.values(), key=lambda k: k['line'])
+                    for rLine in recipeLines:
+                        recipe.append(rLine['recipe'])
+                if not subrecipeError:
+                    if len(recipe) == len(dstLocation):
+                        a = zip(*recipe)
+                        for element in a:
+                            transferString = []
+                            z = zip(element, dstLocation)
+                            for el in z:
+                                component = el[0][0]
+                                volume = el[0][1]
+                                destination = el[1]
+                                transferMethod = line[2]
+                                modifier = ()
+                                transaction = self.createTransfer(component, modifier, destination, volume,
+                                    transferMethod, originalLine)
+                                if transaction:
+                                    transaction['src'] = transaction['src'][
+                                                         0] #making sure the transaction happens from one well (first if component has multiple wells)
+                                    transaction['volume'] = transaction['volume'][0]
+                                    transferString.append(transaction)
+                            if transferString:
+                                self.transactionList.append(transferString)
+                    else:
+                        self.log('Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
+                        self.errorLog(
+                            'Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
+
+                    if len(line) > 3:
+                        options = line[3].split(',')
+                        for option in options:
+                            a = option.lower()
+                            if a.startswith('mix'):
+                                mixoptions = a.split(':')
+                                if len(mixoptions) == 2:
+                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1],
+                                                   'location': dest.location}
+                                    self.transactionList.append([transaction])
+                                else:
+                                    self.log('Error. Wrong mixing options in line "' + originalLine + '"')
+                                    self.errorLog(
+                                        'Error. Wrong mixing options in line "' + originalLine + '". Please correct the error and try again.')
+                else:
+                    pass
+            else:
+                self.errorLog('Error. No such recipe as "' + recipeInfo[0] + '".')
+
+            self.addComment('------ END MAKE ' + line[0] + ' in ' + line[1] + ' ------')
+        else:
+            self.errorLog('Error. Not enough parameters in line "' + originalLine + '". Please correct your script.')
+
+
+    def transfer(self, splitLine, type):
+        originalLine = ' '.join(splitLine)
+        transferInfo = splitLine[1:]
+
+        def CheckMultiplier(componentInfo):
+            """
+            Checks for additional actions on components
+            """
+            pipe = componentInfo.split('|')
+            times = componentInfo.split('*')
+            pipe.insert(0, '|')
+            times.insert(0, '*')
+            if len(pipe) > 2:
+                return pipe
+            elif len(times) > 2:
+                return times
+            else:
+                return componentInfo
+
+        if len(transferInfo) >= 4:
+            self.addComment(
+                '------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+            self.testindex += 1
+
+            #check the source for multipliers
+            check = CheckMultiplier(transferInfo[0])
+            modifier = ()
+            if len(check) == 3:
+                modifier = (check[0], check[2])
+                source = check[1]
+            else:
+                source = check
+            if transferInfo[1] not in self.components:
+                dest = Component({'name': transferInfo[1], 'location': transferInfo[1], 'method': self.methods[0]})
+                self.add('component', dest.name, dest)
+                dst = self.components[dest.name]
+
+            else:
+                dst = self.components[transferInfo[1]]
+            destination = dst.location
+            volume = transferInfo[2]
+            method = transferInfo[3]
+            transferLine = self.createTransfer(source, modifier, destination, volume, method, originalLine)
+            if transferLine:
+                newTr = False
+
+                if type == 'transfer':
+                    if len(transferLine['src']) == len(transferLine['dst']):
+                        newTr = enumerate(zip(transferLine['src'], transferLine['dst']))
+
+                elif type == 'spread':
+                    newTr = enumerate(zip(cycle(transferLine['src']), transferLine['dst']))
+
+                transfer = []
+                if newTr:
+                    vol = transferLine['volume']
+                    for i, tr in newTr:
+                        trLine = deepcopy(transferLine)
+                        trLine['src'] = tr[0]
+                        trLine['dst'] = tr[1]
+                        if len(vol) == 1:
+                            trLine['volume'] = vol[0]
+                        else:
+                            try:
+                                trLine['volume'] = vol[i]
+                            except IndexError:
                                 self.errorLog(
-                                    'Error. Wrong mixing options in line "' + originalLine + '". Please correct the error and try again.')
-            else:
-                pass
+                                    'Error in line "' + originalLine + '". The number of volumes in "' + volume + '" is less than number of source wells.')
+                        transfer.append(trLine)
+                    self.transactionList.append(transfer)
+
+                    if len(transferInfo) > 4:
+                        options = transferInfo[4].split(',')
+                        for option in options:
+                            a = option.lower()
+                            if a.startswith('mix'):
+                                mixoptions = a.split(':')
+                                if len(mixoptions) == 2:
+                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1],
+                                                   'location': dst.location}
+                                    self.transactionList.append([transaction])
+                                else:
+                                    self.log('Error. Wrong mixing options in line "' + originalLine + '"')
+                    self.addComment(
+                        '------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+
+                else:
+                    self.errorLog('Error in line "' + originalLine + '"')
         else:
-            self.errorLog('Error. No such recipe as "' + recipeInfo[0] + '".')
-
-        self.addComment('------ END MAKE ' + line[0] + ' in ' + line[1] + ' ------')
-    else:
-        self.errorLog('Error. Not enough parameters in line "' + originalLine + '". Please correct your script.')
+            self.errorLog('Error. Not enough parameters in line "' + originalLine + '". Please correct your script.')
 
 
-def transfer(self, splitLine, type):
-    originalLine = ' '.join(splitLine)
-    transferInfo = splitLine[1:]
-
-    def CheckMultiplier(componentInfo):
-        """
-        Checks for additional actions on components
-        """
-        pipe = componentInfo.split('|')
-        times = componentInfo.split('*')
-        pipe.insert(0, '|')
-        times.insert(0, '*')
-        if len(pipe) > 2:
-            return pipe
-        elif len(times) > 2:
-            return times
-        else:
-            return componentInfo
-
-    if len(transferInfo) >= 4:
-        self.addComment(
-            '------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
-        self.testindex += 1
-
-        #check the source for multipliers
-        check = CheckMultiplier(transferInfo[0])
-        modifier = ()
-        if len(check) == 3:
-            modifier = (check[0], check[2])
-            source = check[1]
-        else:
-            source = check
-        if transferInfo[1] not in self.components:
-            dest = Component({'name': transferInfo[1], 'location': transferInfo[1], 'method': self.methods[0]})
-            self.add('component', dest.name, dest)
-            dst = self.components[dest.name]
-
-        else:
-            dst = self.components[transferInfo[1]]
-        destination = dst.location
-        volume = transferInfo[2]
-        method = transferInfo[3]
-        transferLine = self.createTransfer(source, modifier, destination, volume, method, originalLine)
-        if transferLine:
-            newTr = False
-
-            if type == 'transfer':
-                if len(transferLine['src']) == len(transferLine['dst']):
-                    newTr = enumerate(zip(transferLine['src'], transferLine['dst']))
-
-            elif type == 'spread':
-                newTr = enumerate(zip(cycle(transferLine['src']), transferLine['dst']))
-
-            transfer = []
-            if newTr:
-                vol = transferLine['volume']
-                for i, tr in newTr:
-                    trLine = deepcopy(transferLine)
-                    trLine['src'] = tr[0]
-                    trLine['dst'] = tr[1]
-                    if len(vol) == 1:
-                        trLine['volume'] = vol[0]
-                    else:
-                        try:
-                            trLine['volume'] = vol[i]
-                        except IndexError:
-                            self.errorLog(
-                                'Error in line "' + originalLine + '". The number of volumes in "' + volume + '" is less than number of source wells.')
-                    transfer.append(trLine)
-                self.transactionList.append(transfer)
-
-                if len(transferInfo) > 4:
-                    options = transferInfo[4].split(',')
-                    for option in options:
-                        a = option.lower()
-                        if a.startswith('mix'):
-                            mixoptions = a.split(':')
-                            if len(mixoptions) == 2:
-                                transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1],
-                                               'location': dst.location}
-                                self.transactionList.append([transaction])
-                            else:
-                                self.log('Error. Wrong mixing options in line "' + originalLine + '"')
-                self.addComment(
-                    '------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
-
-            else:
-                self.errorLog('Error in line "' + originalLine + '"')
-    else:
-        self.errorLog('Error. Not enough parameters in line "' + originalLine + '". Please correct your script.')
+    def message(self, line):
+        message = {'type': 'command', 'action': 'message', 'options': line}
+        self.transactionList.append([message])
 
 
-def message(self, line):
-    message = {'type': 'command', 'action': 'message', 'options': line}
-    self.transactionList.append([message])
+    def addComment(self, line):
+        comment = {'type': 'command', 'action': 'comment', 'options': line}
+        self.transactionList.append([comment])
 
 
-def addComment(self, line):
-    comment = {'type': 'command', 'action': 'comment', 'options': line}
-    self.transactionList.append([comment])
+    def log(self, item):
+        from datetime import datetime
+
+        time = str(datetime.now())
+        print(item)
+        self.logger.append(time + ': ' + item)
 
 
-def log(self, item):
-    from datetime import datetime
-
-    time = str(datetime.now())
-    print(item)
-    self.logger.append(time + ': ' + item)
-
-
-def errorLog(self, item):
-    self.errorLogger.append(item)
+    def errorLog(self, item):
+        self.errorLogger.append(item)
 
 
 class Well:
@@ -988,11 +988,11 @@ def LineToList(line, configFileName, experiment):
 
             elif command['name'] == 'volume':
                 if len(line) == 3:
-                #                    if line[2].isdigit():
+                #if line[2].isdigit():
                     volumeInfo = {'name': line[1], 'amount': line[2]}
                     experiment.add(command['name'], volumeInfo['name'], Volume(volumeInfo))
-                #                    else:
-                #                        experiment.errorLog('Error. Volume value should be a digit in line "' + ' '.join(line) + '"')
+                #else:
+                #   experiment.errorLog('Error. Volume value should be a digit in line "' + ' '.join(line) + '"')
                 else:
                     experiment.errorLog('Error. Please correct the volume info in line "' + ' '.join(line) + '"')
 

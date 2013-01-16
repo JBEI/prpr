@@ -127,9 +127,9 @@ function resetMFField() {
         PaintStyle:{ lineWidth:5, strokeStyle:"#456" },
         ConnectorZIndex:3
     });
-};
+}
 
-function loadMFTable() {
+function loadMFTable(loadButtonOnClick) {
     resetMFField();
     $('.modal-body').css('max-height', '900px');
     var file = $('#mfdata')[0].files[0];
@@ -151,8 +151,9 @@ function loadMFTable() {
             $('#wells').val(connections);
             parseViews(views);
             parseConnections(connections);
-            $('#loadButton').attr('onClick', '');
-            addMFInfo();
+            if (typeof loadButtonOnClick == "undefined") {
+                $('#loadButton').attr('onClick', '');
+            }
         }
     });
 }
