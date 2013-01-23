@@ -86,6 +86,7 @@ class Experiment:
             well = wellInfo[0]
             coords = wellInfo[1].split(',')
             self.mfWellLocations[well] = coords
+        print(self.mfWellLocations)
 
     def addMFWellConnections(self, wellConnectionString):
         for welInfo in wellConnectionString:
@@ -233,35 +234,40 @@ class Experiment:
                         return letterIndex, int(well[1:])
             else:
                 self.errorLog('Error. No well defined in location "' + location + '"')
-
         loc = []
-        if '/' in location:
-            newLoc = location.split('/')
-        else:
-            newLoc = [location]
-        for line in newLoc:
-            plateAndWells = line.split(':')
-            if plateAndWells[0]:
-                if plateAndWells[0] in self.plates:
-                    plateName = self.plates[plateAndWells[0]].name
-                    plateDms = self.plates[plateAndWells[0]].dimensions
-                    plateLocation = self.plates[plateAndWells[0]].location
-
-                    if plateAndWells[1]:
-                        wells = ParseWells(plateAndWells[1], plateDms)
-                        for well in wells:
-                            if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
-                                print('aiaiaiaiaiaiaiai!!!!')
-                            w = Well({'Plate': plateName,
-                                      'Location': well}) #todo: append well only if there are no same wells registered; otherwise error
-                            loc.append(w)
-                            self.wells.append(w)
-                            #                    else:
-                            #                        self.errorLog('Error. No wells in location "' + str(location) + '"')
-                else:
-                    self.errorLog('Error. No such plate in the system "' + str(plateAndWells[0]) + '"')
+        if self.platform != "microfluidics":
+            if '/' in location:
+                newLoc = location.split('/')
             else:
-                self.errorLog('Error. No plate in location "' + str(location) + '"')
+                newLoc = [location]
+            for line in newLoc:
+                plateAndWells = line.split(':')
+                if plateAndWells[0]:
+                    if plateAndWells[0] in self.plates:
+                        plateName = self.plates[plateAndWells[0]].name
+                        plateDms = self.plates[plateAndWells[0]].dimensions
+                        plateLocation = self.plates[plateAndWells[0]].location
+
+                        if plateAndWells[1]:
+                            wells = ParseWells(plateAndWells[1], plateDms)
+                            for well in wells:
+                                if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
+                                    print('aiaiaiaiaiaiaiai!!!!')
+                                w = Well({'Plate': plateName, 'Location': well}) #todo: append well only if there are no same wells registered; otherwise error
+                                loc.append(w)
+                                self.wells.append(w)
+                                #                    else:
+                                #                        self.errorLog('Error. No wells in location "' + str(location) + '"')
+                    else:
+                        self.errorLog('Error. No such plate in the system "' + str(plateAndWells[0]) + '"')
+                else:
+                    self.errorLog('Error. No plate in location "' + str(location) + '"')
+        else:
+            if location in self.mfWellLocations:
+                w = Well({'Plate' : 'mf', 'Location' : location})
+                loc.append(w)
+            else:
+                self.errorLog('Error. No such well in the system "' + location + '"')
         return loc
 
 
@@ -309,15 +315,19 @@ class Experiment:
                 'Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
 
 
-    def createTransfer(self, component, modifier, destination, volume, transferMethod, line):
-        if component in self.components or ':' in component:
+    def createTransfer(self, component, modifier, destination, volume, transferMethod, line): #note: there is MF problem for the components
+        if component in self.components or ':' in component or self.platform == "microfluidics":
         #            if component in self.groups: #better parse groups
             if component in self.components:
                 comp = self.components[component]
+            elif component in self.mfWellLocations:
+                comp = Component({'name': component, 'location': component, 'method': self.methods[0]})
+                self.add('component', component, comp)
             else:
                 if ':' in component:
                     comp = Component({'name': component, 'location': component, 'method': self.methods[0]})
                     self.add('component', component, comp)
+
             method = ''
             methodError = False
             if transferMethod == 'DEFAULT':
@@ -484,6 +494,7 @@ class Experiment:
             else:
                 source = check
             if transferInfo[1] not in self.components:
+                print('component, transferInfo...//..', transferInfo, transferInfo[1])
                 dest = Component({'name': transferInfo[1], 'location': transferInfo[1], 'method': self.methods[0]})
                 self.add('component', dest.name, dest)
                 dst = self.components[dest.name]
@@ -574,6 +585,7 @@ class Well:
 class Component:
 #    method = 'LC_W_Bot_Bot'
     def __init__(self, dict):
+        print('component..', dict)
         self.name = dict['name']
         self.location = dict['location']
         self.shortLocation = dict['location']
@@ -1076,10 +1088,8 @@ def ParseFile(filename, experiment):
 
 def mfPlateFileParse(plateFile, experiment):
     mfTables = plateFile.readlines()
-    print('mfTables', mfTables)
     locationLine = mfTables[0]
     connections = mfTables[1:]
-    print('mfPlateFileParse', locationLine, connections)
     experiment.addMFWellLocations(locationLine)
     experiment.addMFWellConnections(connections)
 
