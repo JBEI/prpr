@@ -114,14 +114,20 @@ class Experiment:
             self.methods = methods
 
     def checkMethod(self, method):
-        if method in self.methods:
-            return method
-        else:
-            if method != '' and method != 'Error' and method != 'None' and method != 'empty':
-                self.errorLog('Error. No such method on file: "' + str(method) + '"')
-                return 'Error'
+        if self.platform != 'microfluidics':
+            if method in self.methods:
+                return method
             else:
-                return self.methods[0]
+                if method != '' and method != 'Error' and method != 'None' and method != 'empty':
+                    self.errorLog('Error. No such method on file: "' + str(method) + '"')
+                    return 'Error'
+                else:
+                    return self.methods[0]
+        else:
+            if isNumber(method):
+                return method
+            else:
+                self.errorLog('Error in method "' + str(method) + '". Microfluidic methods should be numbers.')
 
     def parseLocation(self, location):
         """
@@ -315,13 +321,13 @@ class Experiment:
                 'Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
 
 
-    def createTransfer(self, component, modifier, destination, volume, transferMethod, line): #note: there is MF problem for the components
+    def createTransfer(self, component, modifier, destination, volume, transferMethod, line): #note: there is MF problem for the components, component methods
         if component in self.components or ':' in component or self.platform == "microfluidics":
         #            if component in self.groups: #better parse groups
             if component in self.components:
                 comp = self.components[component]
             elif component in self.mfWellLocations:
-                comp = Component({'name': component, 'location': component, 'method': self.methods[0]})
+                comp = Component({'name': component, 'location': component, 'method': transferMethod})
                 self.add('component', component, comp)
             else:
                 if ':' in component:
@@ -486,16 +492,23 @@ class Experiment:
             self.testindex += 1
 
             #check the source for multipliers
-            check = CheckMultiplier(transferInfo[0])
             modifier = ()
-            if len(check) == 3:
-                modifier = (check[0], check[2])
-                source = check[1]
+            if self.platform != "microfluidics":
+                check = CheckMultiplier(transferInfo[0])
+                if len(check) == 3:
+                    modifier = (check[0], check[2])
+                    source = check[1]
+                else:
+                    source = check
             else:
-                source = check
+                source = transferInfo[0]
             if transferInfo[1] not in self.components:
                 print('component, transferInfo...//..', transferInfo, transferInfo[1])
-                dest = Component({'name': transferInfo[1], 'location': transferInfo[1], 'method': self.methods[0]})
+                if self.platform != "microfluidics":
+                    destMethod = self.methods[0]
+                else:
+                    destMethod = transferInfo[3]
+                dest = Component({'name': transferInfo[1], 'location': transferInfo[1], 'method': destMethod}) #note: error when using with microfluidics, needs fixing
                 self.add('component', dest.name, dest)
                 dst = self.components[dest.name]
 
@@ -505,6 +518,7 @@ class Experiment:
             volume = transferInfo[2]
             method = transferInfo[3]
             transferLine = self.createTransfer(source, modifier, destination, volume, method, originalLine)
+            print('transferline==>', transferLine, 's', source)
             if transferLine:
                 newTr = False
 
@@ -540,8 +554,7 @@ class Experiment:
                             if a.startswith('mix'):
                                 mixoptions = a.split(':')
                                 if len(mixoptions) == 2:
-                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1],
-                                                   'location': dst.location}
+                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': dst.location}
                                     self.transactionList.append([transaction])
                                 else:
                                     self.log('Error. Wrong mixing options in line "' + originalLine + '"')
@@ -1093,6 +1106,12 @@ def mfPlateFileParse(plateFile, experiment):
     experiment.addMFWellLocations(locationLine)
     experiment.addMFWellConnections(connections)
 
+def isNumber(number):
+    try:
+        float(number)
+        return True
+    except ValueError:
+        return False
 
 if __name__ == '__main__':
     global experiment
