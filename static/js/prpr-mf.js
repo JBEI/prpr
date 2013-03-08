@@ -53,10 +53,14 @@ function getPositionString() {
 
 function addMFInfo() {
     if ($('#devices').val() == 'microfluidics') {
-        var position = getPositionString();
-        $('#position').val(position);
+        saveLocation();
         saveConnections();
     }
+}
+
+function saveLocation() {
+    var position = getPositionString();
+    $('#position').val(position);
 }
 
 function saveConnections() {
@@ -170,6 +174,7 @@ function addEndpoint(element) {
             isSource:true,
             isTarget:true
         });
+
     jsPlumb.bind("dblclick", function (connection, originalEvent) {
         jsPlumb.detach({
             source:connection.sourceId,
@@ -231,4 +236,5 @@ function applyIDChanges(id) {
     $('#' + id).attr('name', newName);
     $('#' + id).children('.input-mf').remove();
     $('#' + id).append('<div class="mf-label" onClick="renameWell(' + "'" + id + "'" + ');">' + newName + '<i class="icon-pencil icon-white"></i></div>');
+    saveLocation();
 }
