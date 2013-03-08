@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 __author__ = 'Nina Stawski'
-__version__ = '0.32'
+__version__ = '0.5'
 
 import sys
 import os
