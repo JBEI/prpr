@@ -10,6 +10,7 @@ from prparser import *
 from tempfile import TemporaryFile
 import glob
 from prpr_mf import *
+from prpr_tecan import *
 
 
 global robotTips
@@ -154,7 +155,7 @@ def config():
             #note: if the platform is microfluidics
             position = request.forms.get('position', '')
             wells = '\n'.join(request.forms.get('wells', '').strip().split(';'))
-            print('!!>', wells)
+            print('!!>', wells, position)
             tablename = 'tables' + os.sep + createMFPlate(wells, position)
 
         dirname = 'incoming' + os.sep
@@ -163,8 +164,8 @@ def config():
 
         if getconfig.startswith('TABLE'):
             getconfig = '\n'.join(getconfig.split('\n')[1:]) #removing the extra 'TABLE' from the config file
-        list = ['TABLE ', tablename, '\n', '\n', getconfig] #adding the chosen/uploaded table to the config file.
-        writefile.writelines(''.join(list))
+        list_ = ['TABLE ', tablename, '\n', '\n', getconfig] #adding the chosen/uploaded table to the config file.
+        writefile.writelines(''.join(list_))
         writefile.close()
         readfile = open(dirname + filename, "r")
         ParseFile(readfile, experiment)
@@ -175,8 +176,12 @@ def config():
             return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
 
         elif experiment.testindex:
-            prpr = Prpr(expID)
-            file = 'config' + str(expID) + '.esc'
+            if experiment.platform != "microfluidics":
+                prpr = Prpr_Tecan(expID)
+                file = 'config' + str(expID) + '.esc'
+            else:
+                prpr = Prpr_MF(experiment.ID)
+                file = 'config' + str(expID) + '.mf'
             log = 'experiment' + str(expID) + '.log'
             successList.append("Your configuration file has been successfully processed.")
             return template('pages' + os.sep + 'page.html', file=file, btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)

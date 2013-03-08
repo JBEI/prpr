@@ -25,15 +25,15 @@
           $(document).bind('touchmove', function(e) {
               e.preventDefault();
           }, false);
-
+          
           var tablesList = {{!tables}};
           for (var i = 0; i < tablesList.length; i++) {
               $('#tables').append('<option value="' + tablesList[i] + '">' + tablesList[i] + '</option>')
           }
-
+          
           var alertError = {{!alerterror}};
           var alertSuccess = {{!alertsuccess}};
-
+          
           if (alertError.length > 0) {
               errors = removeDuplicates(alertError);
               for (var err in errors) {
@@ -44,7 +44,7 @@
                           alertError[err] + '</div>');
               }
           }
-
+          
           if (alertSuccess.length > 0) {
               results = removeDuplicates(alertSuccess);
               for (var success in results) {
@@ -58,14 +58,14 @@
               }
           }
       })
-
+      
     </script>
     <link href="static/css/prpr-mf.css" rel="stylesheet">
     <script>
       var _gaq = _gaq || [];
       _gaq.push(['_setAccount', 'UA-35412836-1']);
       _gaq.push(['_trackPageview']);
-
+      
       (function() {
           var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
           ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
@@ -151,7 +151,7 @@
           <div class="span12">
             <div id="result"></div>
             <textarea id="textarea" rows="30" name="text" class="input-large span12">{{text}}</textarea>
-            <button type="submit" name="upload" class="btn pull-right">Prepare robot file</button>
+            <button type="submit" name="upload" onclick="$('.alert').remove();" class="btn pull-right">Prepare robot file</button>
           </div>
           <div id="myModal" class="modal hide prpr-modal">
             <div class="modal-header">

@@ -6,6 +6,7 @@
  */
 
 function selectDevice() {
+    $('.alert').remove();
     var selection = $('#device').find('option:selected').val();
     if (selection == 'freedomevo') {
         $('#microfluidics').addClass('hidden');
@@ -67,6 +68,7 @@ function AppendUploadButton() {
 }
 
 function LoadSampleScript() {
+    $('.alert').remove();
     $('#data').remove();
     $('#preview').remove();
     $('#uploadFile').remove();

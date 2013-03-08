@@ -11,6 +11,8 @@ from shutil import copyfile
 from prpr_commands import *
 from itertools import cycle
 from copy import deepcopy
+from prpr_tecan import *
+from prpr_mf import *
 
 #todo: switch to postgres
 
@@ -61,7 +63,12 @@ class Experiment:
         """
         self.log('Added a ' + target + ' "' + itemName + '"')
         if target == 'component':
-            location = self.parseLocation(itemInfo.location)
+            if self.platform != 'microfluidics':
+                location = self.parseLocation(itemInfo.location)
+            else:
+                well = Well({'Plate' : 'mf', 'Location' : itemName})
+                self.wells.append(well)
+                location = [well]
             method = self.checkMethod(itemInfo.method)
             if method:
                 itemInfo.method = method
@@ -84,7 +91,7 @@ class Experiment:
         for location in locations:
             wellInfo = location.split(':')
             well = wellInfo[0]
-            coords = wellInfo[1].split(',')
+            coords = wellInfo[1]#.split(',')
             self.mfWellLocations[well] = coords
         print(self.mfWellLocations)
 
@@ -320,8 +327,7 @@ class Experiment:
             self.errorLog(
                 'Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
 
-
-    def createTransfer(self, component, modifier, destination, volume, transferMethod, line): #note: there is MF problem for the components, component methods
+    def createTransfer(self, component, modifier, destination, volume, transferMethod, line):
         if component in self.components or ':' in component or self.platform == "microfluidics":
         #            if component in self.groups: #better parse groups
             if component in self.components:
@@ -333,6 +339,10 @@ class Experiment:
                 if ':' in component:
                     comp = Component({'name': component, 'location': component, 'method': self.methods[0]})
                     self.add('component', component, comp)
+                elif self.platform == 'microfluidics':
+                    comp = Component({'name': component, 'location': component, 'method': transferMethod})
+                    self.add('component', component, comp)
+                    print('component', component, comp)
 
             method = ''
             methodError = False
@@ -366,10 +376,12 @@ class Experiment:
                 else:
                     amount = volume
 
-                volumeInfo = [self.splitAmount(x) for x in amount.split(',')]
+                if self.platform != "microfluidics":
+                    volumeInfo = [self.splitAmount(x) for x in amount.split(',')]
+                else:
+                    volumeInfo = amount
 
-                transferDict = {'src': location, 'dst': destination, 'volume': volumeInfo, 'method': method,
-                                'type': 'transfer'}
+                transferDict = {'src': location, 'dst': destination, 'volume': volumeInfo, 'method': method, 'type': 'transfer'}
                 return transferDict
 
             else:
@@ -425,16 +437,18 @@ class Experiment:
                             z = zip(element, dstLocation)
                             for el in z:
                                 component = el[0][0]
-                                volume = el[0][1]
+                                if self.platform != "microfluidics":
+                                    volume = el[0][1]
+                                else:
+                                    volume = el[0]
                                 destination = el[1]
                                 transferMethod = line[2]
                                 modifier = ()
-                                transaction = self.createTransfer(component, modifier, destination, volume,
-                                    transferMethod, originalLine)
+                                transaction = self.createTransfer(component, modifier, destination, volume, transferMethod, originalLine)
                                 if transaction:
-                                    transaction['src'] = transaction['src'][
-                                                         0] #making sure the transaction happens from one well (first if component has multiple wells)
-                                    transaction['volume'] = transaction['volume'][0]
+                                    transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
+                                    if self.platform != "microfluidics":
+                                        transaction['volume'] = transaction['volume'][0]
                                     transferString.append(transaction)
                             if transferString:
                                 self.transactionList.append(transferString)
@@ -536,14 +550,15 @@ class Experiment:
                         trLine = deepcopy(transferLine)
                         trLine['src'] = tr[0]
                         trLine['dst'] = tr[1]
-                        if len(vol) == 1:
-                            trLine['volume'] = vol[0]
-                        else:
-                            try:
-                                trLine['volume'] = vol[i]
-                            except IndexError:
-                                self.errorLog(
-                                    'Error in line "' + originalLine + '". The number of volumes in "' + volume + '" is less than number of source wells.')
+                        if self.platform != "microfluidics":
+                            if len(vol) == 1:
+                                trLine['volume'] = vol[0]
+                            else:
+                                try:
+                                    trLine['volume'] = vol[i]
+                                except IndexError:
+                                    self.errorLog(
+                                        'Error in line "' + originalLine + '". The number of volumes in "' + volume + '" is less than number of source wells.')
                         transfer.append(trLine)
                     self.transactionList.append(transfer)
 
@@ -731,7 +746,10 @@ class DBHandler:
                 experiment.volumes,
                 experiment.recipes,
 
-                experiment.transactionList]
+                experiment.transactionList,
+
+                experiment.mfWellLocations,
+                experiment.mfWellConnections]
         expID = str(experiment.ID)
         for element in list:
             if element:
@@ -816,6 +834,19 @@ class DBHandler:
                                     for l in locationList:
                                         self.insert('CommandLocations', [expID, actionID, str(m), str(id(l))])
                                         m += 1
+
+                elif element == experiment.mfWellLocations:
+                    for key in element:
+                        name = '"' + key + '"'
+                        coords = '"' + element[key] + '"'
+                        self.insert('mfWellLocations', [expID, name, coords])
+
+                elif element == experiment.mfWellConnections:
+                    for key in element:
+                        well = '"' + key + '"'
+                        for item in element[key]:
+                            connection = '"' + item + '"'
+                            self.insert('mfWellConnections', [expID, well, connection])
 
     def close(self):
         self.conn.commit()
@@ -1120,7 +1151,10 @@ if __name__ == '__main__':
     ParseConfigFile(experiment)
 
     if not len(experiment.errorLogger):
-        prpr = Prpr(experiment.ID)
+        if experiment.platform != "microfluidics":
+            prpr = Prpr_Tecan(experiment.ID)
+        else:
+            prpr = Prpr_MF(experiment.ID)
         print('Robot Config:')
         for element in prpr.robotConfig:
             print(element)

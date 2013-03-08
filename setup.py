@@ -54,6 +54,10 @@ def CreateTables():
     crsr.execute('create table Commands(ExpID, ActionID, trOrder, Command, Options, PRIMARY KEY(ExpID, ActionID, trOrder));')
     crsr.execute('create table CommandLocations(ExpID, ActionID, trOrder, Location, PRIMARY KEY(ExpID, ActionID, Location));')
 
+    #Microfluidics
+    crsr.execute('create table mfWellLocations(ExpID, WellName, WellCoords, PRIMARY KEY(ExpID, WellName, WellCoords));')
+    crsr.execute('create table mfWellConnections(ExpID, WellName, ConnectionName, PRIMARY KEY(ExpID, WellName, ConnectionName));')
+
     #Updating experiments
     crsr.execute('insert into Experiments values(0, "", "", "");')
 

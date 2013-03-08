@@ -119,7 +119,7 @@ block content
             .span12
                 #result
                 textarea#textarea.input-large.span12(rows="30", name="text") {{text}}
-                button.btn.pull-right(type="submit", name="upload") Prepare robot file
+                button.btn.pull-right(type="submit", name="upload", onclick="$('.alert').remove();") Prepare robot file
 
             #myModal.modal.hide.prpr-modal
                 .modal-header
