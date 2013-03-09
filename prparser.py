@@ -66,7 +66,7 @@ class Experiment:
             if self.platform != 'microfluidics':
                 location = self.parseLocation(itemInfo.location)
             else:
-                well = Well({'Plate' : 'mf', 'Location' : itemName})
+                well = Well({'Plate' : 'mf', 'Location' : itemInfo.location})
                 self.wells.append(well)
                 location = [well]
             method = self.checkMethod(itemInfo.method)
@@ -342,7 +342,6 @@ class Experiment:
                 elif self.platform == 'microfluidics':
                     comp = Component({'name': component, 'location': component, 'method': transferMethod})
                     self.add('component', component, comp)
-                    print('component', component, comp)
 
             method = ''
             methodError = False
@@ -613,7 +612,6 @@ class Well:
 class Component:
 #    method = 'LC_W_Bot_Bot'
     def __init__(self, dict):
-        print('component..', dict)
         self.name = dict['name']
         self.location = dict['location']
         self.shortLocation = dict['location']

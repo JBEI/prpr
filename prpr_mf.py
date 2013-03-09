@@ -112,6 +112,7 @@ class Prpr_MF:
                                         newPath = deepcopy(currentPath)
                                         newPath.append(cWell)
                                         returnPath(paths, newPath, cWell, destinationWell)
+            print('mf_paths', paths)
             return min(paths, key=len) #returning the best path in terms of length
         paths = returnPath([], [well1], well1, well2)
         return paths
