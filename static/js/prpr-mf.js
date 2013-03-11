@@ -104,7 +104,7 @@ function setupDroppableWells() {
             var clone = $('#wellSrc').clone(false);
             var top = ui.helper.position()['top'];
             var left = ui.helper.position()['left'];
-            var id = 'id' + counter;
+            var id = counter;
             clone.attr({ 'id':id, 'name':id }).css({'top':top, 'left':left, 'position':'absolute'}).addClass('mf-well').appendTo('#field');
             makeDraggable(id);
             addEndpoint(id);
