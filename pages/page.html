@@ -22,13 +22,22 @@
       var grid = [45,45];
       var renamed = [];
       $(document).ready(function () {
+          $('#myModal').children().disableSelection();
           $(document).bind('touchmove', function(e) {
               e.preventDefault();
           }, false);
           
           var tablesList = {{!tables}};
           for (var i = 0; i < tablesList.length; i++) {
-              $('#tables').append('<option value="' + tablesList[i] + '">' + tablesList[i] + '</option>')
+              var tableName = tablesList[i];
+              var tableSelector;
+              if (tableName.substr(-4, 4) == '.ewt') {
+                  tableSelector = 'tables';
+                  $('#' + tableSelector).append('<option value="' + tableName + '">' + tableName + '</option>')
+              } //else if (tableName.substr(-4, 4) == '.mfp') {
+                  //tableSelector = 'mftables';
+              //}
+              
           }
           
           var alertError = {{!alerterror}};
@@ -140,8 +149,8 @@
               </li>
               <li id="script">
                 <h4>Write script &nbsp;&nbsp;<small><a id="sampleScript" onclick="LoadSampleScript()">load example</a></small>
-                  <input id="position" name="position" class="hide">
-                  <input id="wells" name="wells" class="hide">
+                  <input id="position" name="position" hidden class="hide">
+                  <input id="wells" name="wells" hidden class="hide">
                 </h4>
               </li>
             </ol>

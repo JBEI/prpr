@@ -129,7 +129,7 @@ function resetMFField() {
     setupDroppableWells();
     jsPlumb.importDefaults({
         PaintStyle:{ lineWidth:5, strokeStyle:"#456" },
-        ConnectorZIndex:3
+        ConnectorZIndex: 3
     });
 }
 

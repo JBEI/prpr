@@ -44,7 +44,7 @@ def disclaimer():
 
 
 @route('/copyright')
-def copyright():
+def copyright_():
     return template('pages' + os.sep + 'copyright.html', version=__version__)
 
 
@@ -184,6 +184,16 @@ def config():
                 file = 'config' + str(expID) + '.mf'
             log = 'experiment' + str(expID) + '.log'
             successList.append("Your configuration file has been successfully processed.")
+
+            # information = {
+            #     'file' : file,
+            #     'text' : getconfig,
+            #     'alerterror' : errorList,
+            #     'alertsuccess' : successList
+            # }
+            # tojs = json_dumps(information)
+            # return tojs
+
             return template('pages' + os.sep + 'page.html', file=file, btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
 
         else:
@@ -225,7 +235,7 @@ def GetDefaultTables():
     tablesDir = os.listdir('default_tables')
     tables = []
     for name in tablesDir:
-        if not name.startswith('.') and name.endswith('.ewt'):
+        if not name.startswith('.') and (name.endswith('.ewt') or name.endswith('.mfp')):
             tables.append(name)
     tables.sort()
     jsonTables = json_dumps(tables)
