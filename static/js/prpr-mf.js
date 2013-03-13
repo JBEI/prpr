@@ -22,8 +22,8 @@ function getConnectionInfos() {
         }
     }
     var cns = [];
-    for (var i = 0; i < Object.keys(wells).length; i++) {
-        var well = Object.keys(wells)[i];
+    for (var well in wells) {
+        //var well = Object.keys(wells)[i];
         if (wells[well]) {
             var wellinfo = well + ':';
             for (var k = 0; k < wells[well].length; k++) {
