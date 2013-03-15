@@ -468,8 +468,7 @@ class Experiment:
                                     self.transactionList.append([transaction])
                                 else:
                                     self.log('Error. Wrong mixing options in line "' + originalLine + '"')
-                                    self.errorLog(
-                                        'Error. Wrong mixing options in line "' + originalLine + '". Please correct the error and try again.')
+                                    self.errorLog('Error. Wrong mixing options in line "' + originalLine + '". Please correct the error and try again.')
                 else:
                     pass
             else:

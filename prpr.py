@@ -6,6 +6,9 @@ import os
 import sqlite3
 
 class DatabaseHandler:
+    """
+    Pulls all experiment info from the database and calls the appropriate parser depending on the platform
+    """
     def __init__(self, expID):
         self.conn = sqlite3.connect('prpr.db')
         self.crsr = self.conn.cursor()
