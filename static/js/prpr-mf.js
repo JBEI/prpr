@@ -86,6 +86,7 @@ function getMFTableFile() {
         }
     });
 }
+
 function mfAppendLoadButton() {
     $('#loadButton').remove();
     $('#mfdata').after('<button class="btn btn-info pull-right" id="loadButton"  data-toggle="modal" href="#myModal" onClick="loadMFTable();">View/Edit the plate</button>');

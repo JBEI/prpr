@@ -30,7 +30,7 @@ def preview():
 
 @route('/dev')
 def dev():
-    return template('pages' + os.sep + 'dev.html', version=__version__)
+    return template('pages' + os.sep + 'page_dev.html', version=__version__)
 
 
 @route('/mf')
