@@ -410,8 +410,7 @@ class Experiment:
                         dest = Component({'name': line[1], 'location': line[1], 'method': self.methods[0]})
                         self.add('component', dest.name, dest)
                     else:
-                        self.errorLog(
-                            'Error. Wrong component "' + line[1] + '". Please correct the error and try again.')
+                        self.errorLog('Error. Wrong component "' + line[1] + '". Please correct the error and try again.')
                 else:
                     dest = self.components[line[1]]
                 dstLocation = dest.location
