@@ -5,13 +5,11 @@ __version__ = '0.5'
 import bottle
 from bottle import *
 import os
-#from prpr import *
 from prparser import *
 from tempfile import TemporaryFile
 import glob
 from prpr_mf import *
 from prpr_tecan import *
-
 
 global robotTips
 global maxAm

@@ -238,11 +238,9 @@ class Experiment:
                     alphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
                     letterIndex = alphabet.find(well[:1]) + 1
                     if letterIndex > rowsMax:
-                        self.errorLog(
-                            'Error. Well "' + well + '" letter coordinate in location "' + location + '" is out of range')
+                        self.errorLog('Error. Well "' + well + '" letter coordinate in location "' + location + '" is out of range')
                     elif int(well[1:]) > colsMax:
-                        self.errorLog(
-                            'Error. Well "' + well + '" number coordinate in location "' + location + '" is out of range')
+                        self.errorLog('Error. Well "' + well + '" number coordinate in location "' + location + '" is out of range')
                     else:
                         return letterIndex, int(well[1:])
             else:
@@ -324,8 +322,7 @@ class Experiment:
             return item[itemName]
         else:
             self.log('Error. No ' + target + ' "' + itemName + '" defined.')
-            self.errorLog(
-                'Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
+            self.errorLog('Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
 
     def createTransfer(self, component, modifier, destination, volume, transferMethod, line):
         if component in self.components or ':' in component or self.platform == "microfluidics":
@@ -388,8 +385,7 @@ class Experiment:
                     self.errorLog('Error. No method defined in line "' + line + '"')
         else:
             self.log('Error. Wrong component "' + component + '".')
-            self.errorLog(
-                'Error. Component "' + component + '" is not defined. Please correct the error and try again.')
+            self.errorLog('Error. Component "' + component + '" is not defined. Please correct the error and try again.')
             return False
 
 
@@ -452,8 +448,7 @@ class Experiment:
                                 self.transactionList.append(transferString)
                     else:
                         self.log('Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
-                        self.errorLog(
-                            'Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
+                        self.errorLog('Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
 
                     if len(line) > 3:
                         options = line[3].split(',')
@@ -462,8 +457,7 @@ class Experiment:
                             if a.startswith('mix'):
                                 mixoptions = a.split(':')
                                 if len(mixoptions) == 2:
-                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1],
-                                                   'location': dest.location}
+                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': dest.location}
                                     self.transactionList.append([transaction])
                                 else:
                                     self.log('Error. Wrong mixing options in line "' + originalLine + '"')
@@ -498,8 +492,7 @@ class Experiment:
                 return componentInfo
 
         if len(transferInfo) >= 4:
-            self.addComment(
-                '------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+            self.addComment('------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
             self.testindex += 1
 
             #check the source for multipliers
@@ -554,8 +547,7 @@ class Experiment:
                                 try:
                                     trLine['volume'] = vol[i]
                                 except IndexError:
-                                    self.errorLog(
-                                        'Error in line "' + originalLine + '". The number of volumes in "' + volume + '" is less than number of source wells.')
+                                    self.errorLog('Error in line "' + originalLine + '". The number of volumes in "' + volume + '" is less than number of source wells.')
                         transfer.append(trLine)
                     self.transactionList.append(transfer)
 
@@ -570,8 +562,7 @@ class Experiment:
                                     self.transactionList.append([transaction])
                                 else:
                                     self.log('Error. Wrong mixing options in line "' + originalLine + '"')
-                    self.addComment(
-                        '------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+                    self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
 
                 else:
                     self.errorLog('Error in line "' + originalLine + '"')
@@ -668,8 +659,7 @@ class Protocol:
             protocolFile.writelines(newProtocol)
             protocolFile.seek(0)
             line = protocolFile.readline()
-            experiment.addComment('------ BEGIN PROTOCOL ' + self.name + ', variables: ' + ' '.join(
-                self.variables) + '; values: ' + ' '.join(values) + ' ------')
+            experiment.addComment('------ BEGIN PROTOCOL ' + self.name + ', variables: ' + ' '.join(self.variables) + '; values: ' + ' '.join(values) + ' ------')
             while line != '':
                 splitline = line.split()
                 LineToList(splitline, protocolFile, experiment)
@@ -750,8 +740,7 @@ class DBHandler:
         for element in list:
             if element:
                 if element == experiment.name:
-                    self.insert('ExperimentInfo',
-                        [experiment.ID, '"' + element + '"', '"' + '\n'.join(experiment.docString) + '"'])
+                    self.insert('ExperimentInfo', [experiment.ID, '"' + element + '"', '"' + '\n'.join(experiment.docString) + '"'])
 
                 elif element == experiment.components:
                     for component in experiment.components:
@@ -817,8 +806,7 @@ class DBHandler:
                                 dstWellID = str(id(tr['dst']))
                                 volume = '"' + str(tr['volume']) + '"'
                                 method = '"' + str(tr['method']) + '"'
-                                self.insert('Transfers',
-                                    [expID, actionID, trOrder, srcWellID, dstWellID, volume, method])
+                                self.insert('Transfers', [expID, actionID, trOrder, srcWellID, dstWellID, volume, method])
 
                             if tr['type'] == 'command':
                                 command = '"' + tr['action'] + '"'
@@ -933,11 +921,8 @@ def PlateNameParse(parts, plateFile, experiment, plateNicknames, plateIndexes):
                                 plateNicknames[plateNames[i]] = tempPlates[i]
                                 plateIndexes[plateNames[i]] = (stringCounter, i)
                                 if experiment:
-                                    experiment.plates[plateNames[i]] = Plate(plateNames[i], tempPlates[i],
-                                        (stringCounter, i))
-                                    experiment.log('Added a plate "' + tempPlates[i] + '" codename "' + plateNames[
-                                                                                                        i] + '" at location ' + str(
-                                        (stringCounter, i + 1)))
+                                    experiment.plates[plateNames[i]] = Plate(plateNames[i], tempPlates[i],(stringCounter, i))
+                                    experiment.log('Added a plate "' + tempPlates[i] + '" codename "' + plateNames[i] + '" at location ' + str((stringCounter, i + 1)))
                 stringCounter += 1
                 return plateNicknames
 
@@ -967,8 +952,7 @@ def ParseRecipe(configFileName, recipeName, experiment):
                 recipeLine = []
                 for reagent, volume in zip(uncutLine[::2], uncutLine[1::2]):
                     recipeLine.append((reagent, volume))
-                experiment.recipes[recipeName].addSubrecipe(lineName,
-                    {'name': lineName, 'line': lineNo, 'recipe': recipeLine})
+                experiment.recipes[recipeName].addSubrecipe(lineName, {'name': lineName, 'line': lineNo, 'recipe': recipeLine})
             ParseRecipe(configFileName, recipeName, experiment)
         else:
             LineToList(line, configFileName, experiment)
@@ -1098,8 +1082,7 @@ def LineToList(line, configFileName, experiment):
 
 
 def ParseConfigFile(experiment):
-    parser = argparse.ArgumentParser(
-        description='Transfer liquids') #create the new argument parser for the command line arguments
+    parser = argparse.ArgumentParser(description='Transfer liquids') #create the new argument parser for the command line arguments
     parser.add_argument('config_file_name', type=argparse.FileType('r'), default=sys.stdin, help='Config file')
     args = parser.parse_args()
     ParseFile(args.config_file_name, experiment)
