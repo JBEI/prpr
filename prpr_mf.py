@@ -14,6 +14,7 @@ class Prpr_MF:
         self.transfers = db.transfers
         self.mfWellConnections = db.mfWellConnections
         self.mfWellLocations = db.mfWellLocations
+        print('locations::', self.mfWellLocations)
         self.logger = []
         self.robotConfig = []
         self.transactions = []
@@ -91,7 +92,7 @@ class Prpr_MF:
                 return False
 
         def returnPath(paths, previousPath, currentWell, destinationWell):
-            if len(paths) == len(self.mfWellConnections)*5: return min(paths, key=len) #to shorten the wait time for the config until I optimize the code
+            # if len(paths) == len(self.mfWellConnections)*5: return min(paths, key=len) #to shorten the wait time for the config until I optimize the code
             print(currentWell, destinationWell, '!!')
             if destinationWell in self.mfWellConnections[currentWell]:
                 previousPath.append(destinationWell)
@@ -108,11 +109,15 @@ class Prpr_MF:
                             for i in range(0, len(self.mfWellConnections[well])):
                                 cWell = self.mfWellConnections[well][i]
                                 if len(self.mfWellConnections[cWell]) > 1:
-                                    if cWell not in currentPath:
-                                        newPath = deepcopy(currentPath)
-                                        newPath.append(cWell)
-                                        returnPath(paths, newPath, cWell, destinationWell)
-            print('mf_paths', paths)
+                                    currentWellLocation = self.mfWellLocations[cWell]
+                                    previousWellLocation = self.mfWellLocations[well]
+                                    destinationWellLocation = self.mfWellLocations[destinationWell]
+                                    #using well locations to direct the search better
+                                    if (abs(destinationWellLocation[0] - currentWellLocation[0]) < abs(destinationWellLocation[0] - previousWellLocation[0])) or (abs(destinationWellLocation[0] - currentWellLocation[0]) < abs(destinationWellLocation[0] - previousWellLocation[0])):
+                                        if cWell not in currentPath:
+                                            newPath = deepcopy(currentPath)
+                                            newPath.append(cWell)
+                                            returnPath(paths, newPath, cWell, destinationWell)
             return min(paths, key=len) #returning the best path in terms of length
         paths = returnPath([], [well1], well1, well2)
         return paths

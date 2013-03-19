@@ -77,7 +77,7 @@ class DatabaseHandler:
             location = self.getOne('SELECT WellCoords from mfWellLocations WHERE WellName = "' + well + '" AND ExpID = ' + self.expID)[0]
             connections = self.getAll('SELECT ConnectionName FROM mfWellConnections WHERE WellName = "' + well + '" AND ExpID = ' + self.expID)
             self.mfWellConnections[well] = connections
-            self.mfWellLocations[well] = location
+            self.mfWellLocations[well] = tuple(int(x) for x in location.split(','))
 
     def getWell(self, wellID):
         w = self.getOne('SELECT Plate, Location FROM Wells WHERE WellID = ' + str(wellID))
