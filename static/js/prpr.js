@@ -19,6 +19,7 @@ function selectDevice() {
         $('#methodsToggle').addClass('hidden');
         $('#loadButton').remove();
         $('#methods').addClass('hide');
+        $('#result').before('<div class="alert"><i class="icon-exclamation-sign large"></i>&nbsp;<strong>Warning:</strong> Microfluidics functionality may not work correctly in <strong>Internet Explorer</strong>. Please use <strong>Chrome</strong> or <strong>Firefox</strong>.</div>');
         resetMFField();
     }
 }
