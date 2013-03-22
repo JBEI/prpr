@@ -50,18 +50,27 @@ class Prpr_MF:
             wait = transfer['wait']
             config['times'] = int(transfer['times'])
             transferPath = self.findPath(source, destination)
-            for p in range(0, len(transferPath) - 1):
+            p = 0
+            while p < len(transferPath) - 1:
                 openWell = transferPath[p + 1]
-                closeWell = transferPath[p]
+                currentWell = transferPath[p]
+                closeWell = transferPath[p - 1]
                 if p == 0 and len(self.mfWellConnections[closeWell]) == 1:
-                    config['details'].append('o' + closeWell)
+                    config['details'].append('o' + currentWell)
+                    config['details'].append('o' + openWell)
                     config['details'].append('call wait' + trNum)
-                config['details'].append('o' + openWell)
+                    global p
+                    p = 1
+                    openWell = transferPath[p + 1]
+                    closeWell = transferPath[p - 1]
                 config['details'].append('c' + closeWell)
+                config['details'].append('o' + openWell)
                 config['details'].append('call wait' + trNum)
                 if p == (len(transferPath) - 2) and len(self.mfWellConnections[openWell]) == 1:
+                    config['details'].append('c' + currentWell)
                     config['details'].append('c' + openWell)
                     config['details'].append('call wait' + trNum)
+                p += 1
             config['details'].append('end')
             config['wait'] = ['wait' + trNum, 'w' + str(wait), 'end']
             print('confing)))', config)
