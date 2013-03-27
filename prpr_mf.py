@@ -42,14 +42,14 @@ class Prpr_MF:
         transfers = []
         for t, transfer in enumerate(transferList):
             config = {}
-            trNum = str(transferNumber) + str(t)
+            trNum = str(transferNumber) + str(t) + 't'
             config['name'] = 'transfer' + trNum
             config['details'] = ['transfer' + trNum]
             source = transfer['source']['well']
             destination = transfer['destination']['well']
             wait = transfer['wait']
             config['times'] = int(transfer['times'])
-            transferPath = self.findPath(source, destination)
+            transferPath = self.findPath(source, destination, [source])
             p = 0
             while p < len(transferPath) - 1:
                 openWell = transferPath[p + 1]
@@ -93,43 +93,43 @@ class Prpr_MF:
             self.config('')
 
 
-    def findPath(self, well1, well2):
-        def isConnected(srcWell, dstWell):
-            if dstWell in self.mfWellConnections[srcWell]:
-                return True
-            else:
-                return False
-
-        def returnPath(paths, previousPath, currentWell, destinationWell):
-            # if len(paths) == len(self.mfWellConnections)*5: return min(paths, key=len) #to shorten the wait time for the config until I optimize the code
-            print(currentWell, destinationWell, '!!')
-            if destinationWell in self.mfWellConnections[currentWell]:
-                previousPath.append(destinationWell)
-                paths.append(previousPath)
-            else:
-                for well in self.mfWellConnections[currentWell]:
-                    currentPath = deepcopy(previousPath)
-                    if well not in currentPath:
-                        currentPath.append(well)
-                        if isConnected(well, destinationWell):
-                            currentPath.append(destinationWell)
-                            paths.append(currentPath)
-                        else:
-                            for i in range(0, len(self.mfWellConnections[well])):
-                                cWell = self.mfWellConnections[well][i]
-                                if len(self.mfWellConnections[cWell]) > 1:
-                                    currentWellLocation = self.mfWellLocations[cWell]
-                                    previousWellLocation = self.mfWellLocations[well]
-                                    destinationWellLocation = self.mfWellLocations[destinationWell]
-                                    #using well locations to direct the search better
-                                    if (abs(destinationWellLocation[0] - currentWellLocation[0]) < abs(destinationWellLocation[0] - previousWellLocation[0])) or (abs(destinationWellLocation[0] - currentWellLocation[0]) < abs(destinationWellLocation[0] - previousWellLocation[0])):
-                                        if cWell not in currentPath:
-                                            newPath = deepcopy(currentPath)
-                                            newPath.append(cWell)
-                                            returnPath(paths, newPath, cWell, destinationWell)
-            return min(paths, key=len) #returning the best path in terms of length
-        paths = returnPath([], [well1], well1, well2)
-        return paths
+    def findPath(self, source, destination):
+        """
+        Finds a shortest path between two wells on a microfluidic table.
+        
+        :param source: source well, int (must be in self.mfWellConnections)
+        :param destination: destination well, int (must be in self.mfWellConnections)
+        :return: resulting path, list
+        
+        """
+        
+        def searchBranch(path, source, destination):
+            for connection in self.mfWellConnections[source]:
+                newPath = deepcopy(path)
+                newPath.append(connection)
+                if connection == destination:
+                    return newPath
+                else:
+                    searchBranch(newPath, connection, destination)
+        
+        connections = {}
+        path = []
+        destX = self.mfWellLocations[destination][0]
+        destY = self.mfWellLocations[destination][1]
+        for connection in self.mfWellConnections[source]:
+            x = self.mfWellLocations[connection][0]
+            y = self.mfWellLocations[connection][1]
+            checksum = abs(destX - x) + abs(destY - y)
+            if connection not in path:
+                connections[connection] = checksum
+        result = min(connections, key=connections.get)
+        print(result)
+        path.append(result)
+        if result == destination:
+            return path
+        else:
+            path = self.findPath(result, destination, path)
+            return path
 
 
     def parseCommand(self, transferList):
