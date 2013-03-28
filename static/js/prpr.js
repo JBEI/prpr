@@ -5,22 +5,68 @@
  * http://github.com/JBEI/prpr/blob/master/license.txt
  */
 
-function selectDevice() {
+function selectDevice(selection) {
     $('.alert').remove();
-    var selection = $('#device').find('option:selected').val();
+    $('#prpr-platform').children().removeClass('btn-info');
+    $('#platform-' + selection).addClass('btn-info');
+    console.log(selection);
+    console.log( $('#platform-' + selection));
+//    var selection = $('#device').find('option:selected').val();
     if (selection == 'freedomevo') {
+        $('#deviceselect').val('freedomevo');
         $('#microfluidics').addClass('hidden');
-        $('#tablefile').removeClass('hidden');
+        $('#tablefile h4').html('Select/upload table file');
+        $('#tablefile .controls').attr('id', 'table');
+        $('#tablefile .controls select').attr({ 'id' : 'tables', 'name' : 'tableselect', 'onchange' : 'selectClicked(\'table\');' });
+        $('#tablefile .controls input').attr({'id' : 'data', 'name' : 'data', 'onchange' : 'AppendUploadButton()' });
+        setTimeout(function() {
+            if ($('#data').val()) {
+                $('#uploadFile').remove();
+                $('#loadButton').remove();
+                AppendUploadButton()
+            }
+        }, 0);
         $('#methodsToggle').removeClass('hidden');
+        $('#sampleScript').removeClass('hidden');
     }
     else if (selection == 'microfluidics') {
+        $('#deviceselect').val('microfluidics');
         $('#microfluidics').removeClass('hidden');
-        $('#tablefile').addClass('hidden');
+        $('#tablefile h4').html('Upload microfluidics table');
+        $('#tablefile .controls').attr('id', 'mftable');
+        $('#tablefile .controls select').attr({ 'id' : 'mftables', 'name' : 'mftableselect', 'onchange' : 'selectClicked(\'mftable\');' });
+        $('#tablefile .controls input').attr({'id' : 'mfdata', 'name' : 'mfdata', 'onchange' : 'loadMFTable(\'loadButtonOnClick\');mfAppendLoadButton()' });
+        setTimeout(function() {
+            if ($('#mfdata').val()) {
+                console.log('mfdata val!!!');
+                $('#uploadFile').remove();
+                loadMFTable('loadButtonOnClick');
+                $('#mfdata').after('<button class="btn btn-info pull-right" id="loadButton"  data-toggle="modal" href="#myModal" onClick="loadMFTable();">View/Edit the plate</button>');
+            }
+        }, 0);
+        $('#mftables').children().remove();
+        $('#mftables').prepend('<option value="select">Upload table file</option><option value="mfcreatenew">Create new</option>');
         $('#methodsToggle').addClass('hidden');
         $('#loadButton').remove();
         $('#methods').addClass('hide');
         $('#result').before('<div class="alert"><i class="icon-exclamation-sign large"></i>&nbsp;<strong>Warning:</strong> Microfluidics functionality may not work correctly in <strong>Internet Explorer</strong>. Please use <strong>Chrome</strong> or <strong>Firefox</strong>.</div>');
         resetMFField();
+        $('#sampleScript').addClass('hidden');
+    }
+}
+
+function createTablesList(tablesList) {
+    $('#tables').children().remove();
+    $('#tables').prepend('<option value="select">Select table file</option>');
+    for (var i = 0; i < tablesList.length; i++) {
+        var tableName = tablesList[i];
+        var tableSelector;
+        if (tableName.substr(-4, 4) == '.ewt') {
+            tableSelector = 'tables';
+            $('#' + tableSelector).append('<option value="' + tableName + '">' + tableName + '</option>')
+        } //else if (tableName.substr(-4, 4) == '.mfp') {
+        //tableSelector = 'mftables';
+        //}
     }
 }
 

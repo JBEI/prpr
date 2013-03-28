@@ -18,7 +18,7 @@ maxAm = 150
 
 @route('/')
 def prpr():
-    return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[], tables=GetDefaultTables(), version=__version__)
+    return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[], tables=GetDefaultTables(), selected='freedomevo', version=__version__)
 
 
 @route('/preview')
@@ -147,7 +147,7 @@ def config():
                     tablename = 'default_tables' + os.sep + preselected
                 else:
                     errorList.append("Please select or upload the table file for your configuration script.")
-                    return template('pages' + os.sep + 'page.html', file='', btn='', text=getconfig, alerterror=errorList, alertsuccess=successList,tables=GetDefaultTables(), version=__version__)
+                    return template('pages' + os.sep + 'page.html', file='', btn='', text=getconfig, alerterror=errorList, alertsuccess=successList,tables=GetDefaultTables(), selected=platform, version=__version__)
         else:
             print('platform__ MF')
             #note: if the platform is microfluidics
@@ -171,7 +171,7 @@ def config():
         if len(experiment.errorLogger):
             for item in experiment.errorLogger:
                 errorList.append(item)
-            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
+            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
 
         elif experiment.testindex:
             if experiment.platform != "microfluidics":
@@ -192,15 +192,15 @@ def config():
             # tojs = json_dumps(information)
             # return tojs
 
-            return template('pages' + os.sep + 'page.html', file=file, btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
+            return template('pages' + os.sep + 'page.html', file=file, btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
 
         else:
             errorList.append("Your configuration file doesn't contain any actions. Please refer to PR-PR howto guide.")
-            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
+            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
 
     else:
         errorList.append("Your configuration file doesn't contain any actions. Please refer to PR-PR howto guide.")
-        return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
+        return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
 
 
 @route('/static/:path#.+#', name='static')

@@ -14,22 +14,31 @@ block script
         var renamed = [];
         $(document).ready(function () {
             $('#myModal').children().disableSelection();
+            selectDevice('freedomevo');
             $(document).bind('touchmove', function(e) {
                 e.preventDefault();
             }, false);
 
             var tablesList = {{!tables}};
-            for (var i = 0; i < tablesList.length; i++) {
-                var tableName = tablesList[i];
-                var tableSelector;
-                if (tableName.substr(-4, 4) == '.ewt') {
-                    tableSelector = 'tables';
-                    $('#' + tableSelector).append('<option value="' + tableName + '">' + tableName + '</option>')
-                } //else if (tableName.substr(-4, 4) == '.mfp') {
-                    //tableSelector = 'mftables';
-                //}
-
-            }
+            createTablesList(tablesList);
+            
+            var selected = '{{selected}}';
+            
+            if (selected == 'freedomevo') {
+                selectDevice('freedomevo');
+                createTablesList(tablesList);
+            } else if (selected == 'microfluidics') {
+                selectDevice('microfluidics');
+            };
+            
+            $('#platform-freedomevo').click(function() {
+                selectDevice('freedomevo');
+                createTablesList(tablesList);
+            });
+            
+            $('#platform-microfluidics').click(function() {
+                selectDevice('microfluidics');
+            });
 
             var alertError = {{!alerterror}};
             var alertSuccess = {{!alertsuccess}};
@@ -95,12 +104,10 @@ block content
                     li#device
                         h4 Select output device
                         .controls#device
-                            .btn-group
-                                .btn Tecan Freedom Evo
-                                .btn Microfluidics
-                            select#devices.span3(name="deviceselect", onchange="selectDevice();")
-                                option(value="freedomevo") Tecan Freedom Evo
-                                option(value="microfluidics") Microfluidics
+                            input#deviceselect(name="deviceselect").hidden
+                            .btn-group#prpr-platform
+                                .btn#platform-freedomevo Tecan Freedom Evo
+                                .btn#platform-microfluidics Microfluidics
                             a#methodsToggle.btn.btn-link(onclick="$('#methods').toggleClass('hidden');") Setup custom methods
                         .row
                             #methods.hidden
@@ -109,7 +116,7 @@ block content
                                     .input-append#newMethod
                                         input#userMethod(size="16", type="text")
                                         button.btn(type="button", onclick="customizeMethods();") Add
-                    li#microfluidics.hidden
+                    //-li#microfluidics.hidden
                         h4 Upload microfluidics table
                         .controls#mftable
                             select#mftables.span3(name="mftableselect", onchange="selectClicked('mftable');")

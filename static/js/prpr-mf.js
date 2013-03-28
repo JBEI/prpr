@@ -191,6 +191,7 @@ function makeDraggable(element) {
         },
         stop:function (event, ui) {
             jsPlumb.repaintEverything();
+            addMFInfo();
         },
         grid:[45, 45]
     });

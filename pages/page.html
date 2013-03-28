@@ -23,22 +23,31 @@
       var renamed = [];
       $(document).ready(function () {
           $('#myModal').children().disableSelection();
+          selectDevice('freedomevo');
           $(document).bind('touchmove', function(e) {
               e.preventDefault();
           }, false);
           
           var tablesList = {{!tables}};
-          for (var i = 0; i < tablesList.length; i++) {
-              var tableName = tablesList[i];
-              var tableSelector;
-              if (tableName.substr(-4, 4) == '.ewt') {
-                  tableSelector = 'tables';
-                  $('#' + tableSelector).append('<option value="' + tableName + '">' + tableName + '</option>')
-              } //else if (tableName.substr(-4, 4) == '.mfp') {
-                  //tableSelector = 'mftables';
-              //}
-              
-          }
+          createTablesList(tablesList);
+          
+          var selected = '{{selected}}';
+          
+          if (selected == 'freedomevo') {
+              selectDevice('freedomevo');
+              createTablesList(tablesList);
+          } else if (selected == 'microfluidics') {
+              selectDevice('microfluidics');
+          };
+          
+          $('#platform-freedomevo').click(function() {
+              selectDevice('freedomevo');
+              createTablesList(tablesList);
+          });
+          
+          $('#platform-microfluidics').click(function() {
+              selectDevice('microfluidics');
+          });
           
           var alertError = {{!alerterror}};
           var alertSuccess = {{!alertsuccess}};
@@ -111,14 +120,11 @@
               <li id="device">
                 <h4>Select output device</h4>
                 <div id="device" class="controls">
-                  <div class="btn-group">
-                    <div class="btn">Tecan Freedom Evo</div>
-                    <div class="btn">Microfluidics</div>
-                  </div>
-                  <select id="devices" name="deviceselect" onchange="selectDevice();" class="span3">
-                    <option value="freedomevo">Tecan Freedom Evo</option>
-                    <option value="microfluidics">Microfluidics</option>
-                  </select><a id="methodsToggle" onclick="$('#methods').toggleClass('hidden');" class="btn btn-link">Setup custom methods</a>
+                  <input id="deviceselect" name="deviceselect" class="hidden">
+                  <div id="prpr-platform" class="btn-group">
+                    <div id="platform-freedomevo" class="btn">Tecan Freedom Evo</div>
+                    <div id="platform-microfluidics" class="btn">Microfluidics</div>
+                  </div><a id="methodsToggle" onclick="$('#methods').toggleClass('hidden');" class="btn btn-link">Setup custom methods</a>
                 </div>
                 <div class="row">
                   <div id="methods" class="hidden">
@@ -130,16 +136,6 @@
                       </div>
                     </div>
                   </div>
-                </div>
-              </li>
-              <li id="microfluidics" class="hidden">
-                <h4>Upload microfluidics table</h4>
-                <div id="mftable" class="controls">
-                  <select id="mftables" name="mftableselect" onchange="selectClicked('mftable');" class="span3">
-                    <option value="select">Upload table file</option>
-                    <option value="mfcreatenew">Create new</option>
-                  </select>
-                  <input id="mfdata" type="file" name="mfdata" onchange="loadMFTable('loadButtonOnClick');mfAppendLoadButton()" class="span3">
                 </div>
               </li>
               <li id="tablefile">

@@ -103,7 +103,7 @@ class Prpr_MF:
         :return: resulting path, list
 
         """
-
+        print('source:', source, 'destination:', destination, 'path:', path)
         path = path + [source]
         if source == destination:
             return path
