@@ -17,8 +17,7 @@ function selectDevice(selection) {
         $('#tablefile .controls input').attr({'id' : 'data', 'name' : 'data' });
         setTimeout(function() {
             if ($('#data').val()) {
-                $('#uploadFile').remove();
-                $('#loadButton').remove();
+                $('#tablefile .controls .btn').remove();
                 AppendUploadButton();
             }
         }, 0);
@@ -31,7 +30,7 @@ function selectDevice(selection) {
         $('#sampleScript').removeClass('hidden');
     }
     else if (selection == 'microfluidics') {
-        $('#tablefile .controls button').remove();
+        $('#tablefile .controls .btn').remove();
         $('#deviceselect').val('microfluidics');
         $('#tablefile h4').html('Upload microfluidics table');
         $('#tablefile .controls').attr('id', 'mftable');
@@ -39,8 +38,6 @@ function selectDevice(selection) {
         $('#tablefile .controls input').attr({'id' : 'mfdata', 'name' : 'mfdata' });
         setTimeout(function() {
             if ($('#mfdata').val()) {
-                console.log('mfdata val!!!');
-                $('#uploadFile').remove();
                 loadMFTable('loadButtonOnClick');
                 $('#mfdata').after('<button class="btn btn-info pull-right" id="loadButton"  data-toggle="modal" href="#myModal" onClick="loadMFTable();">View/Edit the plate</button>');
             }
@@ -48,8 +45,8 @@ function selectDevice(selection) {
         $('#mftables').children().remove();
         $('#mftables').prepend('<option value="select">Upload table file</option><option value="mfcreatenew">Create new</option>');
         $('#methodsToggle').addClass('hidden');
-        $('#loadButton').remove();
-        $('#methods').addClass('hide');
+        $('#tablefile .controls .btn').remove();
+        $('#methods').addClass('hidden');
         $('#result').before('<div class="alert"><i class="icon-exclamation-sign large"></i>&nbsp;<strong>Warning:</strong> Microfluidics functionality may not work correctly in <strong>Internet Explorer</strong>. Please use <strong>Chrome</strong> or <strong>Firefox</strong>.</div>');
         resetMFField();
         $('#sampleScript').addClass('hidden');
@@ -71,6 +68,8 @@ function recognizeFile() {
         selectDevice('freedomevo');
         createTablesList(tablesList);
         AppendUploadButton();
+    } else {
+        $('#tablefile .controls').append('<div id="noFile" class="btn disabled pull-right">Incorrect plate file</button>');
     }
 }
 
@@ -114,7 +113,7 @@ function selectClicked(selectID) {
     else if (selection == 'mfcreatenew') {
         $('#' + filename).remove();
         $('#' + preview).remove();
-        $('#loadButton').remove();
+        $('#tablefile .controls .btn').remove();
         $('#' + selectID).append('<button id="' + preview + '" class="btn btn-info pull-right" data-toggle="modal" href="#myModal">Edit table layout</button>');
         resetMFField();
         $('#myModal').modal('show');
@@ -124,13 +123,13 @@ function selectClicked(selectID) {
         console.log(selectID, selection);
         $('#' + filename).remove();
         $('#' + preview).remove();
-        $('#loadButton').remove();
+        $('#tablefile .controls .btn').remove();
         $('#' + selectID).append('<button id="' + preview + '" class="btn btn-info pull-right" data-toggle="modal" href="#myModal" onclick="' + clickFunction + '">Preview table layout</button>');
     }
 }
 
 function AppendUploadButton() {
-    $('#uploadFile').remove();
+    $('#tablefile .controls .btn').remove();
     $('#table').append('<button id="uploadFile" class="btn btn-info pull-right"  data-toggle="modal" href="#myModal" onclick="UploadTable();">Preview table layout</button>');
 }
 
