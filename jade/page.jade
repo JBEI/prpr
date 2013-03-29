@@ -134,7 +134,7 @@ block content
                         .controls#table
                             select#tables.span3(name="tableselect", onchange="selectClicked('table');")
                                 option(value="select") Select table file
-                            input#data.span3(type="file", name="data", onchange="AppendUploadButton()")
+                            input#data.span3(type="file", name="data", onchange="recognizeFile();")
                     li#script
                         h4 Write script &nbsp;&nbsp;
                             small: a#sampleScript(onclick="LoadSampleScript()") load example

@@ -14,23 +14,29 @@ function selectDevice(selection) {
         $('#tablefile h4').html('Select/upload table file');
         $('#tablefile .controls').attr('id', 'table');
         $('#tablefile .controls select').attr({ 'id' : 'tables', 'name' : 'tableselect', 'onchange' : 'selectClicked(\'table\');' });
-        $('#tablefile .controls input').attr({'id' : 'data', 'name' : 'data', 'onchange' : 'AppendUploadButton()' });
+        $('#tablefile .controls input').attr({'id' : 'data', 'name' : 'data' });
         setTimeout(function() {
             if ($('#data').val()) {
                 $('#uploadFile').remove();
                 $('#loadButton').remove();
-                AppendUploadButton()
+                AppendUploadButton();
             }
         }, 0);
+        if ($('#tablefile .controls select').val() == 'select') {
+            if (!$('#tablefile .controls').find('input').length) {
+                $('#table').append('<input type="file" name="data" id="data" class="span3" onchange="recognizeFile();"/>');
+            }
+        }
         $('#methodsToggle').removeClass('hidden');
         $('#sampleScript').removeClass('hidden');
     }
     else if (selection == 'microfluidics') {
+        $('#tablefile .controls button').remove();
         $('#deviceselect').val('microfluidics');
         $('#tablefile h4').html('Upload microfluidics table');
         $('#tablefile .controls').attr('id', 'mftable');
         $('#tablefile .controls select').attr({ 'id' : 'mftables', 'name' : 'mftableselect', 'onchange' : 'selectClicked(\'mftable\');' });
-        $('#tablefile .controls input').attr({'id' : 'mfdata', 'name' : 'mfdata', 'onchange' : 'loadMFTable(\'loadButtonOnClick\');mfAppendLoadButton()' });
+        $('#tablefile .controls input').attr({'id' : 'mfdata', 'name' : 'mfdata' });
         setTimeout(function() {
             if ($('#mfdata').val()) {
                 console.log('mfdata val!!!');
@@ -48,6 +54,23 @@ function selectDevice(selection) {
         resetMFField();
         $('#sampleScript').addClass('hidden');
         $('#preview').remove();
+
+        if ($('#tablefile .controls select').val() == 'select') {
+            if (!$('#tablefile .controls').find('input').length) {
+                $('#mftable').append('<input type="file" name="mfdata" id="mfdata" class="span3" onchange="recognizeFile();"/>');
+            }
+        }
+    }
+}
+
+function recognizeFile() {
+    var fileExtension = $('#tablefile .controls input').val().slice(-4);
+    if (fileExtension == '.mfp') {
+        selectDevice('microfluidics');
+    } else if (fileExtension == '.ewt') {
+        selectDevice('freedomevo');
+        createTablesList(tablesList);
+        AppendUploadButton();
     }
 }
 
