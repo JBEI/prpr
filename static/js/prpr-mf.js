@@ -52,7 +52,7 @@ function getPositionString() {
 }
 
 function addMFInfo() {
-    if ($('#devices').val() == 'microfluidics') {
+    if ($('#deviceselect').val() == 'microfluidics') {
         saveLocation();
         saveConnections();
     }
@@ -191,7 +191,6 @@ function makeDraggable(element) {
         },
         stop:function (event, ui) {
             jsPlumb.repaintEverything();
-            addMFInfo();
         },
         grid:[45, 45]
     });
