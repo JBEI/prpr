@@ -1,7 +1,7 @@
 /**
  * prpr.js, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-handling robots
  * Author: Nina Stawski, nstawski@lbl.gov, me@ninastawski.com
- * Copyright 2012, Lawrence Berkeley National Laboratory
+ * Copyright 2012-2013, Lawrence Berkeley National Laboratory
  * http://github.com/JBEI/prpr/blob/master/license.txt
  */
 
@@ -9,12 +9,8 @@ function selectDevice(selection) {
     $('.alert').remove();
     $('#prpr-platform').children().removeClass('btn-info');
     $('#platform-' + selection).addClass('btn-info');
-    console.log(selection);
-    console.log( $('#platform-' + selection));
-//    var selection = $('#device').find('option:selected').val();
     if (selection == 'freedomevo') {
         $('#deviceselect').val('freedomevo');
-        $('#microfluidics').addClass('hidden');
         $('#tablefile h4').html('Select/upload table file');
         $('#tablefile .controls').attr('id', 'table');
         $('#tablefile .controls select').attr({ 'id' : 'tables', 'name' : 'tableselect', 'onchange' : 'selectClicked(\'table\');' });
@@ -31,7 +27,6 @@ function selectDevice(selection) {
     }
     else if (selection == 'microfluidics') {
         $('#deviceselect').val('microfluidics');
-        $('#microfluidics').removeClass('hidden');
         $('#tablefile h4').html('Upload microfluidics table');
         $('#tablefile .controls').attr('id', 'mftable');
         $('#tablefile .controls select').attr({ 'id' : 'mftables', 'name' : 'mftableselect', 'onchange' : 'selectClicked(\'mftable\');' });
@@ -52,6 +47,7 @@ function selectDevice(selection) {
         $('#result').before('<div class="alert"><i class="icon-exclamation-sign large"></i>&nbsp;<strong>Warning:</strong> Microfluidics functionality may not work correctly in <strong>Internet Explorer</strong>. Please use <strong>Chrome</strong> or <strong>Firefox</strong>.</div>');
         resetMFField();
         $('#sampleScript').addClass('hidden');
+        $('#preview').remove();
     }
 }
 
@@ -88,6 +84,7 @@ function selectClicked(selectID) {
     }
 
     if (selection == 'select') {
+        resetMFField();
         $('#' + preview).remove();
         $('#' + selectID).append('<input type="file" name="' + filename + '" id="' + filename + '" class="span3" onchange="loadMFTable();' + changeFunction + '"/>');
     }

@@ -49,6 +49,12 @@
               selectDevice('microfluidics');
           });
           
+          $('#myModal').on('shown', function() {
+              if ($('#deviceselect').val() == 'microfluidics') {
+                  jsPlumb.repaintEverything();
+              }
+          });
+          
           var alertError = {{!alerterror}};
           var alertSuccess = {{!alertsuccess}};
           
