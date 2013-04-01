@@ -1,6 +1,13 @@
 //-
    Author: Nina Stawski
    Contact: me@ninastawski.com
+   Version: 0.6
+
+    prpr.js, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-handling robots
+    Author: Nina Stawski, nstawski@lbl.gov, me@ninastawski.com
+    Copyright 2012-2013, Lawrence Berkeley National Laboratory
+    http://github.com/JBEI/prpr/blob/master/license.txt
+
 extends layout
 
 block style
@@ -14,22 +21,37 @@ block script
         var renamed = [];
         $(document).ready(function () {
             $('#myModal').children().disableSelection();
+            selectDevice('freedomevo');
             $(document).bind('touchmove', function(e) {
                 e.preventDefault();
             }, false);
 
             var tablesList = {{!tables}};
-            for (var i = 0; i < tablesList.length; i++) {
-                var tableName = tablesList[i];
-                var tableSelector;
-                if (tableName.substr(-4, 4) == '.ewt') {
-                    tableSelector = 'tables';
-                    $('#' + tableSelector).append('<option value="' + tableName + '">' + tableName + '</option>')
-                } //else if (tableName.substr(-4, 4) == '.mfp') {
-                    //tableSelector = 'mftables';
-                //}
-
-            }
+            createTablesList(tablesList);
+            
+            var selected = '{{selected}}';
+            
+            if (selected == 'freedomevo') {
+                selectDevice('freedomevo');
+                createTablesList(tablesList);
+            } else if (selected == 'microfluidics') {
+                selectDevice('microfluidics');
+            };
+            
+            $('#platform-freedomevo').click(function() {
+                selectDevice('freedomevo');
+                createTablesList(tablesList);
+            });
+            
+            $('#platform-microfluidics').click(function() {
+                selectDevice('microfluidics');
+            });
+            
+            $('#myModal').on('shown', function() {
+                if ($('#deviceselect').val() == 'microfluidics') {
+                    jsPlumb.repaintEverything();
+                }
+            });
 
             var alertError = {{!alerterror}};
             var alertSuccess = {{!alertsuccess}};
@@ -95,9 +117,10 @@ block content
                     li#device
                         h4 Select output device
                         .controls#device
-                            select#devices.span3(name="deviceselect", onchange="selectDevice();")
-                                option(value="freedomevo") Tecan Freedom Evo
-                                option(value="microfluidics") Microfluidics
+                            input#deviceselect(name="deviceselect").hidden
+                            .btn-group#prpr-platform
+                                .btn#platform-freedomevo Tecan Freedom Evo
+                                .btn#platform-microfluidics Microfluidics
                             a#methodsToggle.btn.btn-link(onclick="$('#methods').toggleClass('hidden');") Setup custom methods
                         .row
                             #methods.hidden
@@ -106,24 +129,17 @@ block content
                                     .input-append#newMethod
                                         input#userMethod(size="16", type="text")
                                         button.btn(type="button", onclick="customizeMethods();") Add
-                    li#microfluidics.hidden
-                        h4 Upload microfluidics table
-                        .controls#mftable
-                            select#mftables.span3(name="mftableselect", onchange="selectClicked('mftable');")
-                                option(value="select") Upload table file
-                                option(value="mfcreatenew") Create new
-                            input#mfdata.span3(type="file", name="mfdata", onchange="loadMFTable('loadButtonOnClick');mfAppendLoadButton()")
                     li#tablefile
                         h4 Select/upload table file
                         .controls#table
                             select#tables.span3(name="tableselect", onchange="selectClicked('table');")
                                 option(value="select") Select table file
-                            input#data.span3(type="file", name="data", onchange="AppendUploadButton()")
+                            input#data.span3(type="file", name="data", onchange="recognizeFile();")
                     li#script
                         h4 Write script &nbsp;&nbsp;
                             small: a#sampleScript(onclick="LoadSampleScript()") load example
-                            input#position.hidden(name='position', id='position', hidden)
-                            input#wells.hidden(name='wells', id='wells', hidden)
+                input#position.hidden(name='position', id='position', hidden)
+                input#wells.hidden(name='wells', id='wells', hidden)
         .row
             .span12
                 #result

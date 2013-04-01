@@ -1,7 +1,8 @@
 /**
- * Author: Nina Stawski, me@ninastawski.com
- * Date: 12/18/12
- * Time: 10:33 AM
+ * prpr-mf.js, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-handling robots
+ * Author: Nina Stawski, nstawski@lbl.gov, me@ninastawski.com
+ * Copyright 2012-2013, Lawrence Berkeley National Laboratory
+ * http://github.com/JBEI/prpr/blob/master/license.txt
  */
 
 function getConnectionInfos() {
@@ -52,7 +53,7 @@ function getPositionString() {
 }
 
 function addMFInfo() {
-    if ($('#devices').val() == 'microfluidics') {
+    if ($('#deviceselect').val() == 'microfluidics') {
         saveLocation();
         saveConnections();
     }
@@ -88,7 +89,7 @@ function getMFTableFile() {
 }
 
 function mfAppendLoadButton() {
-    $('#loadButton').remove();
+    $('#tablefile .controls .btn').remove();
     $('#mfdata').after('<button class="btn btn-info pull-right" id="loadButton"  data-toggle="modal" href="#myModal" onClick="loadMFTable();">View/Edit the plate</button>');
 //    loadMFTable();
 }

@@ -1,26 +1,89 @@
 /**
  * prpr.js, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-handling robots
  * Author: Nina Stawski, nstawski@lbl.gov, me@ninastawski.com
- * Copyright 2012, Lawrence Berkeley National Laboratory
+ * Copyright 2012-2013, Lawrence Berkeley National Laboratory
  * http://github.com/JBEI/prpr/blob/master/license.txt
  */
 
-function selectDevice() {
+function selectDevice(selection) {
     $('.alert').remove();
-    var selection = $('#device').find('option:selected').val();
+    $('#prpr-platform').children().removeClass('btn-info');
+    $('#platform-' + selection).addClass('btn-info');
     if (selection == 'freedomevo') {
-        $('#microfluidics').addClass('hidden');
-        $('#tablefile').removeClass('hidden');
+        $('#deviceselect').val('freedomevo');
+        $('#tablefile .controls').attr('id', 'table');
+        $('#tablefile .controls select').attr({ 'id' : 'tables', 'name' : 'tableselect', 'onchange' : 'selectClicked(\'table\');' });
+        $('#tablefile .controls input').attr({'id' : 'data', 'name' : 'data' });
+        setTimeout(function() {
+            if ($('#data').val()) {
+                $('#tablefile .controls .btn').remove();
+                AppendUploadButton();
+            }
+        }, 0);
+        if ($('#tablefile .controls select').val() == 'select') {
+            if (!$('#tablefile .controls').find('input').length) {
+                $('#table').append('<input type="file" name="data" id="data" class="span3" onchange="recognizeFile();"/>');
+            }
+        }
         $('#methodsToggle').removeClass('hidden');
+        $('#sampleScript').removeClass('hidden');
     }
     else if (selection == 'microfluidics') {
-        $('#microfluidics').removeClass('hidden');
-        $('#tablefile').addClass('hidden');
+        $('#tablefile .controls .btn').remove();
+        $('#deviceselect').val('microfluidics');
+        $('#tablefile .controls').attr('id', 'mftable');
+        $('#tablefile .controls select').attr({ 'id' : 'mftables', 'name' : 'mftableselect', 'onchange' : 'selectClicked(\'mftable\');' });
+        $('#tablefile .controls input').attr({'id' : 'mfdata', 'name' : 'mfdata' });
+        setTimeout(function() {
+            if ($('#mfdata').val()) {
+                loadMFTable('loadButtonOnClick');
+                $('#mfdata').after('<button class="btn btn-info pull-right" id="loadButton"  data-toggle="modal" href="#myModal" onClick="loadMFTable();">View/Edit the plate</button>');
+            }
+        }, 0);
+        $('#mftables').children().remove();
+        $('#mftables').prepend('<option value="select">Upload table file</option><option value="mfcreatenew">Create new</option>');
         $('#methodsToggle').addClass('hidden');
-        $('#loadButton').remove();
-        $('#methods').addClass('hide');
+        $('#tablefile .controls .btn').remove();
+        $('#methods').addClass('hidden');
         $('#result').before('<div class="alert"><i class="icon-exclamation-sign large"></i>&nbsp;<strong>Warning:</strong> Microfluidics functionality may not work correctly in <strong>Internet Explorer</strong>. Please use <strong>Chrome</strong> or <strong>Firefox</strong>.</div>');
         resetMFField();
+        $('#sampleScript').addClass('hidden');
+        $('#preview').remove();
+
+        if ($('#tablefile .controls select').val() == 'select') {
+            if (!$('#tablefile .controls').find('input').length) {
+                $('#mftable').append('<input type="file" name="mfdata" id="mfdata" class="span3" onchange="recognizeFile();"/>');
+            }
+        }
+    }
+}
+
+function recognizeFile() {
+    var fileExtension = $('#tablefile .controls input').val().slice(-4);
+    if (fileExtension == '.mfp') {
+        selectDevice('microfluidics');
+    } else if (fileExtension == '.ewt') {
+        selectDevice('freedomevo');
+        createTablesList(tablesList);
+        AppendUploadButton();
+    } else {
+        $('#tablefile .controls .btn').remove();
+        $('#tablefile .controls').append('<div id="noFile" class="btn disabled pull-right">Incorrect plate file</button>');
+    }
+}
+
+function createTablesList(tablesList) {
+    $('#tables').children().remove();
+    $('#tables').prepend('<option value="select">Select table file</option>');
+    for (var i = 0; i < tablesList.length; i++) {
+        var tableName = tablesList[i];
+        var tableSelector;
+        if (tableName.substr(-4, 4) == '.ewt') {
+            tableSelector = 'tables';
+            $('#' + tableSelector).append('<option value="' + tableName + '">' + tableName + '</option>')
+        } //else if (tableName.substr(-4, 4) == '.mfp') {
+        //tableSelector = 'mftables';
+        //}
     }
 }
 
@@ -42,13 +105,14 @@ function selectClicked(selectID) {
     }
 
     if (selection == 'select') {
+        resetMFField();
         $('#' + preview).remove();
         $('#' + selectID).append('<input type="file" name="' + filename + '" id="' + filename + '" class="span3" onchange="loadMFTable();' + changeFunction + '"/>');
     }
     else if (selection == 'mfcreatenew') {
         $('#' + filename).remove();
         $('#' + preview).remove();
-        $('#loadButton').remove();
+        $('#tablefile .controls .btn').remove();
         $('#' + selectID).append('<button id="' + preview + '" class="btn btn-info pull-right" data-toggle="modal" href="#myModal">Edit table layout</button>');
         resetMFField();
         $('#myModal').modal('show');
@@ -58,13 +122,13 @@ function selectClicked(selectID) {
         console.log(selectID, selection);
         $('#' + filename).remove();
         $('#' + preview).remove();
-        $('#loadButton').remove();
+        $('#tablefile .controls .btn').remove();
         $('#' + selectID).append('<button id="' + preview + '" class="btn btn-info pull-right" data-toggle="modal" href="#myModal" onclick="' + clickFunction + '">Preview table layout</button>');
     }
 }
 
 function AppendUploadButton() {
-    $('#uploadFile').remove();
+    $('#tablefile .controls .btn').remove();
     $('#table').append('<button id="uploadFile" class="btn btn-info pull-right"  data-toggle="modal" href="#myModal" onclick="UploadTable();">Preview table layout</button>');
 }
 

@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
+
+# ppserver.py, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-handling robots
+# Author: Nina Stawski, nstawski@lbl.gov, me@ninastawski.com
+# Copyright 2012-2013, Lawrence Berkeley National Laboratory
+# http://github.com/JBEI/prpr/blob/master/license.txt
+
 __author__ = 'Nina Stawski'
-__version__ = '0.5'
+__version__ = '0.6'
 
 import bottle
 from bottle import *
@@ -18,7 +24,7 @@ maxAm = 150
 
 @route('/')
 def prpr():
-    return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[], tables=GetDefaultTables(), version=__version__)
+    return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[], tables=GetDefaultTables(), selected='freedomevo', version=__version__)
 
 
 @route('/preview')
@@ -147,7 +153,7 @@ def config():
                     tablename = 'default_tables' + os.sep + preselected
                 else:
                     errorList.append("Please select or upload the table file for your configuration script.")
-                    return template('pages' + os.sep + 'page.html', file='', btn='', text=getconfig, alerterror=errorList, alertsuccess=successList,tables=GetDefaultTables(), version=__version__)
+                    return template('pages' + os.sep + 'page.html', file='', btn='', text=getconfig, alerterror=errorList, alertsuccess=successList,tables=GetDefaultTables(), selected=platform, version=__version__)
         else:
             print('platform__ MF')
             #note: if the platform is microfluidics
@@ -171,7 +177,7 @@ def config():
         if len(experiment.errorLogger):
             for item in experiment.errorLogger:
                 errorList.append(item)
-            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
+            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
 
         elif experiment.testindex:
             if experiment.platform != "microfluidics":
@@ -192,15 +198,15 @@ def config():
             # tojs = json_dumps(information)
             # return tojs
 
-            return template('pages' + os.sep + 'page.html', file=file, btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
+            return template('pages' + os.sep + 'page.html', file=file, btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
 
         else:
             errorList.append("Your configuration file doesn't contain any actions. Please refer to PR-PR howto guide.")
-            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
+            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
 
     else:
         errorList.append("Your configuration file doesn't contain any actions. Please refer to PR-PR howto guide.")
-        return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), version=__version__)
+        return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
 
 
 @route('/static/:path#.+#', name='static')
