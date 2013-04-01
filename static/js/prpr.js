@@ -11,7 +11,6 @@ function selectDevice(selection) {
     $('#platform-' + selection).addClass('btn-info');
     if (selection == 'freedomevo') {
         $('#deviceselect').val('freedomevo');
-        $('#tablefile h4').html('Select/upload table file');
         $('#tablefile .controls').attr('id', 'table');
         $('#tablefile .controls select').attr({ 'id' : 'tables', 'name' : 'tableselect', 'onchange' : 'selectClicked(\'table\');' });
         $('#tablefile .controls input').attr({'id' : 'data', 'name' : 'data' });
@@ -32,7 +31,6 @@ function selectDevice(selection) {
     else if (selection == 'microfluidics') {
         $('#tablefile .controls .btn').remove();
         $('#deviceselect').val('microfluidics');
-        $('#tablefile h4').html('Upload microfluidics table');
         $('#tablefile .controls').attr('id', 'mftable');
         $('#tablefile .controls select').attr({ 'id' : 'mftables', 'name' : 'mftableselect', 'onchange' : 'selectClicked(\'mftable\');' });
         $('#tablefile .controls input').attr({'id' : 'mfdata', 'name' : 'mfdata' });
@@ -69,6 +67,7 @@ function recognizeFile() {
         createTablesList(tablesList);
         AppendUploadButton();
     } else {
+        $('#tablefile .controls .btn').remove();
         $('#tablefile .controls').append('<div id="noFile" class="btn disabled pull-right">Incorrect plate file</button>');
     }
 }
