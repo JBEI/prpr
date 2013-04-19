@@ -17,8 +17,8 @@ from shutil import copyfile
 from prpr_commands import *
 from itertools import cycle
 from copy import deepcopy
-from prpr_tecan import *
-from prpr_mf import *
+# from prpr_tecan import *
+# from prpr_mf import *
 
 #todo: switch to postgres
 
@@ -1133,13 +1133,14 @@ if __name__ == '__main__':
     global experiment
     experiment = Experiment(maxVolume=150, tips=8, db=DBHandler(), platform="freedomevo")
     print('Experiment ID: ', experiment.ID)
+    if experiment.platform != "microfluidics":
+        import prpr_tecan as platform
+    else:
+        import prpr_mf as platform
     ParseConfigFile(experiment)
 
     if not len(experiment.errorLogger):
-        if experiment.platform != "microfluidics":
-            prpr = Prpr_Tecan(experiment.ID)
-        else:
-            prpr = Prpr_MF(experiment.ID)
+        prpr = platform.PRPR(experiment.ID)
         print('Robot Config:')
         for element in prpr.robotConfig:
             print(element)

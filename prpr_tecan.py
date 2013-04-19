@@ -11,7 +11,7 @@ __version__ = '0.6'
 import os
 from prpr import *
 
-class Prpr_Tecan:
+class PRPR:
     wash = 'Wash(255,1,1,1,0,"2",500,"1.0",500,20,70,30,1,1,1000);'
     def __init__(self, ID):
         self.expID = ID

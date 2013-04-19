@@ -15,14 +15,13 @@ import os
 from prpr import *
 from copy import deepcopy
 
-class Prpr_MF:
+class PRPR:
     def __init__(self, ID):
         self.expID = ID
         db = DatabaseHandler(ID)
         self.transfers = db.transfers
         self.mfWellConnections = db.mfWellConnections
         self.mfWellLocations = db.mfWellLocations
-        print('locations::', self.mfWellLocations)
         self.logger = []
         self.robotConfig = []
         self.transactions = []
@@ -35,7 +34,6 @@ class Prpr_MF:
         allTransfers = self.transfers
         unparsedTransfers = []
         for i, transfer in enumerate(allTransfers):
-            print('transfer__', transfer)
             trType = transfer['type']
             els = transfer['info']
             if trType == 'command':
@@ -48,9 +46,13 @@ class Prpr_MF:
 
     def parseTransfer(self, transferList, transferNumber):
         transfers = []
+        from_ = transferList[0]['source']['well']
+        to_ = transferList[len(transferList) - 1]['destination']['well']
+        print(from_, to_)
         for t, transfer in enumerate(transferList):
             config = {}
-            trNum = str(transferNumber) + str(t) + 't'
+            waitNum = str(transferNumber)
+            trNum = waitNum + '_from_' + from_ + '_to_' + to_ + '_'
             config['name'] = 'transfer' + trNum
             config['details'] = ['transfer' + trNum]
             source = transfer['source']['well']
@@ -66,22 +68,21 @@ class Prpr_MF:
                 if p == 0 and len(self.mfWellConnections[closeWell]) == 1:
                     config['details'].append('o' + currentWell)
                     config['details'].append('o' + openWell)
-                    config['details'].append('call wait' + trNum)
+                    config['details'].append('call wait' + waitNum)
                     global p
                     p = 1
                     openWell = transferPath[p + 1]
                     closeWell = transferPath[p - 1]
                 config['details'].append('c' + closeWell)
                 config['details'].append('o' + openWell)
-                config['details'].append('call wait' + trNum)
+                config['details'].append('call wait' + waitNum)
                 if p == (len(transferPath) - 2) and len(self.mfWellConnections[openWell]) == 1:
                     config['details'].append('c' + currentWell)
                     config['details'].append('c' + openWell)
-                    config['details'].append('call wait' + trNum)
+                    config['details'].append('call wait' + waitNum)
                 p += 1
             config['details'].append('end')
-            config['wait'] = ['wait' + trNum, 'w' + str(wait), 'end']
-            print('confing)))', config)
+            config['wait'] = ['wait' + waitNum, 'w' + str(wait), 'end']
             transfers.append(config)
         return transfers
 
@@ -111,7 +112,6 @@ class Prpr_MF:
         :return: resulting path, list
 
         """
-        print('source:', source, 'destination:', destination, 'path:', path)
         path = path + [source]
         if source == destination:
             return path

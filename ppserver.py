@@ -181,11 +181,12 @@ def config():
 
         elif experiment.testindex:
             if experiment.platform != "microfluidics":
-                prpr = Prpr_Tecan(expID)
+                import prpr_tecan as platform
                 file = 'config' + str(expID) + '.esc'
             else:
-                prpr = Prpr_MF(experiment.ID)
+                import prpr_mf as platform
                 file = 'config' + str(expID) + '.mf'
+            prpr = platform.PRPR(experiment.ID)
             log = 'experiment' + str(expID) + '.log'
             successList.append("Your configuration file has been successfully processed.")
 
