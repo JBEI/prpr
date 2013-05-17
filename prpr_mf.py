@@ -60,6 +60,7 @@ class PRPR:
             wait = transfer['wait']
             config['times'] = int(transfer['times'])
             transferPath = self.findPath(source, destination)
+            print('src dst trlist', transferPath, source, destination, transferList)
             p = 0
             while p < len(transferPath) - 1:
                 openWell = transferPath[p + 1]

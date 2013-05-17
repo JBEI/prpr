@@ -62,7 +62,7 @@ function recognizeFile() {
     var fileExtension = $('#tablefile .controls input').val().slice(-4);
     if (fileExtension == '.mfp') {
         selectDevice('microfluidics');
-    } else if (fileExtension == '.ewt') {
+    } else if (fileExtension == '.ewt' || fileExtension == '.gem') {
         selectDevice('tecan');
         createTablesList(tablesList);
         AppendUploadButton();
@@ -119,7 +119,6 @@ function selectClicked(selectID) {
         setupDroppableWells(0);
     }
     else {
-        console.log(selectID, selection);
         $('#' + filename).remove();
         $('#' + preview).remove();
         $('#tablefile .controls .btn').remove();

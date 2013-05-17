@@ -109,8 +109,15 @@ def createMFPlate(wells, position):
 
 @post('/mfparse')
 def mfparse():
-    a = request.body.read().decode().split('\n')[4:-2]
-    a[-1] = a[-1].strip()
+    info = request.body.read().decode()
+    if info[-3:] == 'mfp':
+        tabledirname = 'default_tables' + os.sep
+        with open(tabledirname + info, "r") as plateFile:
+            a = plateFile.readlines()
+    else:
+        a = request.body.read().decode().split('\n')[4:-2]
+        a[-1] = a[-1].strip()        
+    print('aa...', a)
     tojs = json_dumps(a)
     return tojs
 
@@ -127,7 +134,6 @@ def config():
     successList = []
     platform = request.forms.get('deviceselect', '').strip()
     getconfig = request.forms.get('text', '').strip()
-    preselected = request.forms.get('tableselect')
     customMethods = request.forms.get('methods', '').strip().split(',')
     if getconfig != '':
         db = DBHandler()
@@ -139,6 +145,7 @@ def config():
         expID = experiment.ID
 
         if platform != 'microfluidics':
+            preselected = request.forms.get('tableselect')
             data = request.files.data
             if data != '':
                 fileExtension = data.filename[-3:]
@@ -154,12 +161,16 @@ def config():
                     errorList.append("Please select or upload the table file for your configuration script.")
                     return template('pages' + os.sep + 'page.html', file='', btn='', text=getconfig, alerterror=errorList, alertsuccess=successList,tables=GetDefaultTables(), selected=platform, version=__version__)
         else:
+            preselected = request.forms.get('mftableselect')
             print('platform__ MF')
             #note: if the platform is microfluidics
-            position = request.forms.get('position', '')
-            wells = '\n'.join(request.forms.get('wells', '').strip().split(';'))
-            print('!!>', wells, position)
-            tablename = 'tables' + os.sep + createMFPlate(wells, position)
+            if preselected != 'select':
+                tablename = 'default_tables' + os.sep + preselected
+            else:
+                position = request.forms.get('position', '')
+                wells = '\n'.join(request.forms.get('wells', '').strip().split(';'))
+                print('!!>', wells, position)
+                tablename = 'tables' + os.sep + createMFPlate(wells, position)
 
         dirname = 'incoming' + os.sep
         filename = 'config_' + expID + '.par'
