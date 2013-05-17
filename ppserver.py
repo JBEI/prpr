@@ -24,7 +24,7 @@ maxAm = 150
 
 @route('/')
 def prpr():
-    return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[], tables=GetDefaultTables(), selected='freedomevo', version=__version__)
+    return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[], tables=GetDefaultTables(), selected='tecan', version=__version__)
 
 
 @route('/preview')
@@ -140,11 +140,11 @@ def config():
         expID = experiment.ID
 
         if platform != 'microfluidics':
-            print('platform__ other', platform)
             data = request.files.data
             if data != '':
+                fileExtension = data.filename[-3:]
                 raw = data.file.read()
-                tablename = 'tables' + os.sep + 'tables_' + expID + '.ewt'
+                tablename = 'tables' + os.sep + 'tables_' + expID + '.' + fileExtension
                 tablefile = open(tablename, "wb")
                 tablefile.write(raw)
                 tablefile.close()
@@ -172,6 +172,10 @@ def config():
         writefile.writelines(''.join(list_))
         writefile.close()
         readfile = open(dirname + filename, "r")
+        if experiment.platform != "microfluidics":
+            import prpr_tecan as platform
+        else:
+            import prpr_mf as platform
         ParseFile(readfile, experiment)
 
         if len(experiment.errorLogger):
@@ -180,12 +184,7 @@ def config():
             return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
 
         elif experiment.testindex:
-            if experiment.platform != "microfluidics":
-                import prpr_tecan as platform
-                file = 'config' + str(expID) + '.esc'
-            else:
-                import prpr_mf as platform
-                file = 'config' + str(expID) + '.mf'
+            file = 'config' + str(expID) + '.' + platform.defaults.fileExtensions[tablename[-3:]]
             prpr = platform.PRPR(experiment.ID)
             log = 'experiment' + str(expID) + '.log'
             successList.append("Your configuration file has been successfully processed.")
@@ -240,7 +239,7 @@ def GetDefaultTables():
     tablesDir = os.listdir('default_tables')
     tables = []
     for name in tablesDir:
-        if not name.startswith('.') and (name.endswith('.ewt') or name.endswith('.mfp')):
+        if not name.startswith('.') and (name.endswith('.ewt') or name.endswith('.gem') or name.endswith('.mfp')):
             tables.append(name)
     tables.sort()
     jsonTables = json_dumps(tables)

@@ -9,8 +9,8 @@ function selectDevice(selection) {
     $('.alert').remove();
     $('#prpr-platform').children().removeClass('btn-info');
     $('#platform-' + selection).addClass('btn-info');
-    if (selection == 'freedomevo') {
-        $('#deviceselect').val('freedomevo');
+    if (selection == 'tecan') {
+        $('#deviceselect').val('tecan');
         $('#tablefile .controls').attr('id', 'table');
         $('#tablefile .controls select').attr({ 'id' : 'tables', 'name' : 'tableselect', 'onchange' : 'selectClicked(\'table\');' });
         $('#tablefile .controls input').attr({'id' : 'data', 'name' : 'data' });
@@ -63,7 +63,7 @@ function recognizeFile() {
     if (fileExtension == '.mfp') {
         selectDevice('microfluidics');
     } else if (fileExtension == '.ewt') {
-        selectDevice('freedomevo');
+        selectDevice('tecan');
         createTablesList(tablesList);
         AppendUploadButton();
     } else {
@@ -78,12 +78,12 @@ function createTablesList(tablesList) {
     for (var i = 0; i < tablesList.length; i++) {
         var tableName = tablesList[i];
         var tableSelector;
-        if (tableName.substr(-4, 4) == '.ewt') {
+        if (tableName.substr(-4, 4) == '.ewt' || tableName.substr(-4, 4) == '.gem') {
             tableSelector = 'tables';
-            $('#' + tableSelector).append('<option value="' + tableName + '">' + tableName + '</option>')
-        } //else if (tableName.substr(-4, 4) == '.mfp') {
-        //tableSelector = 'mftables';
-        //}
+        } else if (tableName.substr(-4, 4) == '.mfp') {
+            tableSelector = 'mftables';
+        }
+        $('#' + tableSelector).append('<option value="' + tableName + '">' + tableName + '</option>')
     }
 }
 

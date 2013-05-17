@@ -95,8 +95,8 @@ def UpdatePlates():
             crsr.execute(message)
         except sqlite3.IntegrityError:
             DatabaseConnect()
-            crsr.execute(message)
             message = 'UPDATE Plates SET Rows = ' + size[0] + ', Columns = ' + size[1] + '  WHERE FactoryName = ' + '"' + name + '"'
+            crsr.execute(message)
         DatabaseDisconnect()
 
 def CreateFolders():

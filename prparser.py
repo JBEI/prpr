@@ -53,6 +53,8 @@ class Experiment:
         self.groups = {} #note: group{name:[component1, component2]}
         self.mfWellLocations = {}
         self.mfWellConnections = {}
+        # self.tableSize = 31
+        self.tableSize = 69
 
     def addName(self, name):
         self.name = name
@@ -150,6 +152,7 @@ class Experiment:
         def ParseWells(wells, plateDimensions):
             wellsLargeList = wells.split(',')
             wellsNewlist = []
+            print('wells, wellslargelitt', wells, wellsLargeList)
             for well in wellsLargeList:
                 wellsList = well.split('+')
                 direction = 'vertical'
@@ -252,6 +255,7 @@ class Experiment:
             else:
                 self.errorLog('Error. No well defined in location "' + location + '"')
         loc = []
+        print('location__', location)
         if self.platform != "microfluidics":
             if '/' in location:
                 newLoc = location.split('/')
@@ -259,7 +263,9 @@ class Experiment:
                 newLoc = [location]
             for line in newLoc:
                 plateAndWells = line.split(':')
+                print('plateandWells', plateAndWells)
                 if plateAndWells[0]:
+                    print('self.plates', self.plates)
                     if plateAndWells[0] in self.plates:
                         plateName = self.plates[plateAndWells[0]].name
                         plateDms = self.plates[plateAndWells[0]].dimensions
@@ -331,18 +337,23 @@ class Experiment:
             self.errorLog('Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
 
     def createTransfer(self, component, modifier, destination, volume, transferMethod, line):
+        print('createTransfer component', component)
         if component in self.components or ':' in component or self.platform == "microfluidics":
         #            if component in self.groups: #better parse groups
             if component in self.components:
+                print('component is in self.components')
                 comp = self.components[component]
             elif component in self.mfWellLocations:
+                print('component is in self.mfWellLocations')
                 comp = Component({'name': component, 'location': component, 'method': transferMethod})
                 self.add('component', component, comp)
             else:
                 if ':' in component:
+                    print(': in component')
                     comp = Component({'name': component, 'location': component, 'method': self.methods[0]})
                     self.add('component', component, comp)
                 elif self.platform == 'microfluidics':
+                    print('platform is microfluidics')
                     comp = Component({'name': component, 'location': component, 'method': transferMethod})
                     self.add('component', component, comp)
 
@@ -749,6 +760,7 @@ class DBHandler:
                     self.insert('ExperimentInfo', [experiment.ID, '"' + element + '"', '"' + '\n'.join(experiment.docString) + '"'])
 
                 elif element == experiment.components:
+                    print('experiment components', experiment.components)
                     for component in experiment.components:
                         c = experiment.components[component]
                         componentID = str(id(c))
@@ -756,6 +768,7 @@ class DBHandler:
                         name = '"' + c.name + '"'
                         for well in c.location:
                             wellID = str(id(well))
+                            print('!!!well', well)
                             plate = '"' + str(well.plate) + '"'
                             location = '"' + str(well.location) + '"'
                             self.insert('Wells', [expID, wellID, plate, location])
@@ -909,7 +922,7 @@ def PlateFileParse(plateFile, experiment, plateNicknames, plateIndexes):
 
 def PlateNameParse(parts, plateFile, experiment, plateNicknames, plateIndexes):
     global stringCounter
-    if stringCounter < 31:
+    if stringCounter < experiment.tableSize:
         if parts[0] == '998':
             if len(parts) >= 2:
                 n_plates = parts[1]
@@ -1020,9 +1033,14 @@ def LineToList(line, configFileName, experiment):
                     plateFile = open(fileName, "r")
                     experiment.log('Table file location: "' + fileName + '"')
                     if experiment.platform == 'microfluidics':
+                        import prpr_mf as platform
                         mfPlateFileParse(plateFile, experiment)
                     else:
-                        copyfile(fileName, 'esc' + os.sep + 'config' + experiment.ID + '.esc')
+                        import prpr_tecan as platform
+                        fileExtension = fileName[-3:]
+                        # copyfile(fileName, 'esc' + os.sep + 'config' + experiment.ID + '.esc')
+                        copyfile(fileName, 'esc' + os.sep + 'config' + experiment.ID + '.' + platform.defaults.fileExtensions[fileExtension])
+                        # copyfile(fileName, 'esc' + os.sep + 'config' + experiment.ID + '.gem')
                         PlateFileParse(plateFile, experiment, plateNicknames={}, plateIndexes={})
 
             elif command['name'] == 'volume':
@@ -1131,7 +1149,7 @@ def isNumber(number):
 
 if __name__ == '__main__':
     global experiment
-    experiment = Experiment(maxVolume=150, tips=8, db=DBHandler(), platform="freedomevo")
+    experiment = Experiment(maxVolume=150, tips=8, db=DBHandler(), platform="tecan")
     print('Experiment ID: ', experiment.ID)
     if experiment.platform != "microfluidics":
         import prpr_tecan as platform

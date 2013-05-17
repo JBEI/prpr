@@ -23,7 +23,7 @@
       var renamed = [];
       $(document).ready(function () {
           $('#myModal').children().disableSelection();
-          selectDevice('freedomevo');
+          selectDevice('tecan');
           $(document).bind('touchmove', function(e) {
               e.preventDefault();
           }, false);
@@ -33,20 +33,21 @@
           
           var selected = '{{selected}}';
           
-          if (selected == 'freedomevo') {
-              selectDevice('freedomevo');
+          if (selected == 'tecan') {
+              selectDevice('tecan');
               createTablesList(tablesList);
           } else if (selected == 'microfluidics') {
               selectDevice('microfluidics');
           };
           
-          $('#platform-freedomevo').click(function() {
-              selectDevice('freedomevo');
+          $('#platform-tecan').click(function() {
+              selectDevice('tecan');
               createTablesList(tablesList);
           });
           
           $('#platform-microfluidics').click(function() {
               selectDevice('microfluidics');
+              createTablesList(tablesList);
           });
           
           $('#myModal').on('shown', function() {
@@ -128,7 +129,7 @@
                 <div id="device" class="controls">
                   <input id="deviceselect" name="deviceselect" class="hidden">
                   <div id="prpr-platform" class="btn-group">
-                    <div id="platform-freedomevo" class="btn">Tecan Freedom Evo</div>
+                    <div id="platform-tecan" class="btn">Tecan (Genesis and Evo)</div>
                     <div id="platform-microfluidics" class="btn">Microfluidics</div>
                   </div><a id="methodsToggle" onclick="$('#methods').toggleClass('hidden');" class="btn btn-link">Setup custom methods</a>
                 </div>

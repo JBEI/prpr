@@ -51,10 +51,10 @@ class PRPR:
         print(from_, to_)
         for t, transfer in enumerate(transferList):
             config = {}
-            waitNum = str(transferNumber)
-            trNum = waitNum + '_from_' + from_ + '_to_' + to_ + '_'
-            config['name'] = 'transfer' + trNum
-            config['details'] = ['transfer' + trNum]
+            waitNum = str(transferNumber) + '_o'
+            trNum = str(transferNumber) + '_w_' + from_ + '_to_' + to_ + '_o'
+            config['name'] = 'tr' + trNum
+            config['details'] = ['tr' + trNum]
             source = transfer['source']['well']
             destination = transfer['destination']['well']
             wait = transfer['wait']
@@ -142,6 +142,7 @@ class PRPR:
 
     def saveConfig(self):
         fileName = 'esc' + os.sep + 'config' + self.expID + '.mf'
+        open(fileName, 'w').close()
         myfile = open(fileName, 'a')
         for line in self.robotConfig:
             myfile.write(line.rstrip() + '\r\n')
@@ -161,3 +162,7 @@ class PRPR:
         writefile = open(logName, "a")
         writefile.writelines("%s\n" % item for item in self.logger)
         print('Translation log location: ' + logName)
+        
+        
+class defaults:
+    fileExtensions = {'mfp' : 'mf'}
