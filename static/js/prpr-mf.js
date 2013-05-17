@@ -137,6 +137,7 @@ function resetMFField() {
 
 function loadMFTable(loadButtonOnClick) {
     resetMFField();
+//    if (!$('#mfdata').length) {
     $('.modal-body').css('max-height', '900px');
     var file = $('#mfdata')[0].files[0];
     var formData = new FormData();

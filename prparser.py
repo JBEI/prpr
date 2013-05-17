@@ -54,7 +54,6 @@ class Experiment:
         self.mfWellLocations = {}
         self.mfWellConnections = {}
         # self.tableSize = 31
-        self.tableSize = 69
 
     def addName(self, name):
         self.name = name
@@ -922,7 +921,7 @@ def PlateFileParse(plateFile, experiment, plateNicknames, plateIndexes):
 
 def PlateNameParse(parts, plateFile, experiment, plateNicknames, plateIndexes):
     global stringCounter
-    if stringCounter < experiment.tableSize:
+    if stringCounter < 69:
         if parts[0] == '998':
             if len(parts) >= 2:
                 n_plates = parts[1]

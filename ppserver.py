@@ -46,7 +46,6 @@ def mf():
 def disclaimer():
     return template('pages' + os.sep + 'disclaimer.html', version=__version__)
 
-
 @route('/copyright')
 def copyright_():
     return template('pages' + os.sep + 'copyright.html', version=__version__)
