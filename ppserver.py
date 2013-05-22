@@ -26,10 +26,10 @@ maxAm = 150
 def prpr():
     return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[], tables=GetDefaultTables(), selected='tecan', version=__version__)
 
-
-@route('/preview')
+@post('/preview')
 def preview():
-    return template('pages' + os.sep + 'page_dev.html', version=__version__)
+    a = {'response' : 'error', 'config' : ['1', '2'], 'somethingelse' : {'somethign' : 'else'}}
+    return json_dumps(a)
 
 
 @route('/dev')
@@ -124,7 +124,12 @@ def mfparse():
 
 @post('/sample')
 def sample():
-    config = open('prpr_sample.par', 'r')
+    platform = request.body.read().decode()
+    if platform == 'tecan':
+        configFile = 'prpr_sample.par'
+    else:
+        configFile = 'prpr_sample_mf.par'
+    config = open(configFile, 'r')
     return config.readlines()
 
 

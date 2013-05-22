@@ -26,7 +26,7 @@ function selectDevice(selection) {
             }
         }
         $('#methodsToggle').removeClass('hidden');
-        $('#sampleScript').removeClass('hidden');
+//        $('#sampleScript').removeClass('hidden');
     }
     else if (selection == 'microfluidics') {
         $('#tablefile .controls .btn').remove();
@@ -47,7 +47,7 @@ function selectDevice(selection) {
         $('#methods').addClass('hidden');
         $('#result').before('<div class="alert"><i class="icon-exclamation-sign large"></i>&nbsp;<strong>Attention:</strong> Internet Explorer version 9 and above, Chrome or Firefox is recommended for full functionality.</div>');
         resetMFField();
-        $('#sampleScript').addClass('hidden');
+//        $('#sampleScript').addClass('hidden');
         $('#preview').remove();
 
         if ($('#tablefile .controls select').val() == 'select') {
@@ -132,13 +132,26 @@ function AppendUploadButton() {
 }
 
 function LoadSampleScript() {
+    var platformName = $('#prpr-platform').children('.btn-info').attr('id').split('-').pop();
     $('.alert').remove();
     $('#data').remove();
     $('#preview').remove();
     $('#uploadFile').remove();
-    $('#table').append('<button id="preview" class="btn btn-info pull-right" data-toggle="modal" href="#myModal" onclick="CallPython();">Preview table layout</button>');
-    $('#tables').val('BreakfastDrinks.ewt');
-    $.post('sample', function (data) {
+    var tag, selection;
+    if (platformName == 'microfluidics') {
+        tag = 'mftable';
+        selection = 'prpr_mf.mfp';
+    } else if (platformName == 'tecan') {
+        tag = 'table';
+        selection = 'BreakfastDrinks.ewt';
+    };
+    $('#' + tag + 's option')
+        .filter(function(index) { return $(this).text() === selection; })
+        .prop('selected', true);
+//    $('#table').append('<button id="preview" class="btn btn-info pull-right" data-toggle="modal" href="#myModal" onclick="CallPython();">Preview table layout</button>');
+//    $('#tables').val('BreakfastDrinks.ewt');
+    selectClicked(tag);
+    $.post('sample', platformName, function (data) {
         $('#textarea').val(data);
     });
 }
