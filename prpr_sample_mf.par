@@ -4,7 +4,7 @@ NAME 	BreakfastDrinks
 Recipe for breakfast drinks
 """
 
-#         name         location     method
+#         name         location     delay(ms)
 COMPONENT Water        21           100
 COMPONENT TeaExtract   23           100
 COMPONENT Syrup        24           100
@@ -12,12 +12,12 @@ COMPONENT Milk         27           100
 COMPONENT BeanExtract  19           100
 COMPONENT LemonJuice   16           100
 
-#         alias        volume(uL)
+#         alias        units
 VOLUME    DrinkVol     5
 VOLUME    WaterVol     10
   
-#         component  destination   times       method
+#         component  destination   units       delay(ms)
 SPREAD    Water      8             DrinkVol    100      
 
-#         source     destination   times     method
+#         source     destination   units     delay(ms)
 TRANSFER  Syrup      7             3         100
