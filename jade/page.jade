@@ -122,14 +122,7 @@ block content
                             .btn-group#prpr-platform
                                 .btn#platform-tecan Tecan (Genesis and Evo)
                                 .btn#platform-microfluidics Microfluidics
-                            a#methodsToggle.btn.btn-link(onclick="$('#methods').toggleClass('hidden');") Setup custom methods
-                        .row
-                            #methods.hidden
-                                .span7
-                                    h5 Custom methods
-                                    .input-append#newMethod
-                                        input#userMethod(size="16", type="text")
-                                        button.btn(type="button", onclick="customizeMethods();") Add
+                            a#methodsToggle.btn.btn-link(data-toggle="modal", href="#settings", onClick="displayDefaults();"): i.icon-cog
                     li#tablefile
                         h4 Select/upload table file
                         .controls#table
@@ -153,6 +146,27 @@ block content
                     h3#platename Plate file name
                 .modal-body
                     #tablerow
+                .modal-footer
+                    a.btn.pull-right(data-dismiss="modal", id="button-close-modal") Close popup
+            #settings.modal.hide.prpr-modal
+                .modal-header
+                    button.close(type="button", data-dismiss="modal") ×
+                    h3#modalName Platform settings
+                .modal-body
+                    .row-fluid
+                        .span6
+                            #defaultMethods
+                                h5 Default Methods
+                            #methods
+                                h5 Custom methods
+                                .input-append#newMethod
+                                    input#userMethod(size="16", type="text")
+                                    button.btn(type="button", onclick="customizeMethods();") Add
+                        .span6
+                            #defaultPlates
+                                h5 Default Plates
+                            #plates
+                                h5 Custom Plates
                 .modal-footer
                     a.btn.pull-right(data-dismiss="modal", id="button-close-modal") Close popup
             textarea#methodsList.hidden(name="methods")

@@ -281,6 +281,46 @@ function customizeMethods() {
     }
 }
 
+function displayDefaultMethods() {
+    $.post('/getMethods', function(data) {
+        var methods = $.parseJSON(data);
+        for (var n in methods) {
+            $('#defaultMethods').append('<div class="label method" id="' + methods[n] + '" onclick="makeDefault(\'' + methods[n] + '\')">' + methods[n] + '</div><br/>');
+            makeDefault(methods[0])
+        }
+    })
+}
+
+function displayDefaults() {
+    $('#defaultMethods, #defaultPlates').children().not('h5').remove();
+    displayDefaultMethods();
+    displayDefaultPlates()
+    
+}
+
+function displayDefaultPlates() {
+    $.post('/getPlates', function(data) {
+        var plates = $.parseJSON(data);
+        $('#defaultPlates').append('<table class="table table-striped">' +
+            '<thead>' +
+            '<tr>' +
+            '<td>Plate Name</td>' +
+            '<td>Rows</td>' +
+            '<td>Columns</td></tr>' +
+            '</thead>' +
+            '<tbody>' +
+            '</tbody>' +
+            '</table>');
+        for (var n in plates) {
+            var plateName = plates[n][0];
+            var plateRows = plates[n][1];
+            var plateCols = plates[n][2];
+            $('#defaultPlates tbody').append('<tr><td>' + plateName + '</td><td>' + plateRows + '</td><td>' + plateCols + '</td></tr>');
+        }
+    })
+}
+
+
 function removeMethod(method) {
     if (!e) var e = window.event;
     e.cancelBubble = true;

@@ -62,24 +62,24 @@ class PRPR:
             transferPath = self.findPath(source, destination)
             print('src dst trlist', transferPath, source, destination, transferList)
             p = 0
-            while p < len(transferPath) - 1:
-                openWell = transferPath[p + 1]
+            while p <= len(transferPath) - 1:
                 currentWell = transferPath[p]
-                closeWell = transferPath[p - 1]
-                if p == 0 and len(self.mfWellConnections[closeWell]) == 1:
+                if p == 0:
+                    openWell = transferPath[p + 1]
                     config['details'].append('o' + currentWell)
                     config['details'].append('o' + openWell)
                     config['details'].append('call wait' + waitNum)
-                    global p
-                    p = 1
+                if p != 0 and p != len(transferPath) - 1:
                     openWell = transferPath[p + 1]
                     closeWell = transferPath[p - 1]
-                config['details'].append('c' + closeWell)
-                config['details'].append('o' + openWell)
-                config['details'].append('call wait' + waitNum)
-                if p == (len(transferPath) - 2) and len(self.mfWellConnections[openWell]) == 1:
-                    config['details'].append('c' + currentWell)
-                    config['details'].append('c' + openWell)
+                    config['details'].append('o' + openWell)
+                    config['details'].append('c' + closeWell)
+                    config['details'].append('call wait' + waitNum)
+                if p == len(transferPath) - 1:
+                    closeWell = transferPath[p - 1]
+                    config['details'].append('c' + closeWell)
+                    if len(self.mfWellConnections[currentWell]) == 1:
+                        config['details'].append('c' + currentWell)
                     config['details'].append('call wait' + waitNum)
                 p += 1
             config['details'].append('end')

@@ -131,18 +131,7 @@
                   <div id="prpr-platform" class="btn-group">
                     <div id="platform-tecan" class="btn">Tecan (Genesis and Evo)</div>
                     <div id="platform-microfluidics" class="btn">Microfluidics</div>
-                  </div><a id="methodsToggle" onclick="$('#methods').toggleClass('hidden');" class="btn btn-link">Setup custom methods</a>
-                </div>
-                <div class="row">
-                  <div id="methods" class="hidden">
-                    <div class="span7">
-                      <h5>Custom methods</h5>
-                      <div id="newMethod" class="input-append">
-                        <input id="userMethod" size="16" type="text">
-                        <button type="button" onclick="customizeMethods();" class="btn">Add</button>
-                      </div>
-                    </div>
-                  </div>
+                  </div><a id="methodsToggle" data-toggle="modal" href="#settings" onClick="displayDefaults();" class="btn btn-link"><i class="icon-cog"></i></a>
                 </div>
               </li>
               <li id="tablefile">
@@ -175,6 +164,37 @@
             </div>
             <div class="modal-body">
               <div id="tablerow"></div>
+            </div>
+            <div class="modal-footer"><a data-dismiss="modal" id="button-close-modal" class="btn pull-right">Close popup</a></div>
+          </div>
+          <div id="settings" class="modal hide prpr-modal">
+            <div class="modal-header">
+              <button type="button" data-dismiss="modal" class="close">×</button>
+              <h3 id="modalName">Platform settings</h3>
+            </div>
+            <div class="modal-body">
+              <div class="row-fluid">
+                <div class="span6">
+                  <div id="defaultMethods">
+                    <h5>Default Methods</h5>
+                  </div>
+                  <div id="methods">
+                    <h5>Custom methods</h5>
+                    <div id="newMethod" class="input-append">
+                      <input id="userMethod" size="16" type="text">
+                      <button type="button" onclick="customizeMethods();" class="btn">Add</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="span6">
+                  <div id="defaultPlates">
+                    <h5>Default Plates</h5>
+                  </div>
+                  <div id="plates">
+                    <h5>Custom Plates</h5>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="modal-footer"><a data-dismiss="modal" id="button-close-modal" class="btn pull-right">Close popup</a></div>
           </div>

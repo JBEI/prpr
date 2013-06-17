@@ -860,13 +860,21 @@ class DBHandler:
         message = 'SELECT Method FROM DefaultMethod'
         default = DBHandler.db(message)[0][0]
         methods.append(default)
-
         message = 'SELECT Method FROM Methods'
-        list = DBHandler.db(message)
-        for row in list:
+        list_ = DBHandler.db(message)
+        for row in list_:
             methods.append(row[0])
         self.conn.commit()
         return methods
+    
+    def getPlates(self):
+        plates = []
+        message = 'SELECT * FROM Plates'
+        plate_list = DBHandler.db(message)
+        for row in plate_list:
+            plates.append(row)
+        self.conn.commit()
+        return plates
 
     @staticmethod
     def checkIfMethodExists(method):

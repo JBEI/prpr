@@ -132,6 +132,18 @@ def sample():
     config = open(configFile, 'r')
     return config.readlines()
 
+@post('/getMethods')
+def getMethods():
+    db = DBHandler()
+    methods = db.getMethods()
+    return json_dumps(methods)
+
+@post('/getPlates')
+def getPlates():
+    db = DBHandler()
+    plates = db.getPlates()
+    return json_dumps(plates)
+
 
 @post('/getconfig')
 def config():
