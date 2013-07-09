@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# prpr_tecan.py, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-handling robots
+# prpr_human.py, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-handling robots
 # Author: Nina Stawski, nstawski@lbl.gov, me@ninastawski.com
 # Copyright 2012-2013, Lawrence Berkeley National Laboratory
 # http://github.com/JBEI/prpr/blob/master/license.txt
@@ -12,13 +12,11 @@ import os
 from prpr import *
 
 class PRPR:
-    # wash = 'Wash(255,1,1,1,0,"2",500,"1.0",500,20,70,30,1,1,1000);'
-    wash = 'Wash(255,17,1,17,2,"2.0",500,"1.0",500,10,70,30,0,0,1000);'
+    wash = 'Wash or change the tips.'
     def __init__(self, ID):
         self.expID = ID
         db = DatabaseHandler(ID)
         self.transfers = db.transfers
-        self.maxTips = db.maxTips
         self.logger = []
         self.robotConfig = []
         self.transactions = []
@@ -39,41 +37,6 @@ class PRPR:
 
             elif trType == 'command':
                 self.parseCommand(els)
-
-    def getTipEncoding(self, tipNumber):
-        return 1 << (tipNumber - 1)
-
-    def getTipAmountString(self, tipNumber, amount):
-        param = ""
-        for i in range(1,13):
-            if i <= tipNumber:
-                param += '"' + str(amount) + '",'
-            elif (not i) == 12:
-                param += ","
-            else:
-                param += "0,"
-        return param
-
-    def getWellEncoding(self, wellsList, maximums):
-        maxRows = maximums[0]
-        maxColumns = maximums[1]
-        header = '{0:02X}{1:02X}'.format(maxColumns, maxRows)
-        selString = bytearray()
-        bitCounter = 0
-        bitMask = 0
-        for x in range(1, maxColumns + 1):
-            for y in range(1, maxRows + 1):
-                for (row, column) in wellsList:
-                    if x == column and y == row:
-                        bitMask |= 1 << bitCounter
-                bitCounter += 1
-                if bitCounter > 6:
-                    selString.append(0x30 + bitMask)
-                    bitCounter = 0
-                    bitMask = 0
-        if bitCounter > 0:
-            selString.append(0x30 + bitMask)
-        return header + selString.decode('latin1')
 
     def checkIfWellsAreConsequent(self, well1Info, well2Info):
         if well1Info['plate'] == well2Info['plate']:
@@ -126,11 +89,11 @@ class PRPR:
 
     def message(self, message):
         self.addWash()
-        command = 'UserPrompt("' + message + '",0,-1);'
+        command = '# ' + message
         self.config(command)
 
     def comment(self, comment):
-        command = 'Comment("' + comment + '");'
+        command = '# ' + comment
         self.config(command)
 
     def mix(self, tipNumber, volumesString, gridAndSite, wellString, mixOptions):
@@ -315,123 +278,11 @@ class PRPR:
         volumesString = ','.join(volumesList)
         return volumesString, tipsEnc
     
-    # @staticmethod
-    # def parseLocation(self, location):
-    #     """
-    #     Parses the given location, i.e. PL3:A1+4 to individual wells
-    #     """
-    # 
-    #     def ParseWells(wells, plateDimensions):
-    #         wellsLargeList = wells.split(',')
-    #         wellsNewlist = []
-    #         print('wells, wellslargelitt', wells, wellsLargeList)
-    #         for well in wellsLargeList:
-    #             wellsList = well.split('+')
-    #             direction = 'vertical'
-    #             if '-' in well:
-    #                 wellsList = well.split('-')
-    #                 direction = 'horizontal'
-    #             elif '~' in well:
-    #                 tempWellsList = well.split('~')
-    #                 startWellCoords = GetWellCoordinates(tempWellsList[0], plateDimensions, str(location))
-    #                 endWellCoords = GetWellCoordinates(tempWellsList[1], plateDimensions, str(location))
-    #                 wellsAmount = (endWellCoords[0] - startWellCoords[0]) * plateDimensions[0] + endWellCoords[1] - startWellCoords[1] + 1
-    #                 print('(', endWellCoords[0], '-', startWellCoords[0], ') *', plateDimensions[0], '-', endWellCoords[1], '+', startWellCoords[1])
-    #                 print(startWellCoords, endWellCoords, plateDimensions, wellsAmount)
-    #                 wellsList = (tempWellsList[0], wellsAmount)
-    #                 direction = 'vertical'
-    #             if wellsList[0]:
-    #                 startWell = wellsList[0]
-    #                 rowsMax = plateDimensions[0]
-    #                 colsMax = plateDimensions[1]
-    #                 if len(wellsList) == 2:
-    #                     assert (wellsList[1] != ''), "Well number after '+' can't be empty."
-    #                     numberWells = int(wellsList[1])
-    #                     startCoords = GetWellCoordinates(startWell, plateDimensions, str(location))
-    #                     for i in range(0, numberWells):
-    #                         addedWells = WellsRename(startCoords, i, plateDimensions, direction)
-    #                         assert(addedWells[1] <= colsMax), 'Wells locations are out of range'
-    #                         wellsNewlist.append(addedWells)
-    #                 elif len(wellsList) == 1:
-    #                     wellsNewlist.append(GetWellCoordinates(wellsList[0], plateDimensions, str(location)))
-    #                 else:
-    #                     self.errorLog('Error. Can\'t be more than one \'+\'. Correct syntax in ' + str(location) + ' and run again. \n')
-    #             else:
-    #                 self.errorLog('Error. Well can\'t be empty in locaton "' + str(location) + '"')
-    # 
-    #         return wellsNewlist
-    # 
-    #     def WellsRename(startCoords, i, plateDimensions, direction):
-    #         rowsMax = plateDimensions[0]
-    #         colsMax = plateDimensions[1]
-    #         currentNum = startCoords[0] + i
-    #         if direction == 'vertical':
-    #             if currentNum <= rowsMax:
-    #                 newCol = startCoords[1]
-    #                 return currentNum, newCol
-    #             elif currentNum > rowsMax:
-    #                 times = int(currentNum / rowsMax)
-    #                 newCol = startCoords[1] + times
-    #                 newRow = currentNum - (times * rowsMax)
-    #                 if newRow == 0:
-    #                     return newRow + rowsMax, newCol - 1
-    #                 else:
-    #                     return newRow, newCol
-    #         if direction == 'horizontal':
-    #             if currentNum <= colsMax:
-    #                 newRow = startCoords[1]
-    #                 return newRow, currentNum
-    #             elif currentNum > colsMax:
-    #                 times = int(currentNum / colsMax)
-    #                 newRow = startCoords[1] + times
-    #                 newCol = currentNum - (times * colsMax)
-    #                 if newCol == 0:
-    #                     return newRow - 1, newCol + colsMax
-    #                 else:
-    #                     return newRow, newCol
-    # 
-    # 
-    #     def GetWellCoordinates(well, plateDimensions, location):
-    #         """
-    #         Takes the well coordinates entered by the user and dimensions of the plate and returns the wells plate coordinates
-    #         """
-    #         if well:
-    #             rowsMax = plateDimensions[0]
-    #             colsMax = plateDimensions[1]
-    #             try:
-    #                 int(well)
-    #                 well = int(well)
-    #                 if well > rowsMax * colsMax:
-    #                     self.errorLog('Error. Well "' + str(well) + '" in location "' + location + '" is out of range')
-    #                 else:
-    #                     if well <= rowsMax:
-    #                         newCol = 1
-    #                         newRow = well
-    #                     else:
-    #                         times = int(well / rowsMax)
-    #                         newCol = times + 1
-    #                         newRow = well - (times * rowsMax)
-    #                     if newRow == 0:
-    #                         return newRow + rowsMax, newCol - 1
-    #                     else:
-    #                         return newRow, newCol
-    #             except ValueError:
-    #                 alphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
-    #                 letterIndex = alphabet.find(well[:1]) + 1
-    #                 if letterIndex > rowsMax:
-    #                     self.errorLog('Error. Well "' + well + '" letter coordinate in location "' + location + '" is out of range')
-    #                 elif int(well[1:]) > colsMax:
-    #                     self.errorLog('Error. Well "' + well + '" number coordinate in location "' + location + '" is out of range')
-    #                 else:
-    #                     return letterIndex, int(well[1:])
-    #         else:
-    #             self.errorLog('Error. No well defined in location "' + location + '"')
-    
 class defaults:
-    fileExtensions = {'ewt' : 'esc', 'gem' : 'gem'}
+    fileExtensions = {'txt' : 'txt'}
 
 if __name__ == '__main__':
     prpr = Prpr_Tecan(310)
-    print('Robot Config:')
+    print('Config:')
     for element in prpr.robotConfig:
         print(element)

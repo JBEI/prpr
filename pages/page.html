@@ -38,6 +38,8 @@
               createTablesList(tablesList);
           } else if (selected == 'microfluidics') {
               selectDevice('microfluidics');
+          } else if (selected == 'human') {
+              selectDevice('human');
           };
           
           $('#platform-tecan').click(function() {
@@ -49,6 +51,10 @@
               selectDevice('microfluidics');
               createTablesList(tablesList);
           });
+          
+          //            $('#platform-human').click(function() {
+          //                selectDevice('human');
+          //            });
           
           $('#myModal').on('shown', function() {
               if ($('#deviceselect').val() == 'microfluidics') {
@@ -131,6 +137,7 @@
                   <div id="prpr-platform" class="btn-group">
                     <div id="platform-tecan" class="btn">Tecan (Genesis and Evo)</div>
                     <div id="platform-microfluidics" class="btn">Microfluidics</div>
+                    <div id="platform-human" class="btn">Human</div>
                   </div><a id="methodsToggle" data-toggle="modal" href="#settings" onClick="displayDefaults();" class="btn btn-link"><i class="icon-cog"></i></a>
                 </div>
               </li>
@@ -175,9 +182,6 @@
             <div class="modal-body">
               <div class="row-fluid">
                 <div class="span6">
-                  <div id="defaultMethods">
-                    <h5>Default Methods</h5>
-                  </div>
                   <div id="methods">
                     <h5>Custom methods</h5>
                     <div id="newMethod" class="input-append">
@@ -185,13 +189,22 @@
                       <button type="button" onclick="customizeMethods();" class="btn">Add</button>
                     </div>
                   </div>
+                  <div id="defaultMethods">
+                    <h5>Default Methods</h5>
+                  </div>
                 </div>
                 <div class="span6">
-                  <div id="defaultPlates">
-                    <h5>Default Plates</h5>
-                  </div>
                   <div id="plates">
                     <h5>Custom Plates</h5>
+                    <div id="newPlate" class="input-append">
+                      <input id="userPlateName" type="text" class="input-large">
+                      <input id="userPlateRows" type="text" class="input-micro input-mid">
+                      <input id="userPlateCols" type="text" class="input-micro input-mid">
+                      <button type="button" onclick="customizePlates();" class="btn">Add</button>
+                    </div>
+                  </div>
+                  <div id="defaultPlates">
+                    <h5>Default Plates</h5>
                   </div>
                 </div>
               </div>

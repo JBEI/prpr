@@ -1076,6 +1076,16 @@ def LineToList(line, configFileName, experiment):
                 if len(line) == 3:
                     plateNickname = line[1]
                     plateName = line[2]
+
+                    plateCoords = []
+                    if plateName.find('*') != -1:
+                        plateCoords = plateName.split('*')
+                    elif plateName.find('x') != -1:
+                        plateCoords = plateName.split('x')
+                    if len(plateCoords) == 2:
+                        row = plateCoords[0]
+                        col = plateCoords[1]
+                        print('plateCoords', 'row:', row, 'col', col)
                     experiment.plates[plateNickname] = experiment.plates[plateName]
                     experiment.log('Added a nickname "' + plateNickname + '" to the plate name "' + plateName + '"')
                 else:

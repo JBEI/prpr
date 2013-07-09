@@ -259,6 +259,7 @@ textarea {
 // -----------
 
 // General classes for quick sizes
+.input-micro       { width: 30px; }
 .input-mini       { width: 60px; }
 .input-small      { width: 90px; }
 .input-medium     { width: 150px; }
@@ -434,6 +435,10 @@ select:focus:required:invalid {
   .dropdown-menu {
     font-size: @baseFontSize;
   }
+  
+.input-append input .input-mid {
+  .border-radius(0);
+}
 
   input,
   select,
@@ -562,8 +567,6 @@ input.search-query {
 .form-search .input-prepend .btn {
   .border-radius(14px 0 0 14px);
 }
-
-
 
 
 // HORIZONTAL & VERTICAL FORMS

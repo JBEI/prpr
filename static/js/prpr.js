@@ -10,6 +10,7 @@ function selectDevice(selection) {
     $('#prpr-platform').children().removeClass('btn-info');
     $('#platform-' + selection).addClass('btn-info');
     if (selection == 'tecan') {
+        $('#tablefile').show();
         $('#deviceselect').val('tecan');
         $('#tablefile .controls').attr('id', 'table');
         $('#tablefile .controls select').attr({ 'id' : 'tables', 'name' : 'tableselect', 'onchange' : 'selectClicked(\'table\');' });
@@ -29,6 +30,7 @@ function selectDevice(selection) {
 //        $('#sampleScript').removeClass('hidden');
     }
     else if (selection == 'microfluidics') {
+        $('#tablefile').show();
         $('#tablefile .controls .btn').remove();
         $('#deviceselect').val('microfluidics');
         $('#tablefile .controls').attr('id', 'mftable');
@@ -55,6 +57,10 @@ function selectDevice(selection) {
                 $('#mftable').append('<input type="file" name="mfdata" id="mfdata" class="span3" onchange="recognizeFile();"/>');
             }
         }
+    }
+    else if (selection == 'human') {
+        $('#deviceselect').val('human');
+        $('#tablefile').hide();
     }
 }
 
@@ -144,7 +150,10 @@ function LoadSampleScript() {
     } else if (platformName == 'tecan') {
         tag = 'table';
         selection = 'BreakfastDrinks.ewt';
-    };
+    } else if (platformName == 'human') {
+        tag = 'table';
+        selection = 'BreakfastDrinks.ewt';
+    }
     $('#' + tag + 's option')
         .filter(function(index) { return $(this).text() === selection; })
         .prop('selected', true);
@@ -274,11 +283,18 @@ function customizeMethods() {
         if (methods.indexOf(method) == -1) {
             methods.push(method);
             var me = method;
-            $('#newMethod').after('<div class="label method" id="' + me + '" onclick="makeDefault(\'' + me + '\')">' + me + '<i class="icon-remove icon-white pull-right" onclick="removeMethod(\'' + me + '\');"></i></div>');
+            $('#newMethod').after('<div class="label method" id="' + me + '" onclick="makeDefault(\'' + me + '\')">' + me + '<i class="icon-remove icon-white pull-right" onclick="removeMethod(\'' + me + '\');"></i></div><br/>');
             $('#userMethod').val('');
             $('#methodsList').val(methods);
         }
     }
+}
+
+function displayDefaults() {
+    $('#defaultMethods, #defaultPlates').children().not('h5').remove();
+    displayDefaultMethods();
+    displayDefaultPlates()
+    
 }
 
 function displayDefaultMethods() {
@@ -289,13 +305,6 @@ function displayDefaultMethods() {
             makeDefault(methods[0])
         }
     })
-}
-
-function displayDefaults() {
-    $('#defaultMethods, #defaultPlates').children().not('h5').remove();
-    displayDefaultMethods();
-    displayDefaultPlates()
-    
 }
 
 function displayDefaultPlates() {

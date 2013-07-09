@@ -14,7 +14,8 @@ def CheckCommand(command):
             'component'     : ['COMPONENT', 'REAGENT'],
             'volume'        : ['VOLUME', 'AMOUNT'],
             'recipe'        : ['RECIPE', 'LIST', 'SET'],
-            'comment'       : ['COMMENT', '%']
+            'comment'       : ['COMMENT', '%'],
+            'wait'          : ['WAIT', '%']
         },
         'action' : {
             'use'           : ['USE'],

@@ -127,8 +127,10 @@ def sample():
     platform = request.body.read().decode()
     if platform == 'tecan':
         configFile = 'prpr_sample.par'
-    else:
+    elif platform == 'microfluidics':
         configFile = 'prpr_sample_mf.par'
+    elif platform == 'human':
+        configFile = 'prpr_sample_human.par'
     config = open(configFile, 'r')
     return config.readlines()
 
@@ -161,7 +163,7 @@ def config():
             experiment = Experiment(maxVolume=150, tips=8, platform=platform, db=db)
         expID = experiment.ID
 
-        if platform != 'microfluidics':
+        if platform == 'tecan':
             preselected = request.forms.get('tableselect')
             data = request.files.data
             if data != '':
@@ -177,7 +179,7 @@ def config():
                 else:
                     errorList.append("Please select or upload the table file for your configuration script.")
                     return template('pages' + os.sep + 'page.html', file='', btn='', text=getconfig, alerterror=errorList, alertsuccess=successList,tables=GetDefaultTables(), selected=platform, version=__version__)
-        else:
+        elif platform == 'microfluidics':
             preselected = request.forms.get('mftableselect')
             print('platform__ MF')
             #note: if the platform is microfluidics
@@ -195,13 +197,18 @@ def config():
 
         if getconfig.startswith('TABLE'):
             getconfig = '\n'.join(getconfig.split('\n')[1:]) #removing the extra 'TABLE' from the config file
-        list_ = ['TABLE ', tablename, '\n', '\n', getconfig] #adding the chosen/uploaded table to the config file.
+        if platform != 'human':
+            list_ = ['TABLE ', tablename, '\n', '\n', getconfig] #adding the chosen/uploaded table to the config file.
+        else:
+            list_ = getconfig
         writefile.writelines(''.join(list_))
         writefile.close()
         readfile = open(dirname + filename, "r")
-        if experiment.platform != "microfluidics":
+        if experiment.platform == "tecan":
             import prpr_tecan as platform
-        else:
+        elif experiment.platform == "human":
+            import prpr_human as platform
+        elif experiment.platform == "microfluidics":
             import prpr_mf as platform
         ParseFile(readfile, experiment)
 
