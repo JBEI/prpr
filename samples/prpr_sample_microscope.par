@@ -1,0 +1,5 @@
+NAME    Microscope_Experiment_1
+
+% moving the microscope
+#move    #location         #increment    #times    #action
+MOVE     5000,6000,2000    +0,+10,+0     5         SNAP

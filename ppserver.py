@@ -126,12 +126,14 @@ def mfparse():
 def sample():
     platform = request.body.read().decode()
     if platform == 'tecan':
-        configFile = 'prpr_sample.par'
+        configFile = 'prpr_sample_tecan.par'
     elif platform == 'microfluidics':
         configFile = 'prpr_sample_mf.par'
+    elif platform == 'microscope':
+        configFile = 'prpr_sample_microscope.par'
     elif platform == 'human':
         configFile = 'prpr_sample_human.par'
-    config = open(configFile, 'r')
+    config = open('samples/' + configFile, 'r')
     return config.readlines()
 
 @post('/getMethods')
@@ -162,6 +164,8 @@ def config():
         else:
             experiment = Experiment(maxVolume=150, tips=8, platform=platform, db=db)
         expID = experiment.ID
+        
+        print('platform:', platform)
 
         if platform == 'tecan':
             preselected = request.forms.get('tableselect')
@@ -197,7 +201,7 @@ def config():
 
         if getconfig.startswith('TABLE'):
             getconfig = '\n'.join(getconfig.split('\n')[1:]) #removing the extra 'TABLE' from the config file
-        if platform != 'human':
+        if (platform != 'human') and (platform != 'microscope'):
             list_ = ['TABLE ', tablename, '\n', '\n', getconfig] #adding the chosen/uploaded table to the config file.
         else:
             list_ = getconfig
@@ -208,6 +212,8 @@ def config():
             import prpr_tecan as platform
         elif experiment.platform == "human":
             import prpr_human as platform
+        elif experiment.platform == "microscope":
+            import prpr_microscope as platform
         elif experiment.platform == "microfluidics":
             import prpr_mf as platform
         ParseFile(readfile, experiment)
@@ -218,7 +224,13 @@ def config():
             return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
 
         elif experiment.testindex:
-            file = 'config' + str(expID) + '.' + platform.defaults.fileExtensions[tablename[-3:]]
+            if experiment.platform == 'human':
+                platformFileExtension = 'txt'
+            elif experiment.platform == 'microscope':
+                platformFileExtension = 'py'
+            else:
+                platformFileExtension = platform.defaults.fileExtensions[tablename[-3:]]
+            file = 'config' + str(expID) + '.' + platformFileExtension
             prpr = platform.PRPR(experiment.ID)
             log = 'experiment' + str(expID) + '.log'
             successList.append("Your configuration file has been successfully processed.")

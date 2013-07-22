@@ -38,6 +38,8 @@
               createTablesList(tablesList);
           } else if (selected == 'microfluidics') {
               selectDevice('microfluidics');
+          } else if (selected == 'microscope') {
+              selectDevice('microscope');
           } else if (selected == 'human') {
               selectDevice('human');
           };
@@ -52,9 +54,14 @@
               createTablesList(tablesList);
           });
           
+          $('#platform-microscope').click(function() {
+              selectDevice('microscope');
+          });
+          
           //            $('#platform-human').click(function() {
           //                selectDevice('human');
           //            });
+          $('#platform-human').addClass('disabled');
           
           $('#myModal').on('shown', function() {
               if ($('#deviceselect').val() == 'microfluidics') {
@@ -137,6 +144,7 @@
                   <div id="prpr-platform" class="btn-group">
                     <div id="platform-tecan" class="btn">Tecan (Genesis and Evo)</div>
                     <div id="platform-microfluidics" class="btn">Microfluidics</div>
+                    <div id="platform-microscope" class="btn">Microscope</div>
                     <div id="platform-human" class="btn">Human</div>
                   </div><a id="methodsToggle" data-toggle="modal" href="#settings" onClick="displayDefaults();" class="btn btn-link"><i class="icon-cog"></i></a>
                 </div>

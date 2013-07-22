@@ -22,7 +22,8 @@ def CheckCommand(command):
             'make'          : ['MAKE', 'PREPARE_LIST'],
             'spread'        : ['SPREAD', 'DISTRIBUTE', 'DIST_REAGENT'],
             'transfer'      : ['TRANSFER', 'TRANSFER_LOCATIONS'],
-            'message'       : ['MESSAGE', 'PROMPT']
+            'message'       : ['MESSAGE', 'PROMPT'],
+            'move'          : ['MOVE']
         },
         'function' : {
             'protocol'      : ['TEMPLATE', 'PROTOCOL'],

@@ -149,6 +149,7 @@ class Experiment:
         """
 
         def ParseWells(wells, plateDimensions):
+            print('this is ParseWells', wells)
             wellsLargeList = wells.split(',')
             wellsNewlist = []
             print('wells, wellslargelitt', wells, wellsLargeList)
@@ -253,6 +254,9 @@ class Experiment:
                         return letterIndex, int(well[1:])
             else:
                 self.errorLog('Error. No well defined in location "' + location + '"')
+                
+                
+        print('location)))))', location)
         loc = []
         print('location__', location)
         if self.platform != "microfluidics":
@@ -268,6 +272,7 @@ class Experiment:
                     if plateAndWells[0] in self.plates:
                         plateName = self.plates[plateAndWells[0]].name
                         plateDms = self.plates[plateAndWells[0]].dimensions
+                        print('plateDMS', plateDms)
                         plateLocation = self.plates[plateAndWells[0]].location
 
                         if plateAndWells[1]:
@@ -388,7 +393,7 @@ class Experiment:
                 else:
                     amount = volume
 
-                if self.platform != "microfluidics":
+                if self.platform != "microfluidics" and self.platform != 'human':
                     volumeInfo = [self.splitAmount(x) for x in amount.split(',')]
                 else:
                     volumeInfo = amount
@@ -585,6 +590,28 @@ class Experiment:
         else:
             self.errorLog('Error. Not enough parameters in line "' + originalLine + '". Please correct your script.')
 
+    def move(self, line, commandName):
+        if self.platform == 'microscope':
+            self.testindex += 1
+            transaction = []
+            print('platform is microscope', commandName, line)
+            coords = line[0].split(',')
+            increment = line[1].split(',')
+            times = line[2]
+            action = line[3]
+            print('line:', coords, increment, times, action)
+            from ast import literal_eval
+            coord_x = int(coords[0])
+            coord_y = int(coords[1])
+            coord_z = int(coords[2])
+            transaction.append({'type': 'command', 'action': 'move', 'options': action, 'location': (coord_x, coord_y, coord_z)})
+            for m in range(int(times)):
+                coord_x = literal_eval(str(coord_x) + increment[0])
+                coord_y = literal_eval(str(coord_y) + increment[1])
+                coord_z = literal_eval(str(coord_z) + increment[2])
+                transaction.append({'type': 'command', 'action': 'move', 'options': action, 'location': (coord_x, coord_y, coord_z)})
+            self.transactionList.append(transaction)
+            print(self.transactionList)
 
     def message(self, line):
         message = {'type': 'command', 'action': 'message', 'options': line}
@@ -609,30 +636,33 @@ class Experiment:
 
 
 class Well:
-    def __init__(self, dict):
-        self.plate = dict['Plate']
-        self.location = dict['Location']
+    def __init__(self, dict_):
+        self.plate = dict_['Plate']
+        self.location = dict_['Location']
 
 
 class Component:
 #    method = 'LC_W_Bot_Bot'
-    def __init__(self, dict):
-        self.name = dict['name']
-        self.location = dict['location']
-        self.shortLocation = dict['location']
-        if 'method' in dict:
-            self.method = dict['method']
+    def __init__(self, dict_):
+        self.name = dict_['name']
+        self.location = dict_['location']
+        self.shortLocation = dict_['location']
+        if 'method' in dict_:
+            self.method = dict_['method']
         else:
             self.method = 'empty'
 
 
 class Plate:
-    def __init__(self, plateName, factoryName, plateLocation):
+    def __init__(self, plateName, factoryName, plateLocation, platform, dimensions=()):
         self.name = plateName
         self.factoryName = factoryName
         self.location = plateLocation
-        db = DBHandler.db('SELECT Rows, Columns from Plates WHERE FactoryName=' + '"' + factoryName + '"')
-        self.dimensions = db[0]
+        if platform != 'human':
+            db = DBHandler.db('SELECT Rows, Columns from Plates WHERE FactoryName=' + '"' + factoryName + '"')
+            self.dimensions = db[0]
+        else:
+            self.dimensions = dimensions
 
 
 class Volume:
@@ -765,6 +795,7 @@ class DBHandler:
                         componentID = str(id(c))
                         method = '"' + c.method + '"'
                         name = '"' + c.name + '"'
+                        print('c.locsation', c.location)
                         for well in c.location:
                             wellID = str(id(well))
                             print('!!!well', well)
@@ -814,6 +845,7 @@ class DBHandler:
                     for i in range(0, len(experiment.transactionList)):
                         actionID = str(i)
                         transaction = experiment.transactionList[i]
+                        print('transaction!!!', transaction)
                         trType = '"' + transaction[0]['type'] + '"'
                         self.insert('Actions', [expID, actionID, trType])
                         for t in range(0, len(transaction)):
@@ -836,6 +868,9 @@ class DBHandler:
                                     for l in locationList:
                                         self.insert('CommandLocations', [expID, actionID, str(m), str(id(l))])
                                         m += 1
+                                elif tr['action'] == 'move':
+                                    location = '"' + str(tr['location']) + '"'
+                                    self.insert('CommandLocations', [expID, actionID, str(t), location])
 
                 elif element == experiment.mfWellLocations:
                     for key in element:
@@ -947,7 +982,7 @@ def PlateNameParse(parts, plateFile, experiment, plateNicknames, plateIndexes):
                                 plateNicknames[plateNames[i]] = tempPlates[i]
                                 plateIndexes[plateNames[i]] = (stringCounter, i)
                                 if experiment:
-                                    experiment.plates[plateNames[i]] = Plate(plateNames[i], tempPlates[i],(stringCounter, i))
+                                    experiment.plates[plateNames[i]] = Plate(plateNames[i], tempPlates[i],(stringCounter, i), experiment.platform)
                                     experiment.log('Added a plate "' + tempPlates[i] + '" codename "' + plateNames[i] + '" at location ' + str((stringCounter, i + 1)))
                 stringCounter += 1
                 return plateNicknames
@@ -1074,6 +1109,7 @@ def LineToList(line, configFileName, experiment):
 
             elif command['name'] == 'plate':
                 if len(line) == 3:
+                    print('line;plate', line, line[1])
                     plateNickname = line[1]
                     plateName = line[2]
 
@@ -1085,8 +1121,12 @@ def LineToList(line, configFileName, experiment):
                     if len(plateCoords) == 2:
                         row = plateCoords[0]
                         col = plateCoords[1]
-                        print('plateCoords', 'row:', row, 'col', col)
-                    experiment.plates[plateNickname] = experiment.plates[plateName]
+
+                        plateInfo = Plate(plateNickname, plateNickname, plateCoords, experiment.platform, dimensions=(int(row), int(col)))
+                        experiment.add('plate', plateNickname, plateInfo)
+                    else:
+                        experiment.plates[plateNickname] = experiment.plates[plateName]
+
                     experiment.log('Added a nickname "' + plateNickname + '" to the plate name "' + plateName + '"')
                 else:
                     experiment.errorLog('Error. Wrong parameter count in line "' + ' '.join(line) + '"')
@@ -1107,6 +1147,9 @@ def LineToList(line, configFileName, experiment):
 
             elif command['name'] == 'transfer' or command['name'] == 'spread':
                 experiment.transfer(line, command['name'])
+            
+            elif command['name'] == 'move':
+                experiment.move(line[1:], command['name'])
 
             elif command['name'] == 'message':
                 experiment.message(' '.join(line[1:]))
@@ -1168,10 +1211,14 @@ if __name__ == '__main__':
     global experiment
     experiment = Experiment(maxVolume=150, tips=8, db=DBHandler(), platform="tecan")
     print('Experiment ID: ', experiment.ID)
-    if experiment.platform != "microfluidics":
-        import prpr_tecan as platform
-    else:
+    if experiment.platform == "microfluidics":
         import prpr_mf as platform
+    elif experiment.platform == "tecan":
+        import prpr_tecan as platform
+    elif experiment.platform == 'human':
+        import prpr_human as platform
+    elif experiment.platform == 'microscope':
+        import prpr_microscope as platform
     ParseConfigFile(experiment)
 
     if not len(experiment.errorLogger):

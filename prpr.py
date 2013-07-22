@@ -47,9 +47,10 @@ class DatabaseHandler:
         if type == 'transfer':
             command = 'SELECT srcWellID, dstWellID, Volume, Method FROM Transfers WHERE ExpID = ' + self.expID + ' AND ActionID = ' + str(actionID) + ' ORDER BY trOrder ASC'
         elif type == 'command':
-            command = 'SELECT Command, Options FROM Commands WHERE ExpID = ' + self.expID + ' AND ActionID = ' + str(actionID) + ' ORDER BY trOrder ASC'
+            command = 'SELECT Command, Options, ActionID, trOrder FROM Commands WHERE ExpID = ' + self.expID + ' AND ActionID = ' + str(actionID) + ' ORDER BY trOrder ASC'
         self.crsr.execute(command)
         transferElements = self.crsr.fetchall()
+        print('transferElements___', transferElements)
         transfer = {'type' : type, 'info' : []}
         for element in transferElements:
             if type == 'transfer':
@@ -70,6 +71,12 @@ class DatabaseHandler:
                     for well in m:
                         w = self.getWell(well)
                         transfer['info'].append({'command' : 'mix', 'volume' : mixOptions[0], 'times' : mixOptions[1], 'target' : w })
+                elif element[0] == 'move':
+                    trOrder = element[-1]
+                    m = self.getAll('SELECT Location FROM CommandLocations WHERE ActionID = ' + str(actionID) + ' AND trOrder = ' + str(trOrder), order='ORDER BY trOrder ASC')
+                    for move in m:
+                        transfer['info'].append({'command' : 'move', 'location' : move})
+                        
                 elif element[0] == 'message' or element[0] == 'comment':
                     command = element[0]
                     message = element[1]

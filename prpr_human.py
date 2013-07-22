@@ -29,7 +29,9 @@ class PRPR:
 
     def createTransfer(self):
         allTransfers = self.transfers
+        print('allTransfers', allTransfers)
         for transfer in allTransfers:
+            print('transffffferrrr', transfer)
             trType = transfer['type']
             els = transfer['info']
             if trType == 'transfer':
@@ -115,6 +117,7 @@ class PRPR:
 
     def updateTransactions(self):
         for transaction in self.transactions:
+            print('updateTransactions. transaction', transaction)
             #empty containers for volumes, plate info and wells are created
             volumesDict = {}
             wells = []
@@ -186,32 +189,22 @@ class PRPR:
         Creating the aspirate / dispense strings from the list of transfers
         """
 
-        totalTips = sum([x['volume'][1] for x in transferList])
-        trsNeeded = totalTips / self.maxTips
-        trs = 1
-        if trsNeeded > 1:
-            trs = int(trsNeeded) + 1
+        trList = {'Aspirate' :  [], 'Dispense' :  []}
+        tr = transferList
+        for command in commandsList:
+            for e in tr:
+                method = e['method']
+                if command == 'Aspirate':
+                    wellInfo = e['source']
+                elif command == 'Dispense':
+                    wellInfo = e['destination']
+                    
+                print('e_volume', e['volume'])
 
-        trList = {'Aspirate' : [[] for n in range(0, max([x['volume'][1] + 1 for x in transferList]))], 'Dispense' :  [[] for n in range(0, max([x['volume'][1] + 1 for x in transferList]))]}
-        tr = self.splitTransaction(transferList)
-        for element in tr:
-            for command in commandsList:
-                tipNumber = 1
-                for e in element:
-                    method = e['method']
-                    if command == 'Aspirate':
-                        wellInfo = e['source']
-                    elif command == 'Dispense':
-                        wellInfo = e['destination']
+                trList[command].append({ 'command' : command, 'wellInfo' : wellInfo, 'volume' : e['volume'][2], 'method' : method })
 
-                    for x in range(0, e['volume'][1]):
-                        trList[command][x].append({ 'command' : command, 'wellInfo' : wellInfo, 'volume' : e['volume'][0], 'method' : method }) #, 'tipNumber' : tip
-
-                    if len(e['volume']) == 3:
-                        trList[command][e['volume'][1]].append({ 'command' : command, 'wellInfo' : wellInfo, 'volume' : e['volume'][2], 'method' : method })
-
-        aspirate = self.splitTransaction([j for i in trList['Aspirate'] for j in i])
-        dispense = self.splitTransaction([j for i in trList['Dispense'] for j in i])
+        aspirate = trList['Aspirate']
+        dispense = trList['Dispense']
 
         for el in range (0, len(aspirate)):
             for l in range(0, len(aspirate[el])):
@@ -220,30 +213,15 @@ class PRPR:
             self.transactions.append([aspirate[el] + dispense[el]])
 
     def parseCommand(self, transferList):
-        tr = self.splitTransaction(transferList)
-        for element in tr:
-            elements = []
-            el = self.splitTransaction(element)
-            for e in el:
-                trList = []
-                tipNumber = 1
-                for option in e:
-                    if option['command'] == 'mix':
-                        wellInfo = option['target']
-                        trList.append({ 'command' : 'Mix', 'tipNumber' : tipNumber, 'wellInfo' : wellInfo, 'volume' : option['volume'], 'times' : option['times'] })
-                        tipNumber += 1
-                    elif option['command'] == 'message' or option['command'] == 'comment':
-                        trList.append(option)
-                elements.append(trList)
-            self.transactions.append(elements)
-
-    def splitTransaction(self, transferList):
-#        count = 1
-        list = []
-        for t in range(0, len(transferList), self.maxTips):
-            cutList = transferList[t:t+self.maxTips]
-            list.append(cutList)
-        return list
+        tr = transferList
+        trList = []
+        for option in tr:
+            if option['command'] == 'mix':
+                wellInfo = option['target']
+                trList.append({ 'command' : 'Mix', 'wellInfo' : wellInfo})
+            elif option['command'] == 'message' or option['command'] == 'comment':
+                trList.append(option)
+        self.transactions.append(trList)
 
     def createMixString(self, volumesString, newVolume):
         ms = volumesString.split(',')

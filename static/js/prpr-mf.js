@@ -126,7 +126,7 @@ function resetMFField() {
         '</div>' +
         '</div>');
     $('#button-close-modal').after('<form id="mffile" class="pull-right">' +
-        '<div onclick="getMFTableFile();" class="btn btn-link">Download table file</div>' +
+        '<div onclick="getMFTableFile();" class="btn btn-link" id="downloadMFtable">Download table file</div>' +
         '</form>');
     setupDroppableWells();
     jsPlumb.importDefaults({

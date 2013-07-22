@@ -6,11 +6,11 @@
  */
 
 function selectDevice(selection) {
-    $('.alert').remove();
+    $('#microscopeTable, #downloadMFtable, .alert').remove();
     $('#prpr-platform').children().removeClass('btn-info');
     $('#platform-' + selection).addClass('btn-info');
     if (selection == 'tecan') {
-        $('#tablefile').show();
+        $('#tablefile, #table, #mftable').show();
         $('#deviceselect').val('tecan');
         $('#tablefile .controls').attr('id', 'table');
         $('#tablefile .controls select').attr({ 'id' : 'tables', 'name' : 'tableselect', 'onchange' : 'selectClicked(\'table\');' });
@@ -30,7 +30,7 @@ function selectDevice(selection) {
 //        $('#sampleScript').removeClass('hidden');
     }
     else if (selection == 'microfluidics') {
-        $('#tablefile').show();
+        $('#tablefile, #table, #mftable').show();
         $('#tablefile .controls .btn').remove();
         $('#deviceselect').val('microfluidics');
         $('#tablefile .controls').attr('id', 'mftable');
@@ -57,6 +57,14 @@ function selectDevice(selection) {
                 $('#mftable').append('<input type="file" name="mfdata" id="mfdata" class="span3" onchange="recognizeFile();"/>');
             }
         }
+    }
+    else if (selection == 'microscope') {
+        $('#deviceselect').val('microscope');
+        $('#tablefile').show();
+        $('#table, #mftable').hide();
+        $('#platename').html('Microscope');
+        $('#tablerow').html('<img src="static/img/microscope.png"/>');
+        $('#tablefile').append('<button class="btn btn-info" id="microscopeTable"  data-toggle="modal" href="#myModal" >View the microscope table</button>')
     }
     else if (selection == 'human') {
         $('#deviceselect').val('human');
