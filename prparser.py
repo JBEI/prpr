@@ -593,6 +593,7 @@ class Experiment:
     def move(self, line, commandName):
         if self.platform == 'microscope':
             self.testindex += 1
+            self.addComment('------ BEGIN MOVE' + ' at location ' + line[0] + ' ' + line[2] + ' times with increments ' + line[1] + ' ------')
             transaction = []
             print('platform is microscope', commandName, line)
             coords = line[0].split(',')
@@ -611,6 +612,7 @@ class Experiment:
                 coord_z = literal_eval(str(coord_z) + increment[2])
                 transaction.append({'type': 'command', 'action': 'move', 'options': action, 'location': (coord_x, coord_y, coord_z)})
             self.transactionList.append(transaction)
+            self.addComment('------ END MOVE' + ' at location ' + line[0] + ' ' + line[2] + ' times with increments ' + line[1] + ' ------')
             print(self.transactionList)
 
     def message(self, line):
@@ -620,8 +622,8 @@ class Experiment:
 
     def addComment(self, line):
         comment = {'type': 'command', 'action': 'comment', 'options': line}
+        print('comment', comment)
         self.transactionList.append([comment])
-
 
     def log(self, item):
         from datetime import datetime
