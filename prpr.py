@@ -56,7 +56,7 @@ class DatabaseHandler:
             if type == 'transfer':
                 srcWell = self.getWell(element[0])
                 dstWell = self.getWell(element[1])
-                if self.platform != "microfluidics":
+                if self.platform == "tecan":
                     volume = eval(element[2])
                     method = element[3]
                     transfer['info'].append({ 'source' : srcWell, 'destination' : dstWell, 'volume' : volume, 'method' : method })
@@ -94,7 +94,7 @@ class DatabaseHandler:
     def getWell(self, wellID):
         w = self.getOne('SELECT Plate, Location FROM Wells WHERE WellID = ' + str(wellID))
         plateName = w[0]
-        if self.platform != 'microfluidics':
+        if self.platform == 'tecan':
             wellLocation = eval(w[1])
         else:
             wellLocation = w[1]

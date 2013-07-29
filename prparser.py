@@ -561,11 +561,12 @@ class Experiment:
                 transfer = []
                 if newTr:
                     vol = transferLine['volume']
+                    print('transferline volume))', vol)
                     for i, tr in newTr:
                         trLine = deepcopy(transferLine)
                         trLine['src'] = tr[0]
                         trLine['dst'] = tr[1]
-                        if self.platform != "microfluidics":
+                        if self.platform == "tecan":
                             if len(vol) == 1:
                                 trLine['volume'] = vol[0]
                             else:

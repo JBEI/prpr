@@ -29,22 +29,21 @@ class PRPR:
         self.config('import os')
         self.config('')
         self.config('d = microscope.director')
-        self.config('proj_dir = os.path.join(d.root_directory, "Local Storage", "experiment_' + str(self.expID) + '")')
+        self.config('proj_dir = os.path.join(d.root_directory, "Local Storage", "Dropbox/experiment_' + str(self.expID) + '")')
         self.config('if not os.path.exists(proj_dir):')
         self.config('\tos.makedirs(proj_dir)')
         self.config('d.set_working_directory(proj_dir)')
-        self.config('')
-        self.config('d.turn_light(1, True)')
         self.config('')
         
         allTransfers = self.transfers
         print('allTransfers', allTransfers)
         for transfer in allTransfers:
-            print('transffffferrrr', transfer)
             trType = transfer['type']
             els = transfer['info']
             if trType == 'command':
                 self.parseCommand(els)
+            else:
+                self.parseTransfer(els)
 
     def config(self, line):
         self.robotConfig.append(line)
@@ -71,7 +70,6 @@ class PRPR:
         print('Translation log location: ' + logname)
 
     def message(self, message):
-        self.addWash()
         command = '# ' + message
         self.config(command)
 
@@ -98,6 +96,28 @@ class PRPR:
                 self.config('d.take_snapshot()')
             if option['command'] == 'comment':
                 self.config('# ' + option['message'])
+    
+    def parseTransfer(self, transferList):
+        tr = transferList
+        for option in tr:
+            print('option!!!+++', option)
+            snapAmount = option['times']
+            method = option['wait']
+            src = option['source']['well']
+            self.config('d.reset_position(' + src + ')')
+            if method == 'lighton':
+                self.config('d.turn_light(1, True)')
+                self.config('')
+            dstLine = option['destination']['well'].split('*')
+            if len(dstLine) == 2:
+                dstMod = dstLine[0].replace('+', '')
+                print(dstMod, '!!!')
+                times = dstLine[1]
+                dst = src
+                self.config('for i in range(' + times + '):')
+                self.config('\td.adjust_position' + dstMod)
+                self.config('\tfor s in range(' + snapAmount + '):')
+                self.config('\t\td.take_snapshot()')
     
 class defaults:
     fileExtensions = {'py' : 'py'}

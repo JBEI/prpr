@@ -2,4 +2,4 @@ NAME    Microscope_Experiment_1
 
 LOCATION    Home    5000,6000,2000
 
-TRANSFER    Home    +1,+10,+20*5    1    LIGHT:ON
+TRANSFER    Home    (+1,+10,+20)*5    1    lighton
