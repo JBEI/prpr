@@ -70,10 +70,10 @@ class Experiment:
         """
         self.log('Added a ' + target + ' "' + itemName + '"')
         if target == 'component':
-            if self.platform != 'microfluidics':
+            if self.platform == 'tecan':
                 location = self.parseLocation(itemInfo.location)
             else:
-                well = Well({'Plate' : 'mf', 'Location' : itemInfo.location})
+                well = Well({'Plate' : self.platform, 'Location' : itemInfo.location})
                 self.wells.append(well)
                 location = [well]
             method = self.checkMethod(itemInfo.method)
@@ -128,7 +128,7 @@ class Experiment:
             self.methods = methods
 
     def checkMethod(self, method):
-        if self.platform != 'microfluidics':
+        if self.platform == 'tecan':
             if method in self.methods:
                 return method
             else:
@@ -137,7 +137,7 @@ class Experiment:
                     return 'Error'
                 else:
                     return self.methods[0]
-        else:
+        elif self.platform == 'microfluidics':
             if isNumber(method):
                 return method
             else:
@@ -370,40 +370,44 @@ class Experiment:
                 if m:
                     method = m
                 else:
-                    methodError = True
-                    self.log('Wrong method "' + transferMethod + '"')
-                    self.errorLog('Error. Wrong method "' + transferMethod + '" in line "' + line + '"')
+                    if self.platform == 'microscope':
+                        method = transferMethod
+                    else:
+                        methodError = True
+                        self.log('Wrong method "' + transferMethod + '"')
+                        self.errorLog('Error. Wrong method "' + transferMethod + '" in line "' + line + '"')
             if method:
                 location = []
-                if modifier:
-                    times = int(modifier[1])
-                    if modifier[0] == '|':
-                        for well in comp.location:
-                            for i in range(0, times):
-                                location.append(well)
-                    if modifier[0] == '*':
-                        for i in range(0, times):
-                            for well in comp.location:
-                                location.append(well)
-                else:
-                    location = comp.location
-
-                if volume in self.volumes:
-                    amount = self.volumes[volume].amount
-                else:
-                    amount = volume
-
-                if self.platform != "microfluidics" and self.platform != 'human':
-                    volumeInfo = [self.splitAmount(x) for x in amount.split(',')]
-                else:
-                    volumeInfo = amount
-
-                transferDict = {'src': location, 'dst': destination, 'volume': volumeInfo, 'method': method, 'type': 'transfer'}
-                return transferDict
-
             else:
                 if not methodError:
                     self.errorLog('Error. No method defined in line "' + line + '"')
+            print('modifier', modifier)
+            if modifier:
+                times = int(modifier[1])
+                if modifier[0] == '|':
+                    for well in comp.location:
+                        for i in range(0, times):
+                            location.append(well)
+                if modifier[0] == '*':
+                    for i in range(0, times):
+                        for well in comp.location:
+                            location.append(well)
+            else:
+                location = comp.location
+
+            if volume in self.volumes:
+                amount = self.volumes[volume].amount
+            else:
+                amount = volume
+
+            if self.platform == 'tecan':
+                volumeInfo = [self.splitAmount(x) for x in amount.split(',')]
+            else:
+                volumeInfo = amount
+
+            transferDict = {'src': location, 'dst': destination, 'volume': volumeInfo, 'method': method, 'type': 'transfer'}
+            return transferDict
+
         else:
             self.log('Error. Wrong component "' + component + '".')
             self.errorLog('Error. Component "' + component + '" is not defined. Please correct the error and try again.')
@@ -566,7 +570,7 @@ class Experiment:
                                 trLine['volume'] = vol[0]
                             else:
                                 try:
-                                    trLine['volume'] = vol[i]
+                                    trLine['volume'] = vol[i]  #volume is the problem!!!
                                 except IndexError:
                                     self.errorLog('Error in line "' + originalLine + '". The number of volumes in "' + volume + '" is less than number of source wells.')
                         transfer.append(trLine)
@@ -590,7 +594,7 @@ class Experiment:
         else:
             self.errorLog('Error. Not enough parameters in line "' + originalLine + '". Please correct your script.')
 
-    def move(self, line, commandName):
+    def move(self, line, commandName):  #todo: add support for TRANSFER and COMPONENT commands
         if self.platform == 'microscope':
             self.testindex += 1
             self.addComment('------ BEGIN MOVE' + ' at location ' + line[0] + ' ' + line[2] + ' times with increments ' + line[1] + ' ------')

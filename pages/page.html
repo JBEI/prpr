@@ -58,10 +58,10 @@
               selectDevice('microscope');
           });
           
-          //            $('#platform-human').click(function() {
-          //                selectDevice('human');
-          //            });
-          $('#platform-human').addClass('disabled');
+          $('#platform-human').click(function() {
+              selectDevice('human');
+          });
+          //$('#platform-human').addClass('disabled');
           
           $('#myModal').on('shown', function() {
               if ($('#deviceselect').val() == 'microfluidics') {

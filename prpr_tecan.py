@@ -429,6 +429,7 @@ class PRPR:
     
 class defaults:
     fileExtensions = {'ewt' : 'esc', 'gem' : 'gem'}
+    washLine = {'ewt' : 'Wash(255,1,1,1,0,"2",500,"1.0",500,20,70,30,1,1,1000);', 'gem' : 'Wash(255,17,1,17,2,"2.0",500,"1.0",500,10,70,30,0,0,1000);'}
 
 if __name__ == '__main__':
     prpr = Prpr_Tecan(310)

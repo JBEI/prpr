@@ -47,7 +47,6 @@ function selectDevice(selection) {
         $('#methodsToggle').addClass('hidden');
         $('#tablefile .controls .btn').remove();
         $('#methods').addClass('hidden');
-        $('#result').before('<div class="alert"><i class="icon-exclamation-sign large"></i>&nbsp;<strong>Attention:</strong> Internet Explorer version 9 and above, Chrome or Firefox is recommended for full functionality.</div>');
         resetMFField();
 //        $('#sampleScript').addClass('hidden');
         $('#preview').remove();

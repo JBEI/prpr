@@ -11,7 +11,7 @@ def CheckCommand(command):
             'table'         : ['TABLE'],
             '"""'           : ['"""', '"""""', '""""""', '"""""""', '""""""""','DOC', 'ENDDOC'],
             'plate'         : ['PLATE'],
-            'component'     : ['COMPONENT', 'REAGENT'],
+            'component'     : ['COMPONENT', 'REAGENT', 'LOCATION'],
             'volume'        : ['VOLUME', 'AMOUNT'],
             'recipe'        : ['RECIPE', 'LIST', 'SET'],
             'comment'       : ['COMMENT', '%'],
