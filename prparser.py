@@ -70,12 +70,7 @@ class Experiment:
         """
         self.log('Added a ' + target + ' "' + itemName + '"')
         if target == 'component':
-            if self.platform == 'tecan':
-                location = self.parseLocation(itemInfo.location)
-            else:
-                well = Well({'Plate' : self.platform, 'Location' : itemInfo.location})
-                self.wells.append(well)
-                location = [well]
+            location = self.parseLocation(itemInfo.location)
             method = self.checkMethod(itemInfo.method)
             if method:
                 itemInfo.method = method
@@ -259,7 +254,7 @@ class Experiment:
         print('location)))))', location)
         loc = []
         print('location__', location)
-        if self.platform != "microfluidics":
+        if self.platform == "tecan":
             if '/' in location:
                 newLoc = location.split('/')
             else:
@@ -289,12 +284,36 @@ class Experiment:
                         self.errorLog('Error. No such plate in the system "' + str(plateAndWells[0]) + '"')
                 else:
                     self.errorLog('Error. No plate in location "' + str(location) + '"')
-        else:
+        elif self.platform == 'microfluidics':
             if location in self.mfWellLocations:
-                w = Well({'Plate' : 'mf', 'Location' : location})
+                w = Well({'Plate' : self.platform, 'Location' : location})
+                self.wells.append(w)
                 loc.append(w)
             else:
                 self.errorLog('Error. No such well in the system "' + location + '"')
+        elif self.platform == 'microscope':
+            #splitting the component from everything
+            compl = location.split('(')
+            if location not in self.components:
+                if compl[0] in self.components:
+                    resLoc = self.components[compl[0]].shortLocation + '(' + ''.join(compl[1:])
+                    print('resLoc....', resLoc)
+                    w = Well({'Plate' : self.platform, 'Location' : resLoc})
+                    self.wells.append(w)
+                    loc.append(w)
+                else:
+                    w = Well({'Plate' : self.platform, 'Location' : location})
+                    self.wells.append(w)
+                    loc.append(w)
+            else:
+                w = Well({'Plate' : self.platform, 'Location' : location})
+                self.wells.append(w)
+                loc.append(w)
+        else:
+            w = Well({'Plate' : self.platform, 'Location' : location})
+            self.wells.append(w)
+            loc.append(w)
+            
         return loc
 
 
@@ -805,7 +824,7 @@ class DBHandler:
                         print('c.locsation', c.location)
                         for well in c.location:
                             wellID = str(id(well))
-                            print('!!!well', well)
+                            print('!!!well', well, well.__dict__)
                             plate = '"' + str(well.plate) + '"'
                             location = '"' + str(well.location) + '"'
                             self.insert('Wells', [expID, wellID, plate, location])

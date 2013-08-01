@@ -34,6 +34,8 @@ class PRPR:
         self.config('\tos.makedirs(proj_dir)')
         self.config('d.set_working_directory(proj_dir)')
         self.config('')
+        self.config('d.turn_light(1, True)')
+        self.config('')
         
         allTransfers = self.transfers
         print('allTransfers', allTransfers)
@@ -77,16 +79,6 @@ class PRPR:
         command = '# ' + comment
         self.config(command)
 
-    def command(self, action, tipNumber, gridAndSite, wellString, method, volumesString):
-        location = str(gridAndSite[0]) + ',' + str(gridAndSite[1])
-        command = action            + '(' + \
-                  str(tipNumber)    + ',"' + \
-                  method            + '",' + \
-                  volumesString     + ',' + \
-                  location          + ',1,"' + \
-                  wellString        + '",0);'
-        self.config(command)
-
     def parseCommand(self, transferList):
         tr = transferList
         for option in tr:
@@ -104,20 +96,30 @@ class PRPR:
             snapAmount = option['times']
             method = option['wait']
             src = option['source']['well']
-            self.config('d.reset_position(' + src + ')')
-            if method == 'lighton':
-                self.config('d.turn_light(1, True)')
-                self.config('')
+            # if method == 'lighton':
+            #     self.config('d.turn_light(1, True)')
+            #     self.config('')
             dstLine = option['destination']['well'].split('*')
             if len(dstLine) == 2:
-                dstMod = dstLine[0].replace('+', '')
-                print(dstMod, '!!!')
                 times = dstLine[1]
+                import re
+                dstMod = re.split('[(|)]', dstLine[0])[:-1]
+                if len(dstMod) > 1:
+                    self.config('d.reset_position(' + dstMod[0] + ')')
+                    dest = dstMod[1].replace('+', '')
+                else:
+                    self.config('d.reset_position(' + src + ')')
+                    dest = dstLine[0].replace('+', '')
+                print(dest, '!!!')
                 dst = src
                 self.config('for i in range(' + times + '):')
-                self.config('\td.adjust_position' + dstMod)
+                self.config('\td.adjust_position' + '(' + dest + ')')
                 self.config('\tfor s in range(' + snapAmount + '):')
                 self.config('\t\td.take_snapshot()')
+            else:
+                self.config('d.reset_position(' + dstLine[0] + ')')
+                self.config('for s in range(' + snapAmount + '):')
+                self.config('\td.take_snapshot()')
     
 class defaults:
     fileExtensions = {'py' : 'py'}
