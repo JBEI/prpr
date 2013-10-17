@@ -5,7 +5,7 @@
 # http://github.com/JBEI/prpr/blob/master/license.txt
 
 __author__ = 'Nina Stawski'
-__version__ = '0.6'
+__version__ = '1.1'
 
 import os
 import sqlite3
@@ -129,3 +129,51 @@ class DatabaseHandler:
         c.close()
         conn.close()
         return q
+
+
+class Well:
+    def __init__(self, dict_):
+        self.plate = dict_['Plate']
+        self.location = dict_['Location']
+
+
+class Component:
+#    method = 'LC_W_Bot_Bot'
+    def __init__(self, dict_):
+        self.name = dict_['name']
+        self.location = dict_['location']
+        self.shortLocation = dict_['location']
+        if 'method' in dict_:
+            self.method = dict_['method']
+        else:
+            self.method = 'empty'
+
+
+class Plate:
+    def __init__(self, plateName, factoryName, plateLocation, platform, dimensions=()):
+        self.name = plateName
+        self.factoryName = factoryName
+        self.location = plateLocation
+        if platform != 'human':
+            db = DatabaseHandler.db('SELECT Rows, Columns from Plates WHERE FactoryName=' + '"' + factoryName + '"')
+            self.dimensions = db[0]
+        else:
+            self.dimensions = dimensions
+
+
+class Volume:
+    def __init__(self, dict):
+        self.name = dict['name']
+        self.amount = dict['amount']
+
+
+class Recipe:
+    def __init__(self, name):
+        self.subrecipes = {}
+        self.name = name
+        self.lineCounter = 0
+
+    def addSubrecipe(self, name, info):
+        self.subrecipes[name] = info
+
+

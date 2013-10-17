@@ -6,7 +6,7 @@
 # http://github.com/JBEI/prpr/blob/master/license.txt
 
 __author__ = 'Nina Stawski'
-__version__ = '0.6'
+__version__ = '1.1'
 
 import os
 from prpr import *
@@ -256,11 +256,25 @@ class PRPR:
         volumesString = ','.join(volumesList)
         return volumesString, tipsEnc
     
+    def parseLocation(self, location):
+        print('location is: ', location)
+        loc = []
+        print('location__', location)
+        
+        #splitting the component from everything
+    
+        w = Well({'Plate' : self.platform, 'Location' : location})
+        self.wells.append(w)
+        loc.append(w)
+        
+        return loc
+
+    
 class defaults:
     fileExtensions = {'txt' : 'txt'}
 
 if __name__ == '__main__':
-    prpr = Prpr_Tecan(310)
+    prpr = PRPR(310)
     print('Config:')
     for element in prpr.robotConfig:
         print(element)

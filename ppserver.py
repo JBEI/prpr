@@ -6,7 +6,7 @@
 # http://github.com/JBEI/prpr/blob/master/license.txt
 
 __author__ = 'Nina Stawski'
-__version__ = '0.6'
+__version__ = '1.1'
 
 import bottle
 from bottle import *
@@ -14,7 +14,8 @@ import os
 from prparser import *
 from tempfile import TemporaryFile
 import glob
-from prpr_mf import *
+import importlib
+from prpr_microfluidics import *
 from prpr_tecan import *
 
 global robotTips
@@ -125,14 +126,7 @@ def mfparse():
 @post('/sample')
 def sample():
     platform = request.body.read().decode()
-    if platform == 'tecan':
-        configFile = 'prpr_sample_tecan.par'
-    elif platform == 'microfluidics':
-        configFile = 'prpr_sample_mf.par'
-    elif platform == 'microscope':
-        configFile = 'prpr_sample_microscope.par'
-    elif platform == 'human':
-        configFile = 'prpr_sample_human.par'
+    configFile = 'prpr_sample_' + platform + '.par'
     config = open('samples/' + configFile, 'r')
     return config.readlines()
 
@@ -208,14 +202,7 @@ def config():
         writefile.writelines(''.join(list_))
         writefile.close()
         readfile = open(dirname + filename, "r")
-        if experiment.platform == "tecan":
-            import prpr_tecan as platform
-        elif experiment.platform == "human":
-            import prpr_human as platform
-        elif experiment.platform == "microscope":
-            import prpr_microscope as platform
-        elif experiment.platform == "microfluidics":
-            import prpr_mf as platform
+        platform = __import__('prpr_'+ experiment.platform)
         ParseFile(readfile, experiment)
 
         if len(experiment.errorLogger):

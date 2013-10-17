@@ -6,7 +6,7 @@
 # http://github.com/JBEI/prpr/blob/master/license.txt
 
 __author__ = 'Nina Stawski'
-__version__ = '0.6'
+__version__ = '1.1'
 
 import os
 from prpr import *
@@ -120,12 +120,37 @@ class PRPR:
                 self.config('d.reset_position(' + dstLine[0] + ')')
                 self.config('for s in range(' + snapAmount + '):')
                 self.config('\td.take_snapshot()')
+                
+    def parseLocation(self, location):
+        print('location is: ', location)
+        loc = []
+        print('location__', location)
+        
+        #splitting the component from everything
+        compl = location.split('(')
+        if location not in self.components:
+            if compl[0] in self.components:
+                resLoc = self.components[compl[0]].shortLocation + '(' + ''.join(compl[1:])
+                print('resLoc....', resLoc)
+                w = Well({'Plate' : self.platform, 'Location' : resLoc})
+                self.wells.append(w)
+                loc.append(w)
+            else:
+                w = Well({'Plate' : self.platform, 'Location' : location})
+                self.wells.append(w)
+                loc.append(w)
+        else:
+            w = Well({'Plate' : self.platform, 'Location' : location})
+            self.wells.append(w)
+            loc.append(w)
+            
+        return loc
     
 class defaults:
     fileExtensions = {'py' : 'py'}
 
 if __name__ == '__main__':
-    prpr = Prpr_Tecan(310)
+    prpr = PRPR(310)
     print('Config:')
     for element in prpr.robotConfig:
         print(element)

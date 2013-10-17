@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-# prpr_mf.py, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-handling robots
+# prpr_microfluidics.py, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-handling robots
 # Author: Nina Stawski, nstawski@lbl.gov, me@ninastawski.com
 # Copyright 2012-2013, Lawrence Berkeley National Laboratory
 # http://github.com/JBEI/prpr/blob/master/license.txt
 
 __author__ = 'Nina Stawski'
 __contact__ = 'me@ninastawski.com'
-__version__ = '0.6'
+__version__ = '1.1'
 
 #microfluidics support for PRPR
 
@@ -164,6 +164,19 @@ class PRPR:
         writefile.writelines("%s\n" % item for item in self.logger)
         print('Translation log location: ' + logName)
         
+    def parseLocation(self, location):
+        print('location is: ', location)
+        loc = []
+        print('location__', location)
+        
+        if location in self.mfWellLocations:
+            w = Well({'Plate' : self.platform, 'Location' : location})
+            self.wells.append(w)
+            loc.append(w)
+        else:
+            self.errorLog('Error. No such well in the system "' + location + '"')
+            
+        return loc
         
 class defaults:
     fileExtensions = {'mfp' : 'mf'}
