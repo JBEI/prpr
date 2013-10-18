@@ -223,9 +223,9 @@ class Experiment:
         method = ''
         methodError = False
         if transferMethod == 'DEFAULT':
-            if platform == 'tecan':
+            if self.platform == 'tecan':
                 method = self.methods[0]
-            elif platform == 'microfluidics':
+            elif self.platform == 'microfluidics':
                 method = 100
         else:
             m = self.checkMethod(transferMethod)
