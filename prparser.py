@@ -131,10 +131,14 @@ class Experiment:
                 else:
                     return self.methods[0]
         elif self.platform == 'microfluidics':
+            print('method for microfluidics', method)
             if isNumber(method):
+                print('method for microfluidics is number', method)
                 return method
             else:
-                self.errorLog('Error in method "' + str(method) + '". Microfluidic methods should be numbers.')
+                print('method for microfluidics is not number', method)
+                return '100'
+                #self.errorLog('Error in method "' + str(method) + '". Microfluidic methods should be numbers.')
 
 
 
@@ -180,78 +184,116 @@ class Experiment:
             self.log('Error. No ' + target + ' "' + itemName + '" defined.')
             self.errorLog('Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
 
-    def createTransfer(self, component, modifier, destination, volume, transferMethod, line):
-        if component in self.components or ':' in component or self.platform == "microfluidics":
-        #            if component in self.groups: #better parse groups
-            if component in self.components:
-                comp = self.components[component]
-            elif component in self.mfWellLocations:
-                comp = Component({'name': component, 'location': component, 'method': transferMethod})
-                self.add('component', component, comp)
-            else:
-                if ':' in component:
-                    comp = Component({'name': component, 'location': component, 'method': self.methods[0]})
-                    self.add('component', component, comp)
-                elif self.platform == 'microfluidics':
-                    comp = Component({'name': component, 'location': component, 'method': transferMethod})
-                    self.add('component', component, comp)
-
-            method = ''
-            methodError = False
-            if transferMethod == 'DEFAULT':
-                method = self.methods[0]
-            else:
-                m = self.checkMethod(transferMethod)
-                if m:
-                    method = m
-                else:
-                    if self.platform == 'microscope':
-                        method = transferMethod
-                    else:
-                        methodError = True
-                        self.log('Wrong method "' + transferMethod + '"')
-                        self.errorLog('Error. Wrong method "' + transferMethod + '" in line "' + line + '"')
-            if method:
-                location = []
-            else:
-                if not methodError:
-                    self.errorLog('Error. No method defined in line "' + line + '"')
-            if modifier:
-                times = int(modifier[1])
-                if modifier[0] == '|':
-                    for well in comp.location:
+    def prepareLocation(self, component):
+        location = []
+        for comp in component:
+            if len(comp) == 2:
+                times = int(comp[1][1])
+                if comp[1][0] == '|':
+                    for well in comp[0].location:
                         for i in range(0, times):
                             location.append(well)
-                if modifier[0] == '*':
+                if comp[1][0] == '*':
                     for i in range(0, times):
-                        for well in comp.location:
+                        for well in comp[0].location:
                             location.append(well)
             else:
-                location = comp.location
+                for well in comp[0].location:
+                    location.append(well)
+        return location
 
+    def createTransfer(self, source, destination, volume, transferMethod, line, wellsOnly = False):
+        
+        print('create transfer -->>', source, destination)
+        #if component in self.components or ':' in component or self.platform == "microfluidics":
+        #            if component in self.groups: #better parse groups
+        #    if component in self.components:
+        #        comp = self.components[component]
+        #    elif component in self.mfWellLocations:
+        #        comp = Component({'name': component, 'location': component, 'method': transferMethod})
+        #        self.add('component', component, comp)
+        #    else:
+        #        if ':' in component:
+        #            comp = Component({'name': component, 'location': component, 'method': self.methods[0]})
+        #            self.add('component', component, comp)
+        #        elif self.platform == 'microfluidics':
+        #            comp = Component({'name': component, 'location': component, 'method': transferMethod})
+        #            self.add('component', component, comp)
+        
+        method = ''
+        methodError = False
+        if transferMethod == 'DEFAULT':
+            method = self.methods[0]
+        else:
+            m = self.checkMethod(transferMethod)
+            if m:
+                method = m
+            else:
+                if self.platform == 'microscope':
+                    method = transferMethod
+                else:
+                    methodError = True
+                    self.log('Wrong method "' + transferMethod + '"')
+                    self.errorLog('Error. Wrong method "' + transferMethod + '" in line "' + line + '"')
+        if method:
             if volume in self.volumes:
                 amount = self.volumes[volume].amount
             else:
                 amount = volume
-
+    
             if self.platform == 'tecan':
                 volumeInfo = [self.splitAmount(x) for x in amount.split(',')]
             else:
                 volumeInfo = amount
-
-            transferDict = {'src': location, 'dst': destination, 'volume': volumeInfo, 'method': method, 'type': 'transfer'}
+            if wellsOnly:
+                src = source
+                dst = destination
+            else:
+                src = self.prepareLocation(source)
+                dst = self.prepareLocation(destination)
+            transferDict = {'src': src, 'dst': dst, 'volume': volumeInfo, 'method': method, 'type': 'transfer'}
             print('transfer DICTIONARY', transferDict)
             return transferDict
-
+        
         else:
-            self.log('Error. Wrong component "' + component + '".')
-            self.errorLog('Error. Component "' + component + '" is not defined. Please correct the error and try again.')
-            return False
+            if not methodError:
+                self.errorLog('Error. No method defined in line "' + line + '"')
+                
+        
+        #else:
+        #    self.log('Error. Wrong component "' + component + '".')
+        #    self.errorLog('Error. Component "' + component + '" is not defined. Please correct the error and try again.')
+        #    return False
 
 ### todo: separate by '/', ',' and '*' before calling platform location parse, common for all platforms, then parse location for both source and destination
         
         
-    def parseGivenLocation(self, location):
+    def parseGivenLocation(self, location, method=''):
+        
+        print('location in GIVEN Locations_________===', location)
+        
+        def CheckMultiplier(componentInfo):
+            """
+            Checks for additional actions on components
+            """
+            pipe = componentInfo.split('|')
+            times = componentInfo.split('*')
+            if len(pipe) == 2:
+                pipe[1] = ('|', pipe[1])
+                return pipe
+            elif len(times) == 2:
+                times[1] = ('*', times[1])
+                return times
+            else:
+                return [componentInfo]
+            
+        def CheckIfPlatePreDefined(locationInfo):
+            plateAndWells = locationInfo.split(':')
+            if len(plateAndWells) >1:
+                if plateAndWells[0] in self.plates:
+                    print('plateAndWell is in selfplates:::::::::::::::::', self.plates[plateAndWells[0]])
+                    print('plateAndWell is in selfplates:::::::::::::::::', self.plates)
+        
         splitLocations = []
         print('location in parseGivenLocation', location)
         
@@ -262,24 +304,50 @@ class Experiment:
         for plateLocation in locationPerPlate:
             singleLocations = plateLocation.split(',')
             print('singleLocation', singleLocations)
-            for location in singleLocations:
-                if location in self.components:
+            for l in singleLocations:
+                location = CheckMultiplier(l)
+                
+                if location[0] in self.components:
                     print('location is in self.components:', location)
-                    print('here is location:', self.components[location])
+                    print('here is location:', location)
                     prevLocations = ','.join(tempLocations)
+                    location[0] = self.components[location[0]]
+                    print('location now is:', location)
+                    splitLocations.append(location)
                     if prevLocations != '':
-                        splitLocations.append(prevLocations)
-                    splitLocations.append(self.components[location])
+                        lc = CheckMultiplier(prevLocations)
+                        if self.platform == 'tecan':
+                            method = self.methods[0]
+                            
+                        CheckIfPlatePreDefined(lc[0])
+                        tempComponent = Component({'name': lc[0], 'location': lc[0], 'method': method})
+                        print('location after check multiplier, no components: ', lc)
+                        self.add('component', tempComponent.name, tempComponent)
+                        lc[0] = self.components[location[0]]
+                        print('location after check multiplier, added component: ', lc)
+                        self.locations.append(lc)
                     tempLocations = []
                 else:
-                    print('location is NOT in self.components', location)
-                    tempLocations.append(location)
+                    print('location is NOT in self.components', l)
+                    
+                    tempLocations.append(l)
                     
             prevLocations = ','.join(tempLocations)
             if prevLocations != '':
-                splitLocations.append(prevLocations)     
+                location = CheckMultiplier(prevLocations)
+                if self.platform == 'tecan':
+                    method = self.methods[0]
+                    
+                CheckIfPlatePreDefined(location[0])
+                tempComponent = Component({'name': location[0], 'location': location[0], 'method': method})
+                print('location after check multiplier, no components: ', location)
+                self.add('component', tempComponent.name, tempComponent)
+                location[0] = self.components[location[0]]
+                print('location after check multiplier, added component: ', location)
+                splitLocations.append(location)     
         
         print('splitlocations', splitLocations)
+        return splitLocations
         
     def make(self, splitLine):
         originalLine = ' '.join(splitLine)
@@ -293,15 +361,8 @@ class Experiment:
                 subrecipeError = False
                 recipeName = self.recipes[recipeInfo[0]]
                 recipe = []
-                if line[1] not in self.components:
-                    if ':' in line[1]:
-                        dest = Component({'name': line[1], 'location': line[1], 'method': self.methods[0]})
-                        self.add('component', dest.name, dest)
-                    else:
-                        self.errorLog('Error. Wrong component "' + line[1] + '". Please correct the error and try again.')
-                else:
-                    dest = self.components[line[1]]
-                dstLocation = dest.location
+                destination = self.parseGivenLocation(line[1])
+                dstLocation = self.prepareLocation(destination)
 
                 if len(recipeInfo) == 2:
                     subrecipes = recipeInfo[1].split(',')
@@ -318,30 +379,53 @@ class Experiment:
                 if not subrecipeError:
                     if len(recipe) == len(dstLocation):
                         a = zip(*recipe)
-                        for element in a:
+                        for i, element in enumerate(a):
                             transferString = []
-                            z = zip(element, dstLocation)
-                            for el in z:
-                                component = el[0][0]
-                                if self.platform != "microfluidics":
-                                    volume = el[0][1]
-                                else:
-                                    volume = el[0]
-                                destination = el[1]
+                            dst = dstLocation[i-1]
+                            for z in element:
+                                source = self.parseGivenLocation(z[0])
+                                src = self.prepareLocation(source)[0]
+                                volume = z[1]
                                 transferMethod = line[2]
-                                modifier = ()
-                                transaction = self.createTransfer(component, modifier, destination, volume, transferMethod, originalLine)
+                                transaction = self.createTransfer(src, dst, volume, transferMethod, originalLine, wellsOnly=True)
                                 if transaction:
-                                    transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
                                     if self.platform != "microfluidics":
                                         transaction['volume'] = transaction['volume'][0]
                                     transferString.append(transaction)
                             if transferString:
                                 self.transactionList.append(transferString)
+                            #transferString = []
+                            #z = zip(element, dstLocation)
+                            #print('z!!', z)
+                            #for i, el in enumerate(z):
+                            #    print('el!!', el)
+                            #    source = self.parseGivenLocation(el[0][0])
+                            #    source[0][0].location = source[0][0].location[:1]
+                            #    print('es******', source[0][0].location)
+                            #    if self.platform != "microfluidics":
+                            #        volume = el[0][1]
+                            #    else:
+                            #        volume = el[0]
+                            #    print('source before :', source)
+                            #    print('destination before :', destination)
+                            #    #destination = el[1]
+                            #    dst = deepcopy(destination)
+                            #    dst[0][0].location = [dst[0][0].location[i]]
+                            #    transferMethod = line[2]
+                            #    modifier = ()
+                            #    transaction = self.createTransfer(source, dst, volume, transferMethod, originalLine)
+                            #    if transaction:
+                            #        #transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
+                            #        if self.platform != "microfluidics":
+                            #            transaction['volume'] = transaction['volume'][0]
+                            #        transferString.append(transaction)
+                            #if transferString:
+                            #    self.transactionList.append(transferString)
+                            #    for el in self.transactionList:
+                            #        print('this is transaction list..........................', el)
                     else:
                         self.log('Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
                         self.errorLog('Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
-
                     if len(line) > 3:
                         options = line[3].split(',')
                         for option in options:
@@ -349,7 +433,7 @@ class Experiment:
                             if a.startswith('mix'):
                                 mixoptions = a.split(':')
                                 if len(mixoptions) == 2:
-                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': dest.location}
+                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': self.prepareLocation(destination)}
                                     self.transactionList.append([transaction])
                                 else:
                                     self.log('Error. Wrong mixing options in line "' + originalLine + '"')
@@ -367,54 +451,26 @@ class Experiment:
     def transfer(self, splitLine, type):
         originalLine = ' '.join(splitLine)
         transferInfo = splitLine[1:]
-        self.parseGivenLocation(transferInfo[0])
-        self.parseGivenLocation(transferInfo[1])
-        def CheckMultiplier(componentInfo):
-            """
-            Checks for additional actions on components
-            """
-            pipe = componentInfo.split('|')
-            times = componentInfo.split('*')
-            pipe.insert(0, '|')
-            times.insert(0, '*')
-            if len(pipe) > 2:
-                return pipe
-            elif len(times) > 2:
-                return times
-            else:
-                return componentInfo
-
+        method = ''
+        source = self.parseGivenLocation(transferInfo[0], method)
+        destination = self.parseGivenLocation(transferInfo[1], method)
+        
         if len(transferInfo) >= 4:
             self.addComment('------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
             self.testindex += 1
-
-            #check the source for multipliers
-            modifier = ()
-            if self.platform != "microfluidics":
-                check = CheckMultiplier(transferInfo[0])
-                if len(check) == 3:
-                    modifier = (check[0], check[2])
-                    source = check[1]
-                else:
-                    source = check
-            else:
-                source = transferInfo[0]
-                
-            if transferInfo[1] not in self.components:
-                if self.platform != "microfluidics":
-                    destMethod = self.methods[0]
-                else:
-                    destMethod = transferInfo[3]
-                dest = Component({'name': transferInfo[1], 'location': transferInfo[1], 'method': destMethod}) #note: error when using with microfluidics, needs fixing
-                self.add('component', dest.name, dest)
-                dst = self.components[dest.name]
-
-            else:
-                dst = self.components[transferInfo[1]]
-            destination = dst.location
+            
             volume = transferInfo[2]
             method = transferInfo[3]
-            transferLine = self.createTransfer(source, modifier, destination, volume, method, originalLine)
+            if self.platform == 'microfluidics':
+                #method = transferInfo[3]
+                if not isNumber(method):
+                    if method == 'DEFAULT':
+                        method = 100
+                    elif method in self.volumes:
+                        method = self.volumes[method].amount
+                    else:
+                        self.errorLog('Error in method "' + str(method) + '". Not found in defined methods.')
+            transferLine = self.createTransfer(source, destination, volume, method, originalLine)
             if transferLine:
                 newTr = False
 
@@ -450,7 +506,8 @@ class Experiment:
                             if a.startswith('mix'):
                                 mixoptions = a.split(':')
                                 if len(mixoptions) == 2:
-                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': dst.location}
+                                    print('destination!!!', destination, self.prepareLocation(destination))
+                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': self.prepareLocation(destination)}
                                     self.transactionList.append([transaction])
                                 else:
                                     self.log('Error. Wrong mixing options in line "' + originalLine + '"')
@@ -591,9 +648,14 @@ class DBHandler:
         Dumps experiment information into database
         """
         self.experiment = experiment
+        
+        print('experiment wells in main', experiment.wells)
+        
         list = [experiment.name,
                 experiment.docString,
 
+                experiment.wells,
+                
                 experiment.components,
                 experiment.plates,
                 experiment.volumes,
@@ -619,10 +681,20 @@ class DBHandler:
                             wellID = str(id(well))
                             plate = '"' + str(well.plate) + '"'
                             location = '"' + str(well.location) + '"'
-                            self.insert('Wells', [expID, wellID, plate, location])
+                            
                             self.insert('Components', [expID, componentID, wellID])
                         self.insert('ComponentMethods', [expID, componentID, method])
                         self.insert('ComponentNames', [expID, componentID, name])
+
+                elif element == experiment.wells:
+                    for well in experiment.wells:
+                    
+                        wellID = str(id(well))
+                        plate = '"' + str(well.plate) + '"'
+                        location = '"' + str(well.location) + '"'
+                        
+                        print('well______ in wells:', expID, wellID, plate, location)
+                        self.insert('Wells', [expID, wellID, plate, location])
 
                 elif element == experiment.plates:
                     for plate in experiment.plates:

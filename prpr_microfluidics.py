@@ -19,6 +19,7 @@ class PRPR:
     def __init__(self, ID):
         self.expID = ID
         db = DatabaseHandler(ID)
+        self.wait = {}
         self.transfers = db.transfers
         self.mfWellConnections = db.mfWellConnections
         self.mfWellLocations = db.mfWellLocations
@@ -51,13 +52,18 @@ class PRPR:
         print(from_, to_)
         for t, transfer in enumerate(transferList):
             config = {}
-            waitNum = str(transferNumber) + '_o'
-            trNum = str(transferNumber) + '_w_' + from_ + '_to_' + to_ + '_o'
-            config['name'] = 'tr' + trNum
-            config['details'] = ['tr' + trNum]
             source = transfer['source']['well']
             destination = transfer['destination']['well']
+            trNum = str(transferNumber) + '_w_' + source + '_to_' + destination + '_o'
+            config['name'] = 'tr' + trNum
+            config['details'] = ['tr' + trNum]
             wait = transfer['wait']
+            
+            if wait not in self.wait:
+                self.wait[wait] = wait + '_o'
+            waitNum = self.wait[wait]
+            
+            print('transfer!', transfer)
             config['times'] = int(transfer['times'])
             transferPath = self.findPath(source, destination)
             print('src dst trlist', transferPath, source, destination, transferList)
@@ -83,7 +89,6 @@ class PRPR:
                     config['details'].append('call wait' + waitNum)
                 p += 1
             config['details'].append('end')
-            config['wait'] = ['wait' + waitNum, 'w' + str(wait), 'end']
             transfers.append(config)
         return transfers
 
@@ -97,9 +102,11 @@ class PRPR:
             for line in transaction:
                 self.config(line)
             self.config('')
-        for wait in (tr['wait'] for tr in transferList):
-            for line in wait:
-                self.config(line)
+        print('MF-transfer-list', transferList)
+        for wait in self.wait:
+            line = ['wait' + str(self.wait[wait]), 'w' + wait, 'end']
+            for l in line:
+                self.config(l)
             self.config('')
 
 
@@ -169,12 +176,14 @@ class PRPR:
         loc = []
         print('location__', location)
         
-        if location in self.mfWellLocations:
-            w = Well({'Plate' : self.platform, 'Location' : location})
-            self.wells.append(w)
-            loc.append(w)
-        else:
-            self.errorLog('Error. No such well in the system "' + location + '"')
+        splitLocation = location.split(',')
+        for l in splitLocation:
+            if l in self.mfWellLocations:
+                w = Well({'Plate' : self.platform, 'Location' : l})
+                self.wells.append(w)
+                loc.append(w)
+            else:
+                self.errorLog('Error. No such well in the system "' + l + '"')
             
         return loc
         

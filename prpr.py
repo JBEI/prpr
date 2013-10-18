@@ -54,6 +54,7 @@ class DatabaseHandler:
         transfer = {'type' : type, 'info' : []}
         for element in transferElements:
             if type == 'transfer':
+                print('element for trnasfer_______', element)
                 srcWell = self.getWell(element[0])
                 dstWell = self.getWell(element[1])
                 if self.platform == "tecan":
@@ -92,7 +93,10 @@ class DatabaseHandler:
             self.mfWellLocations[well] = tuple(int(x) for x in location.split(','))
 
     def getWell(self, wellID):
-        w = self.getOne('SELECT Plate, Location FROM Wells WHERE WellID = ' + str(wellID))
+        message = 'SELECT Plate, Location FROM Wells WHERE WellID = ' + str(wellID)
+        w = self.getOne(message)
+        print('getting a well with db handler ______________', w)
+        print('getting a well with db handler ______________', message)
         plateName = w[0]
         if self.platform == 'tecan':
             wellLocation = eval(w[1])
