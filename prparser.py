@@ -223,7 +223,10 @@ class Experiment:
         method = ''
         methodError = False
         if transferMethod == 'DEFAULT':
-            method = self.methods[0]
+            if platform == 'tecan':
+                method = self.methods[0]
+            elif platform == 'microfluidics':
+                method = 100
         else:
             m = self.checkMethod(transferMethod)
             if m:
@@ -958,6 +961,7 @@ def LineToList(line, configFileName, experiment):
                 experiment.add(command['name'], componentInfo['name'], Component(componentInfo))
 
             elif command['name'] == 'table':
+                print('table is added', line[1], experiment.platform)
                 if not experiment.tableAdded:
                     experiment.tableAdded = True
                     if __name__ == "__main__":

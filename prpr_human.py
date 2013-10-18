@@ -222,39 +222,6 @@ class PRPR:
             elif option['command'] == 'message' or option['command'] == 'comment':
                 trList.append(option)
         self.transactions.append(trList)
-
-    def createMixString(self, volumesString, newVolume):
-        ms = volumesString.split(',')
-        for i in range(0, len(ms)):
-            if ms[i] != '0':
-                ms[i] = '"' + newVolume + '"'
-        volumesString = self.joinVolumesList(ms)
-        return volumesString[0]
-
-    def fillVolumesList(self, volumes):
-        """
-        Finalizes the list of volumes by adding zeroes where needed.
-        volumes - current list of volumes
-        """
-        for l in range (0, 12):
-            if l+1 not in volumes:
-                volumes[l+1] = '0'
-        volumesList = []
-        for d in range (1, 13):
-            volumesList.append(volumes[d])
-        return volumesList
-
-    def joinVolumesList(self, volumesList):
-        """
-        Creates the final list of volumes for aspirate / dispense commands
-        volumesList - list of volumes to join
-        """
-        tipsEnc = 0
-        for i in range(0, len(volumesList)):
-            if volumesList[i] != '0':
-                tipsEnc += self.getTipEncoding(i+1)
-        volumesString = ','.join(volumesList)
-        return volumesString, tipsEnc
     
     def parseLocation(self, location):
         print('location is: ', location)
