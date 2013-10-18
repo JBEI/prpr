@@ -276,16 +276,19 @@ class Experiment:
             """
             Checks for additional actions on components
             """
-            pipe = componentInfo.split('|')
-            times = componentInfo.split('*')
-            if len(pipe) == 2:
-                pipe[1] = ('|', pipe[1])
-                return pipe
-            elif len(times) == 2:
-                times[1] = ('*', times[1])
-                return times
-            else:
+            if self.platform == 'microscope':
                 return [componentInfo]
+            else:
+                pipe = componentInfo.split('|')
+                times = componentInfo.split('*')
+                if len(pipe) == 2:
+                    pipe[1] = ('|', pipe[1])
+                    return pipe
+                elif len(times) == 2:
+                    times[1] = ('*', times[1])
+                    return times
+                else:
+                    return [componentInfo]
             
         def CheckIfPlatePreDefined(locationInfo):
             plateAndWells = locationInfo.split(':')
