@@ -61,6 +61,10 @@ class DatabaseHandler:
                     volume = eval(element[2])
                     method = element[3]
                     transfer['info'].append({ 'source' : srcWell, 'destination' : dstWell, 'volume' : volume, 'method' : method })
+                elif self.platform == 'human':
+                    volume = element[2]
+                    method = element[3]
+                    transfer['info'].append({ 'source' : srcWell, 'destination' : dstWell, 'volume' : volume, 'method' : method })
                 else:
                     times = element[2]
                     wait = element[3]
@@ -103,8 +107,10 @@ class DatabaseHandler:
         else:
             wellLocation = w[1]
         plateDimensions = self.getOne('SELECT Rows, Columns FROM Plates NATURAL JOIN PlateLocations WHERE Plate = "' + plateName + '"')
-        plateLocation = self.getOne('SELECT Grid, Site FROM PlateLocations WHERE Plate = "' + plateName + '"')
-        return { 'well' : wellLocation, 'plateDimensions' : plateDimensions, 'plate' : plateLocation }
+        plateLocation = self.getOne('SELECT Grid, Site, PlateLocation FROM PlateLocations WHERE Plate = "' + plateName + '"')
+        componentName = self.getOne('select Name from (ComponentNames NATURAL JOIN Components NATURAL JOIN Wells) WHERE ExpID = ' + self.expID +' AND WellID = ' + str(wellID))[0]
+        wellPlateName = self.getOne('select Plate from (ComponentNames NATURAL JOIN Components NATURAL JOIN Wells) WHERE ExpID = ' + self.expID +' AND WellID = ' + str(wellID))[0]
+        return { 'well' : wellLocation, 'plateDimensions' : plateDimensions, 'plate' : plateLocation, 'componentName' : componentName, 'plateName' : wellPlateName }
 
     def getOne(self, message):
         self.crsr.execute(message + ' AND ExpID = ' + self.expID)
@@ -154,10 +160,12 @@ class Component:
 
 
 class Plate:
-    def __init__(self, plateName, factoryName, plateLocation, platform, dimensions=()):
+    def __init__(self, plateName, factoryName, plateLocation, platform, plateLocationDescription='', dimensions=()):
         self.name = plateName
         self.factoryName = factoryName
         self.location = plateLocation
+        self.plateLocationDescription = plateLocationDescription
+        
         if platform != 'human':
             db = DatabaseHandler.db('SELECT Rows, Columns from Plates WHERE FactoryName=' + '"' + factoryName + '"')
             self.dimensions = db[0]

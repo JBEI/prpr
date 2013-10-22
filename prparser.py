@@ -121,7 +121,7 @@ class Experiment:
             self.methods = methods
 
     def checkMethod(self, method):
-        if self.platform == 'tecan':
+        if self.platform == 'tecan' or  self.platform == 'human':
             if method in self.methods:
                 return method
             else:
@@ -223,7 +223,7 @@ class Experiment:
         method = ''
         methodError = False
         if transferMethod == 'DEFAULT':
-            if self.platform == 'tecan':
+            if self.platform == 'tecan' or self.platform == 'human':
                 method = self.methods[0]
             elif self.platform == 'microfluidics':
                 method = 100
@@ -359,7 +359,8 @@ class Experiment:
         originalLine = ' '.join(splitLine)
         line = splitLine[1:]
         if len(line) >= 3:
-            self.addComment('------ BEGIN MAKE ' + line[0] + ' in ' + line[1] + ' ------')
+            if self.platform != 'human':
+                self.addComment('------ BEGIN MAKE ' + line[0] + ' in ' + line[1] + ' ------')
             self.testindex += 1
             recipeInfo = line[0].split(':')
 
@@ -448,8 +449,8 @@ class Experiment:
                     pass
             else:
                 self.errorLog('Error. No such recipe as "' + recipeInfo[0] + '".')
-
-            self.addComment('------ END MAKE ' + line[0] + ' in ' + line[1] + ' ------')
+            if self.platform != 'human':
+                self.addComment('------ END MAKE ' + line[0] + ' in ' + line[1] + ' ------')
         else:
             self.errorLog('Error. Not enough parameters in line "' + originalLine + '". Please correct your script.')
 
@@ -462,7 +463,8 @@ class Experiment:
         destination = self.parseGivenLocation(transferInfo[1], method)
         
         if len(transferInfo) >= 4:
-            self.addComment('------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+            if self.platform != 'human':
+                self.addComment('------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
             self.testindex += 1
             
             volume = transferInfo[2]
@@ -517,7 +519,8 @@ class Experiment:
                                     self.transactionList.append([transaction])
                                 else:
                                     self.log('Error. Wrong mixing options in line "' + originalLine + '"')
-                    self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+                    if self.platform != 'human':
+                        self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
 
                 else:
                     self.errorLog('Error in line "' + originalLine + '"')
@@ -709,11 +712,14 @@ class DBHandler:
                         site = p.location[1]
                         factoryName = '"' + p.factoryName + '"'
                         name = '"' + p.name + '"'
+                        
+                        plateLocationDescription = '"' + p.plateLocationDescription + '"'
+                        
                         if plate != p.name:
                             nickname = '"' + plate + '"'
                             self.insert('PlateNicknames', [expID, name, nickname])
                         else:
-                            self.insert('PlateLocations', [expID, name, factoryName, grid, site])
+                            self.insert('PlateLocations', [expID, name, factoryName, grid, site, plateLocationDescription])
 
                 elif element == experiment.volumes:
                     for volume in experiment.volumes:
@@ -1004,9 +1010,12 @@ def LineToList(line, configFileName, experiment):
                     experiment.log('Docstring already added for this experiment.')
 
             elif command['name'] == 'plate':
-                if len(line) == 3:
+                if len(line) >= 3:
                     plateNickname = line[1]
                     plateName = line[2]
+                    plateLocationDescription = ''
+                    if len(line) > 3:
+                        plateLocationDescription = ' '.join(line[3:])
 
                     plateCoords = []
                     if plateName.find('*') != -1:
@@ -1017,7 +1026,7 @@ def LineToList(line, configFileName, experiment):
                         row = plateCoords[0]
                         col = plateCoords[1]
 
-                        plateInfo = Plate(plateNickname, plateNickname, plateCoords, experiment.platform, dimensions=(int(row), int(col)))
+                        plateInfo = Plate(plateNickname, plateNickname, plateCoords, experiment.platform, plateLocationDescription=plateLocationDescription, dimensions=(int(row), int(col)))
                         experiment.add('plate', plateNickname, plateInfo)
                     else:
                         experiment.plates[plateNickname] = experiment.plates[plateName]

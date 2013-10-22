@@ -38,7 +38,7 @@ def CreateTables():
 
     #Plates
     crsr.execute('create table Plates(FactoryName UNIQUE, Rows, Columns)')
-    crsr.execute('create table PlateLocations(ExpID, Plate, FactoryName, Grid, Site, PRIMARY KEY(ExpID, Plate))')
+    crsr.execute('create table PlateLocations(ExpID, Plate, FactoryName, Grid, Site, PlateLocation, PRIMARY KEY(ExpID, Plate))')
     crsr.execute('create table PlateNicknames(ExpID, Plate, Nickname, PRIMARY KEY(ExpID, Nickname))')
 
     #Volumes

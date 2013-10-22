@@ -13,6 +13,11 @@ from prpr import *
 
 class PRPR:
     wash = 'Wash or change the tips.'
+    
+    dictionary = {
+        
+    }
+    
     def __init__(self, ID):
         self.expID = ID
         db = DatabaseHandler(ID)
@@ -22,7 +27,6 @@ class PRPR:
         self.transactions = []
         self.volumesList = []
         self.createTransfer()
-        self.updateTransactions()
         self.addWash()
         self.saveLog()
         self.saveConfig()
@@ -35,7 +39,7 @@ class PRPR:
             trType = transfer['type']
             els = transfer['info']
             if trType == 'transfer':
-                self.constructTransaction(('Aspirate', 'Dispense'), els)
+                self.constructTransaction(els)
 
             elif trType == 'command':
                 self.parseCommand(els)
@@ -72,9 +76,8 @@ class PRPR:
         fileName = ''
         for key in defaults.fileExtensions:
             file_ = 'esc' + os.sep + 'config' + self.expID + '.' + defaults.fileExtensions[key]
-            if os.path.isfile(file_):
-                fileName = file_
-        with open(fileName, 'a', encoding='latin1') as myfile:
+            fileName = file_
+        with open(fileName, 'a') as myfile:
             writeLines(myfile)
 
     def log(self, item):
@@ -97,120 +100,25 @@ class PRPR:
     def comment(self, comment):
         command = '# ' + comment
         self.config(command)
+        
+    def getLetterForWell(self, wellInfo):
+        well = eval(wellInfo)
+        alphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
+        wellLetter = alphabet[well[0]-1]
+        wellString = wellLetter + str(well[1])
+        return wellString
 
-    def mix(self, tipNumber, volumesString, gridAndSite, wellString, mixOptions):
-        location = str(gridAndSite[0]) + ',' + str(gridAndSite[1])
-        command = 'Mix(' + str(tipNumber) + ',"LCWMX",' + \
-                  volumesString + ',' + location + ',1,"' + \
-                  wellString + '",' + mixOptions + ',0);'
-        self.config(command)
-
-    def command(self, action, tipNumber, gridAndSite, wellString, method, volumesString):
-        location = str(gridAndSite[0]) + ',' + str(gridAndSite[1])
-        command = action            + '(' + \
-                  str(tipNumber)    + ',"' + \
-                  method            + '",' + \
-                  volumesString     + ',' + \
-                  location          + ',1,"' + \
-                  wellString        + '",0);'
-        self.config(command)
-
-    def updateTransactions(self):
-        for transaction in self.transactions:
-            print('updateTransactions. transaction', transaction)
-            #empty containers for volumes, plate info and wells are created
-            volumesDict = {}
-            wells = []
-            plateInfo = {}
-            for t in transaction:
-                if t:
-                    for e in range(0, len(t)):
-                        element = t[e]
-                        if element['command'] == 'message':
-                            self.message(element['message'])
-                        elif element['command'] == 'comment':
-                            self.comment(element['message'])
-                        else:
-                            if e:
-                                previousElement = t[e-1]
-                                consequent = self.checkIfWellsAreConsequent(previousElement['wellInfo'], element['wellInfo'])
-                                if not consequent:
-                                    volumesList = self.fillVolumesList(volumesDict)
-                                    volumesLine = self.joinVolumesList(volumesList)
-                                    plateDimensions = plateInfo['dimensions']
-                                    wellenc = self.getWellEncoding(wells, plateDimensions)
-                                    gridAndSite = plateInfo['location']
-                                    volume = volumesLine[0]
-                                    tipsEncoding = volumesLine[1]
-                                    action = previousElement['command']
-                                    if action == 'Aspirate' or action == 'Dispense':
-                                        method = element['method']
-                                        self.command(action, tipsEncoding, gridAndSite, wellenc, method, volume)
-                                    if action == 'Mix':
-                                        mixOptions = element['times']
-                                        self.mix(tipsEncoding, volume, gridAndSite, wellenc, mixOptions)
-
-                                    volumesDict = {element['tipNumber'] : '"' + str(element['volume']) + '"' }
-                                    wells = [element['wellInfo']['well']]
-                                    volumesDict[element['tipNumber']] = '"' + str(element['volume']) + '"'
-                                    plateInfo = {'dimensions' : element['wellInfo']['plateDimensions'], 'location' : element['wellInfo']['plate']}
-                                else:
-                                    volumesDict[element['tipNumber']] = '"' + str(element['volume']) + '"'
-                                    wells.append(element['wellInfo']['well'])
-                            else:
-                                if element['command'] == 'Aspirate' or element['command'] == 'Mix':
-                                    self.addWash()
-                                volumesDict[element['tipNumber']] = '"' + str(element['volume']) + '"'
-                                wells.append(element['wellInfo']['well'])
-                                plateInfo = {'dimensions' : element['wellInfo']['plateDimensions'], 'location' : element['wellInfo']['plate']}
-                    element = t[len(t)-1]
-
-                    if element['command'] == 'message' or element['command'] == 'comment':
-                        pass
-                    else:
-                        volumesList = self.fillVolumesList(volumesDict)
-                        volumesLine = self.joinVolumesList(volumesList)
-                        plateDimensions = plateInfo['dimensions']
-                        wells.append(element['wellInfo']['well'])
-                        wellenc = self.getWellEncoding(wells, plateDimensions)
-                        gridAndSite = plateInfo['location']
-                        volume = volumesLine[0]
-                        tipsEncoding = volumesLine[1]
-                        action = element['command']
-                        if action == 'Aspirate' or action == 'Dispense':
-                            method = element['method']
-                            self.command(action, tipsEncoding, gridAndSite, wellenc, method, volume)
-                        if action == 'Mix':
-                            mixOptions = element['times']
-                            self.mix(tipsEncoding, volume, gridAndSite, wellenc, mixOptions)
-
-    def constructTransaction(self, commandsList, transferList):
+    def constructTransaction(self, transferList):
         """
         Creating the aspirate / dispense strings from the list of transfers
         """
-
-        trList = {'Aspirate' :  [], 'Dispense' :  []}
-        tr = transferList
-        for command in commandsList:
-            for e in tr:
-                method = e['method']
-                if command == 'Aspirate':
-                    wellInfo = e['source']
-                elif command == 'Dispense':
-                    wellInfo = e['destination']
-                    
-                print('e_volume', e['volume'])
-
-                trList[command].append({ 'command' : command, 'wellInfo' : wellInfo, 'volume' : e['volume'][2], 'method' : method })
-
-        aspirate = trList['Aspirate']
-        dispense = trList['Dispense']
-
-        for el in range (0, len(aspirate)):
-            for l in range(0, len(aspirate[el])):
-                aspirate[el][l]['tipNumber'] = l + 1
-                dispense[el][l]['tipNumber'] = l + 1
-            self.transactions.append([aspirate[el] + dispense[el]])
+        
+        for tr in transferList:
+            print('tr________________________', tr)
+            volume = tr['volume']
+            method = tr['method']
+            transfer = 'Transfer ' + volume + 'uL of component "' + tr['source']['componentName'] + '" from (plate ' + tr['source']['plateName'] + ' well ' + self.getLetterForWell(tr['source']['well']) + ') to (plate ' + tr['destination']['plateName'] + ' well ' + self.getLetterForWell(tr['destination']['well']) + ') using method: ' + method
+            self.config(transfer)
 
     def parseCommand(self, transferList):
         tr = transferList
@@ -218,22 +126,161 @@ class PRPR:
         for option in tr:
             if option['command'] == 'mix':
                 wellInfo = option['target']
-                trList.append({ 'command' : 'Mix', 'wellInfo' : wellInfo})
+                mix = 'Mix component "' + wellInfo['componentName'] + '" in (well ' + self.getLetterForWell(wellInfo['well']) + ' on plate ' + wellInfo['plateName'] + ')'
+                self.config(mix)
             elif option['command'] == 'message' or option['command'] == 'comment':
-                trList.append(option)
+                self.config('')
+                self.config(option['message'])
+                self.config('')
         self.transactions.append(trList)
     
     def parseLocation(self, location):
-        print('location is: ', location)
+        """
+        Parses the given location, i.e. PL3:A1+4 to individual wells
+        """
+
+        def ParseWells(wells, plateDimensions):
+            wellsLargeList = wells.split(',')
+            wellsNewlist = []
+            for well in wellsLargeList:
+                wellsList = well.split('+')
+                direction = 'vertical'
+                if '-' in well:
+                    wellsList = well.split('-')
+                    direction = 'horizontal'
+                elif '~' in well:
+                    tempWellsList = well.split('~')
+                    startWellCoords = GetWellCoordinates(tempWellsList[0], plateDimensions, str(location))
+                    endWellCoords = GetWellCoordinates(tempWellsList[1], plateDimensions, str(location))
+                    wellsAmount = (endWellCoords[0] - startWellCoords[0]) * plateDimensions[0] + endWellCoords[1] - startWellCoords[1] + 1
+                    wellsList = (tempWellsList[0], wellsAmount)
+                    direction = 'vertical'
+                if wellsList[0]:
+                    startWell = wellsList[0]
+                    rowsMax = plateDimensions[0]
+                    colsMax = plateDimensions[1]
+                    if len(wellsList) == 2:
+                        assert (wellsList[1] != ''), "Well number after '+' can't be empty."
+                        numberWells = int(wellsList[1])
+                        startCoords = GetWellCoordinates(startWell, plateDimensions, str(location))
+                        for i in range(0, numberWells):
+                            addedWells = WellsRename(startCoords, i, plateDimensions, direction)
+                            assert(addedWells[1] <= colsMax), 'Wells locations are out of range'
+                            wellsNewlist.append(addedWells)
+                    elif len(wellsList) == 1:
+                        wellsNewlist.append(GetWellCoordinates(wellsList[0], plateDimensions, str(location)))
+                    else:
+                        self.errorLog('Error. Can\'t be more than one \'+\'. Correct syntax in ' + str(location) + ' and run again. \n')
+                else:
+                    self.errorLog('Error. Well can\'t be empty in locaton "' + str(location) + '"')
+
+            return wellsNewlist
+
+        def WellsRename(startCoords, i, plateDimensions, direction):
+            rowsMax = plateDimensions[0]
+            colsMax = plateDimensions[1]
+            currentNum = startCoords[0] + i
+            if direction == 'vertical':
+                if currentNum <= rowsMax:
+                    newCol = startCoords[1]
+                    return currentNum, newCol
+                elif currentNum > rowsMax:
+                    times = int(currentNum / rowsMax)
+                    newCol = startCoords[1] + times
+                    newRow = currentNum - (times * rowsMax)
+                    if newRow == 0:
+                        return newRow + rowsMax, newCol - 1
+                    else:
+                        return newRow, newCol
+            if direction == 'horizontal':
+                if currentNum <= colsMax:
+                    newRow = startCoords[1]
+                    return newRow, currentNum
+                elif currentNum > colsMax:
+                    times = int(currentNum / colsMax)
+                    newRow = startCoords[1] + times
+                    newCol = currentNum - (times * colsMax)
+                    if newCol == 0:
+                        return newRow - 1, newCol + colsMax
+                    else:
+                        return newRow, newCol
+
+
+        def GetWellCoordinates(well, plateDimensions, location):
+            """
+            Takes the well coordinates entered by the user and dimensions of the plate and returns the wells plate coordinates
+            """
+            if well:
+                rowsMax = plateDimensions[0]
+                colsMax = plateDimensions[1]
+                try:
+                    int(well)
+                    well = int(well)
+                    if well > rowsMax * colsMax:
+                        self.errorLog('Error. Well "' + str(well) + '" in location "' + location + '" is out of range')
+                    else:
+                        if well <= rowsMax:
+                            newCol = 1
+                            newRow = well
+                        else:
+                            times = int(well / rowsMax)
+                            newCol = times + 1
+                            newRow = well - (times * rowsMax)
+                        if newRow == 0:
+                            return newRow + rowsMax, newCol - 1
+                        else:
+                            return newRow, newCol
+                except ValueError:
+                    alphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
+                    letterIndex = alphabet.find(well[:1]) + 1
+                    if letterIndex > rowsMax:
+                        self.errorLog('Error. Well "' + well + '" letter coordinate in location "' + location + '" is out of range')
+                    elif int(well[1:]) > colsMax:
+                        self.errorLog('Error. Well "' + well + '" number coordinate in location "' + location + '" is out of range')
+                    else:
+                        return letterIndex, int(well[1:])
+            else:
+                self.errorLog('Error. No well defined in location "' + location + '"')
+                
+                
         loc = []
-        print('location__', location)
-        
-        #splitting the component from everything
+        if '/' in location:
+            newLoc = location.split('/')
+        else:
+            newLoc = [location]
+        for line in newLoc:
+            if ':' in location:
+                plateAndWells = line.split(':')
+                if plateAndWells[0]:
+                    if plateAndWells[0] in self.plates:
+                        plateName = self.plates[plateAndWells[0]].name
+                        plateDms = self.plates[plateAndWells[0]].dimensions
+                        plateLocation = self.plates[plateAndWells[0]].location
     
-        w = Well({'Plate' : self.platform, 'Location' : location})
-        self.wells.append(w)
-        loc.append(w)
-        
+                        if plateAndWells[1]:
+                            wells = ParseWells(plateAndWells[1], plateDms)
+                            for well in wells:
+                                if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
+                                    print('aiaiaiaiaiaiaiai!!!!')
+                                w = Well({'Plate': plateName, 'Location': well}) #todo: append well only if there are no same wells registered; otherwise error
+                                loc.append(w)
+                                self.wells.append(w)
+                                print('self wells in Tecan', self.wells)
+                                #                    else:
+                                #                        self.errorLog('Error. No wells in location "' + str(location) + '"')
+                    else:
+                        self.errorLog('Error. No such plate in the system "' + str(plateAndWells[0]) + '"')
+                else:
+                    self.errorLog('Error. No plate in location "' + str(location) + '"')
+            else:
+                plate = self.platform
+                wellLocation = location
+                w = Well({'Plate' : plate, 'Location' : wellLocation})
+                self.wells.append(w)
+                loc.append(w)
+            
+            
+                           
         return loc
 
     
