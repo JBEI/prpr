@@ -372,6 +372,8 @@ class Experiment:
                 recipe = []
                 destination = self.parseGivenLocation(line[1])
                 dstLocation = self.prepareLocation(destination)
+                print('destination___________', destination)
+                print('dstLocation___________', dstLocation)
 
                 if len(recipeInfo) == 2:
                     subrecipes = recipeInfo[1].split(',')
@@ -388,14 +390,17 @@ class Experiment:
                 if not subrecipeError:
                     if len(recipe) == len(dstLocation):
                         a = zip(*recipe)
-                        for i, element in enumerate(a):
+                        for element in a:
                             transferString = []
-                            if len(dstLocation) == 1:
-                                dst = dstLocation[0]
-                            else:
-                                dst = dstLocation[i-1]
-                            for z in element:
+                            for i, z in enumerate(element):
+                                
+                                if len(dstLocation) == 1:
+                                    dst = dstLocation[0]
+                                else:
+                                    dst = dstLocation[i-1]
+                                
                                 source = self.parseGivenLocation(z[0])
+                                print('source___________', source)
                                 src = self.prepareLocation(source)[0]
                                 volume = z[1]
                                 transferMethod = line[2]
@@ -406,35 +411,6 @@ class Experiment:
                                     transferString.append(transaction)
                             if transferString:
                                 self.transactionList.append(transferString)
-                            #transferString = []
-                            #z = zip(element, dstLocation)
-                            #print('z!!', z)
-                            #for i, el in enumerate(z):
-                            #    print('el!!', el)
-                            #    source = self.parseGivenLocation(el[0][0])
-                            #    source[0][0].location = source[0][0].location[:1]
-                            #    print('es******', source[0][0].location)
-                            #    if self.platform != "microfluidics":
-                            #        volume = el[0][1]
-                            #    else:
-                            #        volume = el[0]
-                            #    print('source before :', source)
-                            #    print('destination before :', destination)
-                            #    #destination = el[1]
-                            #    dst = deepcopy(destination)
-                            #    dst[0][0].location = [dst[0][0].location[i]]
-                            #    transferMethod = line[2]
-                            #    modifier = ()
-                            #    transaction = self.createTransfer(source, dst, volume, transferMethod, originalLine)
-                            #    if transaction:
-                            #        #transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
-                            #        if self.platform != "microfluidics":
-                            #            transaction['volume'] = transaction['volume'][0]
-                            #        transferString.append(transaction)
-                            #if transferString:
-                            #    self.transactionList.append(transferString)
-                            #    for el in self.transactionList:
-                            #        print('this is transaction list..........................', el)
                     else:
                         self.log('Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
                         self.errorLog('Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
