@@ -401,7 +401,7 @@ class Experiment:
                                 transferMethod = line[2]
                                 transaction = self.createTransfer(src, dst, volume, transferMethod, originalLine, wellsOnly=True)
                                 if transaction:
-                                    if self.platform == 'tecan':
+                                    if self.platform != "microfluidics" and self.platform != "human":
                                         transaction['volume'] = transaction['volume'][0]
                                     transferString.append(transaction)
                             if transferString:
