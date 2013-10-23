@@ -33,6 +33,14 @@ class PRPR:
             'in' : 'в'
         }
     }
+    defaultMethodDescriptions = {
+        'LC_W_Bot_Bot' : 'bottom to bottom',
+        'LC_W_Bot_Air' : 'bottom to air',
+        'LC_W_Bot_Lev' : 'bottom to level',
+        'LC_W_Lev_Bot' : 'level to bottom',
+        'LC_W_Lev_Air' : 'level to air',
+        'LC_W_Lev_Lev' : 'level to level',
+    }
     
     def __init__(self, ID):
         self.expID = ID
@@ -135,7 +143,7 @@ class PRPR:
             volume = tr['volume']
             method = tr['method']
             
-            transfer = self.dictionary[self.language]['transfer'] + ' ' + volume + 'uL ' + self.dictionary[self.language]['of'] + ' "' + tr['source']['componentName'] + '" ' + self.dictionary[self.language]['from'] + ' (' + tr['source']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['source']['well']) + ') ' + self.dictionary[self.language]['to'] + ' (' + tr['destination']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['destination']['well']) + '): ' + method
+            transfer = self.dictionary[self.language]['transfer'] + ' ' + volume + 'uL ' + self.dictionary[self.language]['of'] + ' "' + tr['source']['componentName'] + '" ' + self.dictionary[self.language]['from'] + ' (' + tr['source']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['source']['well']) + ') ' + self.dictionary[self.language]['to'] + ' (' + tr['destination']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['destination']['well']) + '): ' + self.defaultMethodDescriptions[method]
             self.config(transfer)
 
     def parseCommand(self, transferList):
@@ -147,9 +155,11 @@ class PRPR:
                 mix = self.dictionary[self.language]['mix'] + ' "' + wellInfo['componentName'] + '" ' + self.dictionary[self.language]['in'] + ' (' + wellInfo['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(wellInfo['well']) + ')'
                 self.config(mix)
             elif option['command'] == 'message' or option['command'] == 'comment':
-                self.config('')
+                if option['message'] and self.robotConfig[-1] != '':
+                    self.config('')
                 self.config(option['message'])
-                self.config('')
+                if option['message'] and self.robotConfig[-1] != '':
+                    self.config('')
         self.transactions.append(trList)
     
     def parseLocation(self, location):
