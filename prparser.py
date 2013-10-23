@@ -385,11 +385,16 @@ class Experiment:
                     for rLine in recipeLines:
                         recipe.append(rLine['recipe'])
                 if not subrecipeError:
+                    print('lenrellll;;;;;', len(recipe), recipe)
                     if len(recipe) == len(dstLocation):
                         a = zip(*recipe)
                         for i, element in enumerate(a):
+                            print('...///', i, element, a, dstLocation, len(recipe), len(dstLocation))
                             transferString = []
-                            dst = dstLocation[i-1]
+                            if len(dstLocation) == 1:
+                                dst = dstLocation[0]
+                            else:
+                                dst = dstLocation[i-1]
                             for z in element:
                                 source = self.parseGivenLocation(z[0])
                                 src = self.prepareLocation(source)[0]

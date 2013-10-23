@@ -183,7 +183,8 @@ class PRPR:
         print('Translation log location: ' + logName)
         
     def parseVolume(self, volume):
-        volume_nL = int(volume) * 1000
+        volume_uL = float(volume) if '.' in volume else int(volume)
+        volume_nL = volume_uL * 1000
         import math
         timesTransfer = math.ceil(volume_nL/self.unitVolume)
         return timesTransfer        
