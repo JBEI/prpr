@@ -19,6 +19,7 @@ class PRPR:
             'of' : 'of',
             'from' : 'from',
             'well' : 'well',
+            'tube' : 'tube',
             'to' : 'to',
             'mix' : 'mix',
             'in' : 'in'
@@ -28,6 +29,7 @@ class PRPR:
             'of' : '',
             'from' : 'из',
             'well' : 'лунка',
+            'tube' : 'пробирка',
             'to' : 'в',
             'mix' : 'перемешать',
             'in' : 'в'
@@ -159,6 +161,10 @@ class PRPR:
         wellLetter = alphabet[well[0]-1]
         wellString = wellLetter + str(well[1])
         return wellString
+        
+    def getNumberForTube(self, wellInfo):
+        well = eval(wellInfo)
+        return str(well[1])
 
     def constructTransaction(self, transferList):
         """
@@ -171,8 +177,17 @@ class PRPR:
             method = tr['method']
             if method not in self.usedMethods:
                 self.usedMethods.append(method)
+                
+            if tr['source']['plateName'] == 'Tubes':
+                sourceLocation = ' (' + self.dictionary[self.language]['tube'] + ' ' + self.getNumberForTube(tr['source']['well']) + ') '
+            else:
+                sourceLocation = ' (' + tr['source']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['source']['well']) + ') '
+            if tr['destination']['plateName'] == 'Tubes':
+                destinationLocation = ' (' + self.dictionary[self.language]['tube'] + ' ' + self.getNumberForTube(tr['destination']['well']) + ')'
+            else:
+                destinationLocation = ' (' + tr['destination']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['destination']['well']) + ')'
             
-            transfer = self.dictionary[self.language]['transfer'].capitalize() + ' ' + volume + ' uL ' + self.dictionary[self.language]['of'] + ' "' + tr['source']['componentName'] + '" ' + self.dictionary[self.language]['from'] + ' (' + tr['source']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['source']['well']) + ') ' + self.dictionary[self.language]['to'] + ' (' + tr['destination']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['destination']['well']) + '): ' + self.defaultMethodDescriptions[method]['short']
+            transfer = self.dictionary[self.language]['transfer'].capitalize() + ' ' + volume + ' uL ' + self.dictionary[self.language]['of'] + ' "' + tr['source']['componentName'] + '" ' + self.dictionary[self.language]['from'] + sourceLocation + self.dictionary[self.language]['to'] + destinationLocation + ': ' + self.defaultMethodDescriptions[method]['short']
             self.config(transfer)
 
     def parseCommand(self, transferList):
