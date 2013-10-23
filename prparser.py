@@ -242,6 +242,7 @@ class Experiment:
         if method:
             if volume in self.volumes:
                 amount = self.volumes[volume].amount
+                print('amount in transfer', amount)
             else:
                 amount = volume
     
@@ -385,11 +386,9 @@ class Experiment:
                     for rLine in recipeLines:
                         recipe.append(rLine['recipe'])
                 if not subrecipeError:
-                    print('lenrellll;;;;;', len(recipe), recipe)
                     if len(recipe) == len(dstLocation):
                         a = zip(*recipe)
                         for i, element in enumerate(a):
-                            print('...///', i, element, a, dstLocation, len(recipe), len(dstLocation))
                             transferString = []
                             if len(dstLocation) == 1:
                                 dst = dstLocation[0]
@@ -402,7 +401,7 @@ class Experiment:
                                 transferMethod = line[2]
                                 transaction = self.createTransfer(src, dst, volume, transferMethod, originalLine, wellsOnly=True)
                                 if transaction:
-                                    if self.platform != "microfluidics":
+                                    if self.platform == 'tecan':
                                         transaction['volume'] = transaction['volume'][0]
                                     transferString.append(transaction)
                             if transferString:
@@ -512,6 +511,7 @@ class Experiment:
                                     self.errorLog('Error in line "' + originalLine + '". The number of volumes in "' + volume + '" is less than number of source wells.')
                         transfer.append(trLine)
                     if transfer:
+                        print('!!!???_____________________________________', transfer)
                         self.transactionList.append(transfer)
 
                     if len(transferInfo) > 4:
