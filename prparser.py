@@ -391,14 +391,16 @@ class Experiment:
                     if len(recipe) == len(dstLocation):
                         a = zip(*recipe)
                         for element in a:
+                            print('transactionEllll_________', element)
                             transferString = []
                             for i, z in enumerate(element):
+                                print('transactionEllllzzz_________', i, z)
                                 
                                 if len(dstLocation) == 1:
                                     dst = dstLocation[0]
                                 else:
-                                    dst = dstLocation[i-1]
-                                
+                                    dst = dstLocation[i]
+                                print('transactionEllll_dst_________', dst.__dict__)
                                 source = self.parseGivenLocation(z[0])
                                 print('source___________', source)
                                 src = self.prepareLocation(source)[0]
