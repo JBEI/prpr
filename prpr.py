@@ -42,6 +42,7 @@ class DatabaseHandler:
         self.maxTips = info[1]
         self.maxVolume = info[2]
         self.platform = info[3]
+        self.language = info[4]
 
     def getTransfer(self, actionID, type):
         if type == 'transfer':
@@ -59,16 +60,10 @@ class DatabaseHandler:
                 dstWell = self.getWell(element[1])
                 if self.platform == "tecan":
                     volume = eval(element[2])
-                    method = element[3]
-                    transfer['info'].append({ 'source' : srcWell, 'destination' : dstWell, 'volume' : volume, 'method' : method })
-                elif self.platform == 'human':
-                    volume = element[2]
-                    method = element[3]
-                    transfer['info'].append({ 'source' : srcWell, 'destination' : dstWell, 'volume' : volume, 'method' : method })
                 else:
-                    times = element[2]
-                    wait = element[3]
-                    transfer['info'].append({ 'source' : srcWell, 'destination' : dstWell, 'times' : times, 'wait' : wait })
+                    volume = element[2]
+                method = element[3]
+                transfer['info'].append({ 'source' : srcWell, 'destination' : dstWell, 'volume' : volume, 'method' : method })
             if type == 'command':
                 if element[0] == 'mix':
                     mixOptions = element[1].split('x')

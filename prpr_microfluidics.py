@@ -16,6 +16,7 @@ from prpr import *
 from copy import deepcopy
 
 class PRPR:
+    unitVolume = 150 #nL
     def __init__(self, ID):
         self.expID = ID
         db = DatabaseHandler(ID)
@@ -38,7 +39,9 @@ class PRPR:
             trType = transfer['type']
             els = transfer['info']
             if trType == 'command':
-                self.parseCommand(els)
+                messages = self.parseCommand(els)
+                for element in messages:
+                    unparsedTransfers.append(element)
             elif trType == 'transfer':
                 transfers = self.parseTransfer(els, i)
                 for element in transfers:
@@ -57,14 +60,14 @@ class PRPR:
             trNum = str(transferNumber) + '_w_' + source + '_to_' + destination + '_o'
             config['name'] = 'tr' + trNum
             config['details'] = ['tr' + trNum]
-            wait = transfer['wait']
+            wait = transfer['method']
             
             if wait not in self.wait:
                 self.wait[wait] = wait + '_o'
             waitNum = self.wait[wait]
             
             print('transfer!', transfer)
-            config['times'] = int(transfer['times'])
+            config['volume'] = self.parseVolume(transfer['volume'])
             transferPath = self.findPath(source, destination)
             print('src dst trlist', transferPath, source, destination, transferList)
             p = 0
@@ -94,17 +97,26 @@ class PRPR:
 
     def saveTransfers(self, transferList):
         self.config('main')
-        for name, times in ((t['name'], t['times']) for t in [transfer for transfer in transferList]):
-            self.config('call ' + name + (' ' + str(times) if times > 1 else ''))
+        print('transferList________', transferList)
+        for t in [transfer for transfer in transferList]:
+            if 'name' in t:
+                self.config('call ' + t['name'] + (' ' + str(t['volume']) if t['volume'] > 1 else ''))
+            elif 'message' in t:
+                self.config('#' + t['message'])
         self.config('end')
         self.config('')
-        for transaction in (tr['details'] for tr in transferList):
-            for line in transaction:
-                self.config(line)
-            self.config('')
+        
+        for tr in transferList:
+            if 'name' in tr:
+                for line in tr['details']:
+                    self.config(line)
+                self.config('')
+            elif 'message' in tr:
+                self.config('#' + tr['message'])
+                
         print('MF-transfer-list', transferList)
         for wait in self.wait:
-            line = ['wait' + str(self.wait[wait]), 'w' + wait, 'end']
+            line = ['method' + str(self.wait[wait]), 'w' + wait, 'end']
             for l in line:
                 self.config(l)
             self.config('')
@@ -136,12 +148,11 @@ class PRPR:
 
 
     def parseCommand(self, transferList):
-        print('transferList', transferList)
-        trList = []
-        for option in transferList:
-            if option['command'] == 'message' or option['command'] == 'comment':
-                trList.append(option)
-                self.transactions.append(trList)
+        option=transferList[0]
+        messages = []
+        if option['command'] == 'message' or option['command'] == 'comment':
+            messages.append(option)
+        return messages
 
 
     def config(self, line):
@@ -170,6 +181,12 @@ class PRPR:
         writefile = open(logName, "a")
         writefile.writelines("%s\n" % item for item in self.logger)
         print('Translation log location: ' + logName)
+        
+    def parseVolume(self, volume):
+        volume_nL = int(volume) * 1000
+        import math
+        timesTransfer = math.ceil(volume_nL/self.unitVolume)
+        return timesTransfer        
         
     def parseLocation(self, location):
         print('location is: ', location)

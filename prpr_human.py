@@ -13,14 +13,31 @@ from prpr import *
 
 class PRPR:
     wash = 'Wash or change the tips.'
-    
     dictionary = {
-        
+        'en' : {
+            'transfer' : 'transfer',
+            'of' : 'of',
+            'from' : 'from',
+            'well' : 'well',
+            'to' : 'to',
+            'mix' : 'mix',
+            'in' : 'in'
+        },
+        'ru' : {
+            'transfer' : 'перенести',
+            'of' : '',
+            'from' : 'из',
+            'well' : 'лунка',
+            'to' : 'в',
+            'mix' : 'перемешать',
+            'in' : 'в'
+        }
     }
     
     def __init__(self, ID):
         self.expID = ID
         db = DatabaseHandler(ID)
+        self.language = db.language
         self.transfers = db.transfers
         self.logger = []
         self.robotConfig = []
@@ -77,7 +94,7 @@ class PRPR:
         for key in defaults.fileExtensions:
             file_ = 'esc' + os.sep + 'config' + self.expID + '.' + defaults.fileExtensions[key]
             fileName = file_
-        with open(fileName, 'a') as myfile:
+        with open(fileName, 'a', encoding='utf8') as myfile:
             writeLines(myfile)
 
     def log(self, item):
@@ -117,7 +134,8 @@ class PRPR:
             print('tr________________________', tr)
             volume = tr['volume']
             method = tr['method']
-            transfer = 'Transfer ' + volume + 'uL of component "' + tr['source']['componentName'] + '" from (plate ' + tr['source']['plateName'] + ' well ' + self.getLetterForWell(tr['source']['well']) + ') to (plate ' + tr['destination']['plateName'] + ' well ' + self.getLetterForWell(tr['destination']['well']) + ') using method: ' + method
+            
+            transfer = self.dictionary[self.language]['transfer'] + ' ' + volume + 'uL ' + self.dictionary[self.language]['of'] + ' "' + tr['source']['componentName'] + '" ' + self.dictionary[self.language]['from'] + ' (' + tr['source']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['source']['well']) + ') ' + self.dictionary[self.language]['to'] + ' (' + tr['destination']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['destination']['well']) + '): ' + method
             self.config(transfer)
 
     def parseCommand(self, transferList):
@@ -126,7 +144,7 @@ class PRPR:
         for option in tr:
             if option['command'] == 'mix':
                 wellInfo = option['target']
-                mix = 'Mix component "' + wellInfo['componentName'] + '" in (well ' + self.getLetterForWell(wellInfo['well']) + ' on plate ' + wellInfo['plateName'] + ')'
+                mix = self.dictionary[self.language]['mix'] + ' "' + wellInfo['componentName'] + '" ' + self.dictionary[self.language]['in'] + ' (' + wellInfo['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(wellInfo['well']) + ')'
                 self.config(mix)
             elif option['command'] == 'message' or option['command'] == 'comment':
                 self.config('')

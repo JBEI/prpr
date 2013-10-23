@@ -23,6 +23,7 @@ from copy import deepcopy
 #todo: switch to postgres
 
 class Experiment:
+    language = 'en'
     def __init__(self, maxVolume, tips, db, platform, userMethods=''):
         """
         New experiment with parameters:
@@ -45,7 +46,7 @@ class Experiment:
         self.ID = str(db.selectMax('Experiments'))
         self.robotTips = tips
         self.maxVolume = maxVolume
-        db.insert('Experiments', [self.ID, self.robotTips, self.maxVolume, '"' + self.platform + '"'])
+        db.insert('Experiments', [self.ID, self.robotTips, self.maxVolume, '"' + self.platform + '"', '"' + self.language + '"'])
         self.log('Experiment ID: ' + str(self.ID))
         self.errorLogger = []
         self.protocols = {}
@@ -593,12 +594,18 @@ class Protocol:
             protocolFile.writelines(newProtocol)
             protocolFile.seek(0)
             line = protocolFile.readline()
-            experiment.addComment('------ BEGIN PROTOCOL ' + self.name + ', variables: ' + ' '.join(self.variables) + '; values: ' + ' '.join(values) + ' ------')
+            if experiment.platform != 'human':
+                experiment.addComment('------ BEGIN PROTOCOL ' + self.name + ', variables: ' + ' '.join(self.variables) + '; values: ' + ' '.join(values) + ' ------')
+            else:
+                experiment.addComment('')
             while line != '':
                 splitline = line.split()
                 LineToList(splitline, protocolFile, experiment)
                 line = protocolFile.readline()
-            experiment.addComment('------ END PROTOCOL ' + self.name + ' ------')
+            if experiment.platform != 'human':
+                experiment.addComment('------ END PROTOCOL ' + self.name + ' ------')
+            else:
+                experiment.addComment('')
 
 class DBHandler:
     def __init__(self):
@@ -612,8 +619,9 @@ class DBHandler:
         maxTips = experiment.robotTips
         maxVolume = experiment.maxVolume
         platform = experiment.platform
+        language = 'en'
 
-        self.insert('Experiments', [expID, maxTips, maxVolume, '"' + platform + '"'])
+        self.insert('Experiments', [expID, maxTips, maxVolume, '"' + platform + '"', '"' + language + '"'])
 
     def insert(self, destination, items):
         list = []
