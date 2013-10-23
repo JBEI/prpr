@@ -506,7 +506,8 @@ class Experiment:
                                 except IndexError:
                                     self.errorLog('Error in line "' + originalLine + '". The number of volumes in "' + volume + '" is less than number of source wells.')
                         transfer.append(trLine)
-                    self.transactionList.append(transfer)
+                    if transfer:
+                        self.transactionList.append(transfer)
 
                     if len(transferInfo) > 4:
                         options = transferInfo[4].split(',')
@@ -597,7 +598,7 @@ class Protocol:
             if experiment.platform != 'human':
                 experiment.addComment('------ BEGIN PROTOCOL ' + self.name + ', variables: ' + ' '.join(self.variables) + '; values: ' + ' '.join(values) + ' ------')
             else:
-                experiment.addComment('')
+                experiment.addComment('$')
             while line != '':
                 splitline = line.split()
                 LineToList(splitline, protocolFile, experiment)
@@ -605,7 +606,7 @@ class Protocol:
             if experiment.platform != 'human':
                 experiment.addComment('------ END PROTOCOL ' + self.name + ' ------')
             else:
-                experiment.addComment('')
+                experiment.addComment('$')
 
 class DBHandler:
     def __init__(self):

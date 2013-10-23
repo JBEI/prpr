@@ -34,16 +34,35 @@ class PRPR:
         }
     }
     defaultMethodDescriptions = {
-        'LC_W_Bot_Bot' : 'bottom to bottom',
-        'LC_W_Bot_Air' : 'bottom to air',
-        'LC_W_Bot_Lev' : 'bottom to level',
-        'LC_W_Lev_Bot' : 'level to bottom',
-        'LC_W_Lev_Air' : 'level to air',
-        'LC_W_Lev_Lev' : 'level to level',
+        'LC_W_Bot_Bot' : {
+            'short': 'bottom to bottom',
+            'long': 'Aspirate from bottom of the source well, dispense to the bottom of the destination well.'
+        },
+        'LC_W_Bot_Air' : {
+            'short': 'bottom to air',
+            'long': 'Aspirate from bottom of the source well, dispense from above the liquid level to the destination well.'
+        },
+        'LC_W_Bot_Lev' : {
+            'short': 'bottom to level',
+            'long': 'Aspirate from bottom of the source well, dispense at the liquid level of the destination well.'
+        },
+        'LC_W_Lev_Bot' : {
+            'short': 'level to bottom',
+            'long': 'Aspirate from the liquid level of the source well, dispense to the bottom of the destination well.'
+        },
+        'LC_W_Lev_Air' : {
+            'short': 'level to air',
+            'long': 'Aspirate from the liquid level of the source well, dispense from above the liquid level to the destination well.'
+        },
+        'LC_W_Lev_Lev' : {
+            'short': 'level to level',
+            'long': 'Aspirate from the liquid level of the source well, dispense at the liquid level of the destination well.'
+        }
     }
     
     def __init__(self, ID):
         self.expID = ID
+        self.usedMethods = []
         db = DatabaseHandler(ID)
         self.language = db.language
         self.transfers = db.transfers
@@ -53,8 +72,16 @@ class PRPR:
         self.volumesList = []
         self.createTransfer()
         self.addWash()
+        self.addMethodDescriptions()
         self.saveLog()
         self.saveConfig()
+        
+    def addMethodDescriptions(self):
+        info = ['Transfer method descriptions:', '']
+        for method in self.usedMethods:
+            info.append(self.defaultMethodDescriptions[method]['short'].capitalize() + ': ' + self.defaultMethodDescriptions[method]['long'])
+            info.append('')
+        self.robotConfig = info + self.robotConfig
 
     def createTransfer(self):
         allTransfers = self.transfers
@@ -142,8 +169,10 @@ class PRPR:
             print('tr________________________', tr)
             volume = tr['volume']
             method = tr['method']
+            if method not in self.usedMethods:
+                self.usedMethods.append(method)
             
-            transfer = self.dictionary[self.language]['transfer'] + ' ' + volume + 'uL ' + self.dictionary[self.language]['of'] + ' "' + tr['source']['componentName'] + '" ' + self.dictionary[self.language]['from'] + ' (' + tr['source']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['source']['well']) + ') ' + self.dictionary[self.language]['to'] + ' (' + tr['destination']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['destination']['well']) + '): ' + self.defaultMethodDescriptions[method]
+            transfer = self.dictionary[self.language]['transfer'].capitalize() + ' ' + volume + 'uL ' + self.dictionary[self.language]['of'] + ' "' + tr['source']['componentName'] + '" ' + self.dictionary[self.language]['from'] + ' (' + tr['source']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['source']['well']) + ') ' + self.dictionary[self.language]['to'] + ' (' + tr['destination']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['destination']['well']) + '): ' + self.defaultMethodDescriptions[method]['short']
             self.config(transfer)
 
     def parseCommand(self, transferList):
@@ -152,14 +181,17 @@ class PRPR:
         for option in tr:
             if option['command'] == 'mix':
                 wellInfo = option['target']
-                mix = self.dictionary[self.language]['mix'] + ' "' + wellInfo['componentName'] + '" ' + self.dictionary[self.language]['in'] + ' (' + wellInfo['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(wellInfo['well']) + ')'
+                mix = self.dictionary[self.language]['mix'].capitalize() + ' "' + wellInfo['componentName'] + '" ' + self.dictionary[self.language]['in'] + ' (' + wellInfo['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(wellInfo['well']) + ')'
                 self.config(mix)
             elif option['command'] == 'message' or option['command'] == 'comment':
-                if option['message'] and self.robotConfig[-1] != '':
-                    self.config('')
-                self.config(option['message'])
-                if option['message'] and self.robotConfig[-1] != '':
-                    self.config('')
+                if option['message']:
+                    if len(self.robotConfig) and self.robotConfig[-1] != '':
+                        if option['message'] != '$':
+                            self.config('')
+                            self.config('# ' + option['message'])
+                            self.config('')
+                        else:
+                            self.config('')
         self.transactions.append(trList)
     
     def parseLocation(self, location):
