@@ -93,8 +93,8 @@ class PRPR:
         tr = transferList
         for option in tr:
             print('option!!!+++', option)
-            snapAmount = option['times']
-            method = option['wait']
+            snapAmount = option['volume']
+            method = option['method']
             src = option['source']['well']
             # if method == 'lighton':
             #     self.config('d.turn_light(1, True)')
