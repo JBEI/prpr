@@ -59,7 +59,7 @@ def CreateTables():
     crsr.execute('create table mfWellConnections(ExpID, WellName, ConnectionName, PRIMARY KEY(ExpID, WellName, ConnectionName));')
 
     #Updating experiments
-    crsr.execute('insert into Experiments values(0, "", "", "");')
+    crsr.execute('insert into Experiments values(0, "", "", "", "");')
 
     DatabaseDisconnect()
 
