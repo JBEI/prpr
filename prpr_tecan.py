@@ -6,13 +6,14 @@
 # http://github.com/JBEI/prpr/blob/master/license.txt
 
 __author__ = 'Nina Stawski'
-__version__ = '0.6'
+__version__ = '1.1'
 
 import os
 from prpr import *
 
-class Prpr_Tecan:
-    wash = 'Wash(255,1,1,1,0,"2",500,"1.0",500,20,70,30,1,1,1000);'
+class PRPR:
+    # wash = 'Wash(255,1,1,1,0,"2",500,"1.0",500,20,70,30,1,1,1000);'
+    wash = 'Wash(255,17,1,17,2,"2.0",500,"1.0",500,10,70,30,0,0,1000);'
     def __init__(self, ID):
         self.expID = ID
         db = DatabaseHandler(ID)
@@ -99,11 +100,17 @@ class Prpr_Tecan:
                 self.config(self.wash)
 
     def saveConfig(self):
-        fileName = 'esc' + os.sep + 'config' + self.expID + '.esc'
-        myfile = open(fileName, 'a', encoding='latin1')
-        for line in self.robotConfig:
-            myfile.write(line.rstrip() + '\r\n')
-        myfile.close()
+        def writeLines(file):
+            for line in self.robotConfig:
+                file.write(line.rstrip() + '\r\n')
+                
+        fileName = ''
+        for key in defaults.fileExtensions:
+            file_ = 'esc' + os.sep + 'config' + self.expID + '.' + defaults.fileExtensions[key]
+            if os.path.isfile(file_):
+                fileName = file_
+        with open(fileName, 'a', encoding='latin1') as myfile:
+            writeLines(myfile)
 
     def log(self, item):
         from datetime import datetime
@@ -307,9 +314,152 @@ class Prpr_Tecan:
                 tipsEnc += self.getTipEncoding(i+1)
         volumesString = ','.join(volumesList)
         return volumesString, tipsEnc
+    
+    def parseLocation(self, location):
+        """
+        Parses the given location, i.e. PL3:A1+4 to individual wells
+        """
+
+        def ParseWells(wells, plateDimensions):
+            wellsLargeList = wells.split(',')
+            wellsNewlist = []
+            for well in wellsLargeList:
+                wellsList = well.split('+')
+                direction = 'vertical'
+                if '-' in well:
+                    wellsList = well.split('-')
+                    direction = 'horizontal'
+                elif '~' in well:
+                    tempWellsList = well.split('~')
+                    startWellCoords = GetWellCoordinates(tempWellsList[0], plateDimensions, str(location))
+                    endWellCoords = GetWellCoordinates(tempWellsList[1], plateDimensions, str(location))
+                    wellsAmount = (endWellCoords[0] - startWellCoords[0]) * plateDimensions[0] + endWellCoords[1] - startWellCoords[1] + 1
+                    wellsList = (tempWellsList[0], wellsAmount)
+                    direction = 'vertical'
+                if wellsList[0]:
+                    startWell = wellsList[0]
+                    rowsMax = plateDimensions[0]
+                    colsMax = plateDimensions[1]
+                    if len(wellsList) == 2:
+                        assert (wellsList[1] != ''), "Well number after '+' can't be empty."
+                        numberWells = int(wellsList[1])
+                        startCoords = GetWellCoordinates(startWell, plateDimensions, str(location))
+                        for i in range(0, numberWells):
+                            addedWells = WellsRename(startCoords, i, plateDimensions, direction)
+                            assert(addedWells[1] <= colsMax), 'Wells locations are out of range'
+                            wellsNewlist.append(addedWells)
+                    elif len(wellsList) == 1:
+                        wellsNewlist.append(GetWellCoordinates(wellsList[0], plateDimensions, str(location)))
+                    else:
+                        self.errorLog('Error. Can\'t be more than one \'+\'. Correct syntax in ' + str(location) + ' and run again. \n')
+                else:
+                    self.errorLog('Error. Well can\'t be empty in locaton "' + str(location) + '"')
+
+            return wellsNewlist
+
+        def WellsRename(startCoords, i, plateDimensions, direction):
+            rowsMax = plateDimensions[0]
+            colsMax = plateDimensions[1]
+            currentNum = startCoords[0] + i
+            if direction == 'vertical':
+                if currentNum <= rowsMax:
+                    newCol = startCoords[1]
+                    return currentNum, newCol
+                elif currentNum > rowsMax:
+                    times = int(currentNum / rowsMax)
+                    newCol = startCoords[1] + times
+                    newRow = currentNum - (times * rowsMax)
+                    if newRow == 0:
+                        return newRow + rowsMax, newCol - 1
+                    else:
+                        return newRow, newCol
+            if direction == 'horizontal':
+                if currentNum <= colsMax:
+                    newRow = startCoords[1]
+                    return newRow, currentNum
+                elif currentNum > colsMax:
+                    times = int(currentNum / colsMax)
+                    newRow = startCoords[1] + times
+                    newCol = currentNum - (times * colsMax)
+                    if newCol == 0:
+                        return newRow - 1, newCol + colsMax
+                    else:
+                        return newRow, newCol
+
+
+        def GetWellCoordinates(well, plateDimensions, location):
+            """
+            Takes the well coordinates entered by the user and dimensions of the plate and returns the wells plate coordinates
+            """
+            if well:
+                rowsMax = plateDimensions[0]
+                colsMax = plateDimensions[1]
+                try:
+                    int(well)
+                    well = int(well)
+                    if well > rowsMax * colsMax:
+                        self.errorLog('Error. Well "' + str(well) + '" in location "' + location + '" is out of range')
+                    else:
+                        if well <= rowsMax:
+                            newCol = 1
+                            newRow = well
+                        else:
+                            times = int(well / rowsMax)
+                            newCol = times + 1
+                            newRow = well - (times * rowsMax)
+                        if newRow == 0:
+                            return newRow + rowsMax, newCol - 1
+                        else:
+                            return newRow, newCol
+                except ValueError:
+                    alphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
+                    letterIndex = alphabet.find(well[:1]) + 1
+                    if letterIndex > rowsMax:
+                        self.errorLog('Error. Well "' + well + '" letter coordinate in location "' + location + '" is out of range')
+                    elif int(well[1:]) > colsMax:
+                        self.errorLog('Error. Well "' + well + '" number coordinate in location "' + location + '" is out of range')
+                    else:
+                        return letterIndex, int(well[1:])
+            else:
+                self.errorLog('Error. No well defined in location "' + location + '"')
+                
+                
+        loc = []
+        if '/' in location:
+            newLoc = location.split('/')
+        else:
+            newLoc = [location]
+        for line in newLoc:
+            plateAndWells = line.split(':')
+            if plateAndWells[0]:
+                if plateAndWells[0] in self.plates:
+                    plateName = self.plates[plateAndWells[0]].name
+                    plateDms = self.plates[plateAndWells[0]].dimensions
+                    plateLocation = self.plates[plateAndWells[0]].location
+
+                    if plateAndWells[1]:
+                        wells = ParseWells(plateAndWells[1], plateDms)
+                        for well in wells:
+                            if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
+                                print('aiaiaiaiaiaiaiai!!!!')
+                            w = Well({'Plate': plateName, 'Location': well}) #todo: append well only if there are no same wells registered; otherwise error
+                            loc.append(w)
+                            self.wells.append(w)
+                else:
+                    self.errorLog('Error. No such plate in the system "' + str(plateAndWells[0]) + '"')
+            else:
+                self.errorLog('Error. No plate in location "' + str(location) + '"')
+                           
+        return loc
+    
+    
+    
+class defaults:
+    fileExtensions = {'ewt' : 'esc', 'gem' : 'gem'}
+    washLine = {'ewt' : 'Wash(255,1,1,1,0,"2",500,"1.0",500,20,70,30,1,1,1000);', 'gem' : 'Wash(255,17,1,17,2,"2.0",500,"1.0",500,10,70,30,0,0,1000);'}
 
 if __name__ == '__main__':
-    prpr = Prpr_Tecan(310)
+    prpr = PRPR(310)
     print('Robot Config:')
     for element in prpr.robotConfig:
         print(element)

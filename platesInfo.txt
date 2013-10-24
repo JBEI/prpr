@@ -26,12 +26,16 @@ DiTi 50ul,8x12
 DiTi 50ul MCA 384,16x24
 Wash Station Cleaner deep,8x1
 Wash Station Waste,8x1
+Cleaner shallow 8 Pos,8x1
+Waste,8x1
+Cleaner deep 8 Pos,8x1
 Balance Mettler Active,1x1
 Trough 25ml,1x1
 Trough 100ml,1x1
 Trough 300ml MCA,1x1
 Tube 13*100mm 16 Pos,16x1
 Tube 13*75mm 16 Pos,16x1
+Tube 16*75mm 16 Pos,16x1
 24 Well CaCo2 Plate,4x6
 384 Well HalfDeepWell,16x24
 96 Well DeepWell square,8x12

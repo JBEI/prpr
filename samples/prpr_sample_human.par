@@ -1,0 +1,40 @@
+NAME 	BreakfastDrinks
+
+"""
+Recipe for breakfast drinks
+"""
+
+#         alias        name
+PLATE     DrinksPlate  8x12
+PLATE     ResultPlate  8x12
+
+#         name         location             method
+COMPONENT Water        DrinksPlate:A1+4,F1  LC_W_Lev_Air
+COMPONENT TeaExtract   DrinksPlate:17       LC_W_Lev_Bot
+COMPONENT Syrup        DrinksPlate:18       LC_W_Lev_Bot
+COMPONENT Milk         DrinksPlate:19       LC_W_Lev_Bot
+COMPONENT BeanExtract  DrinksPlate:20       LC_W_Lev_Bot
+COMPONENT LemonJuice   DrinksPlate:21       LC_W_Lev_Bot
+
+#         alias        volume(uL)
+VOLUME    DrinkVol     50
+VOLUME    WaterVol     25
+
+#         name
+RECIPE    Drinks
+#         component1   volume1 component2 volume2 component3   volume3
+chai:     TeaExtract   30      Syrup      30      Water        WaterVol
+coffee:   BeanExtract  30      Milk       30      Water        WaterVol
+lemonade: LemonJuice   15      Syrup      45      Water        WaterVol
+ 
+#      recipe:sub-recipe       location           method       options
+MAKE   Drinks                  ResultPlate:A6+3   DEFAULT      MIX:25x20
+% Robot comment line
+MAKE   Drinks:coffee,lemonade  ResultPlate:A1+2   DEFAULT      MIX:30x10
+
+#         component  destination   volume(uL)     method       options
+SPREAD    Water      ResultPlate:A4+10,A6  DrinkVol       DEFAULT      MIX:25x20
+
+MESSAGE Start transferring the reagent
+#         source     destination   volume(uL)     method       options
+TRANSFER  DrinksPlate:A1+3   ResultPlate:A7+3      150            LC_W_Bot_Bot MIX:15x8

@@ -6,7 +6,7 @@
 # http://github.com/JBEI/prpr/blob/master/license.txt
 
 __author__ = 'Nina Stawski'
-__version__ = '0.6'
+__version__ = '1.1'
 
 import sys
 import os
@@ -17,12 +17,13 @@ from shutil import copyfile
 from prpr_commands import *
 from itertools import cycle
 from copy import deepcopy
-from prpr_tecan import *
-from prpr_mf import *
+# from prpr_tecan import *
+# from prpr_mf import *
 
 #todo: switch to postgres
 
 class Experiment:
+    language = 'en'
     def __init__(self, maxVolume, tips, db, platform, userMethods=''):
         """
         New experiment with parameters:
@@ -45,7 +46,7 @@ class Experiment:
         self.ID = str(db.selectMax('Experiments'))
         self.robotTips = tips
         self.maxVolume = maxVolume
-        db.insert('Experiments', [self.ID, self.robotTips, self.maxVolume, '"' + self.platform + '"'])
+        db.insert('Experiments', [self.ID, self.robotTips, self.maxVolume, '"' + self.platform + '"', '"' + self.language + '"'])
         self.log('Experiment ID: ' + str(self.ID))
         self.errorLogger = []
         self.protocols = {}
@@ -53,13 +54,13 @@ class Experiment:
         self.groups = {} #note: group{name:[component1, component2]}
         self.mfWellLocations = {}
         self.mfWellConnections = {}
+        # self.tableSize = 31
 
     def addName(self, name):
         self.name = name
         self.log('Experiment name: ' + str(self.name))
 
     def addDocString(self, line):
-        print('line', line)
         self.docString.append(line)
 
     def add(self, target, itemName, itemInfo):
@@ -69,12 +70,8 @@ class Experiment:
         """
         self.log('Added a ' + target + ' "' + itemName + '"')
         if target == 'component':
-            if self.platform != 'microfluidics':
-                location = self.parseLocation(itemInfo.location)
-            else:
-                well = Well({'Plate' : 'mf', 'Location' : itemInfo.location})
-                self.wells.append(well)
-                location = [well]
+            platform = __import__('prpr_'+ self.platform)
+            location = platform.PRPR.parseLocation(self, itemInfo.location) #self.parseLocation
             method = self.checkMethod(itemInfo.method)
             if method:
                 itemInfo.method = method
@@ -99,7 +96,6 @@ class Experiment:
             well = wellInfo[0]
             coords = wellInfo[1]#.split(',')
             self.mfWellLocations[well] = coords
-        print(self.mfWellLocations)
 
     def addMFWellConnections(self, wellConnectionString):
         for welInfo in wellConnectionString:
@@ -115,7 +111,6 @@ class Experiment:
                     self.mfWellConnections[connection].append(well)
                 else:
                     self.mfWellConnections[connection] = [well]
-        print(self.mfWellConnections)
 
     def addMethods(self, userMethods, methods):
         if userMethods:
@@ -127,7 +122,7 @@ class Experiment:
             self.methods = methods
 
     def checkMethod(self, method):
-        if self.platform != 'microfluidics':
+        if self.platform == 'tecan' or  self.platform == 'human':
             if method in self.methods:
                 return method
             else:
@@ -136,156 +131,13 @@ class Experiment:
                     return 'Error'
                 else:
                     return self.methods[0]
-        else:
+        elif self.platform == 'microfluidics':
             if isNumber(method):
                 return method
             else:
-                self.errorLog('Error in method "' + str(method) + '". Microfluidic methods should be numbers.')
+                return '100'
+                #self.errorLog('Error in method "' + str(method) + '". Microfluidic methods should be numbers.')
 
-    def parseLocation(self, location):
-        """
-        Parses the given location, i.e. PL3:A1+4 to individual wells
-        """
-
-        def ParseWells(wells, plateDimensions):
-            wellsLargeList = wells.split(',')
-            wellsNewlist = []
-            for well in wellsLargeList:
-                wellsList = well.split('+')
-                direction = 'vertical'
-                if '-' in well:
-                    wellsList = well.split('-')
-                    direction = 'horizontal'
-                elif '~' in well:
-                    tempWellsList = well.split('~')
-                    startWellCoords = GetWellCoordinates(tempWellsList[0], plateDimensions, str(location))
-                    endWellCoords = GetWellCoordinates(tempWellsList[1], plateDimensions, str(location))
-                    wellsAmount = (endWellCoords[0] - startWellCoords[0]) * plateDimensions[0] + endWellCoords[1] - startWellCoords[1] + 1
-                    print('(', endWellCoords[0], '-', startWellCoords[0], ') *', plateDimensions[0], '-', endWellCoords[1], '+', startWellCoords[1])
-                    print(startWellCoords, endWellCoords, plateDimensions, wellsAmount)
-                    wellsList = (tempWellsList[0], wellsAmount)
-                    direction = 'vertical'
-                if wellsList[0]:
-                    startWell = wellsList[0]
-                    rowsMax = plateDimensions[0]
-                    colsMax = plateDimensions[1]
-                    if len(wellsList) == 2:
-                        assert (wellsList[1] != ''), "Well number after '+' can't be empty."
-                        numberWells = int(wellsList[1])
-                        startCoords = GetWellCoordinates(startWell, plateDimensions, str(location))
-                        for i in range(0, numberWells):
-                            addedWells = WellsRename(startCoords, i, plateDimensions, direction)
-                            assert(addedWells[1] <= colsMax), 'Wells locations are out of range'
-                            wellsNewlist.append(addedWells)
-                    elif len(wellsList) == 1:
-                        wellsNewlist.append(GetWellCoordinates(wellsList[0], plateDimensions, str(location)))
-                    else:
-                        self.errorLog('Error. Can\'t be more than one \'+\'. Correct syntax in ' + str(location) + ' and run again. \n')
-                else:
-                    self.errorLog('Error. Well can\'t be empty in locaton "' + str(location) + '"')
-
-            return wellsNewlist
-
-        def WellsRename(startCoords, i, plateDimensions, direction):
-            rowsMax = plateDimensions[0]
-            colsMax = plateDimensions[1]
-            currentNum = startCoords[0] + i
-            if direction == 'vertical':
-                if currentNum <= rowsMax:
-                    newCol = startCoords[1]
-                    return currentNum, newCol
-                elif currentNum > rowsMax:
-                    times = int(currentNum / rowsMax)
-                    newCol = startCoords[1] + times
-                    newRow = currentNum - (times * rowsMax)
-                    if newRow == 0:
-                        return newRow + rowsMax, newCol - 1
-                    else:
-                        return newRow, newCol
-            if direction == 'horizontal':
-                if currentNum <= colsMax:
-                    newRow = startCoords[1]
-                    return newRow, currentNum
-                elif currentNum > colsMax:
-                    times = int(currentNum / colsMax)
-                    newRow = startCoords[1] + times
-                    newCol = currentNum - (times * colsMax)
-                    if newCol == 0:
-                        return newRow - 1, newCol + colsMax
-                    else:
-                        return newRow, newCol
-
-
-        def GetWellCoordinates(well, plateDimensions, location):
-            """
-            Takes the well coordinates entered by the user and dimensions of the plate and returns the wells plate coordinates
-            """
-            if well:
-                rowsMax = plateDimensions[0]
-                colsMax = plateDimensions[1]
-                try:
-                    int(well)
-                    well = int(well)
-                    if well > rowsMax * colsMax:
-                        self.errorLog('Error. Well "' + str(well) + '" in location "' + location + '" is out of range')
-                    else:
-                        if well <= rowsMax:
-                            newCol = 1
-                            newRow = well
-                        else:
-                            times = int(well / rowsMax)
-                            newCol = times + 1
-                            newRow = well - (times * rowsMax)
-                        if newRow == 0:
-                            return newRow + rowsMax, newCol - 1
-                        else:
-                            return newRow, newCol
-                except ValueError:
-                    alphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
-                    letterIndex = alphabet.find(well[:1]) + 1
-                    if letterIndex > rowsMax:
-                        self.errorLog('Error. Well "' + well + '" letter coordinate in location "' + location + '" is out of range')
-                    elif int(well[1:]) > colsMax:
-                        self.errorLog('Error. Well "' + well + '" number coordinate in location "' + location + '" is out of range')
-                    else:
-                        return letterIndex, int(well[1:])
-            else:
-                self.errorLog('Error. No well defined in location "' + location + '"')
-        loc = []
-        if self.platform != "microfluidics":
-            if '/' in location:
-                newLoc = location.split('/')
-            else:
-                newLoc = [location]
-            for line in newLoc:
-                plateAndWells = line.split(':')
-                if plateAndWells[0]:
-                    if plateAndWells[0] in self.plates:
-                        plateName = self.plates[plateAndWells[0]].name
-                        plateDms = self.plates[plateAndWells[0]].dimensions
-                        plateLocation = self.plates[plateAndWells[0]].location
-
-                        if plateAndWells[1]:
-                            wells = ParseWells(plateAndWells[1], plateDms)
-                            for well in wells:
-                                if (plateName, location) in filter(lambda x: (x.plate, x.location), self.wells):
-                                    print('aiaiaiaiaiaiaiai!!!!')
-                                w = Well({'Plate': plateName, 'Location': well}) #todo: append well only if there are no same wells registered; otherwise error
-                                loc.append(w)
-                                self.wells.append(w)
-                                #                    else:
-                                #                        self.errorLog('Error. No wells in location "' + str(location) + '"')
-                    else:
-                        self.errorLog('Error. No such plate in the system "' + str(plateAndWells[0]) + '"')
-                else:
-                    self.errorLog('Error. No plate in location "' + str(location) + '"')
-        else:
-            if location in self.mfWellLocations:
-                w = Well({'Plate' : 'mf', 'Location' : location})
-                loc.append(w)
-            else:
-                self.errorLog('Error. No such well in the system "' + location + '"')
-        return loc
 
 
     def splitAmount(self, volume):
@@ -330,76 +182,152 @@ class Experiment:
             self.log('Error. No ' + target + ' "' + itemName + '" defined.')
             self.errorLog('Error. No ' + target + ' "' + itemName + '" defined. Please correct the error and try again.')
 
-    def createTransfer(self, component, modifier, destination, volume, transferMethod, line):
-        if component in self.components or ':' in component or self.platform == "microfluidics":
-        #            if component in self.groups: #better parse groups
-            if component in self.components:
-                comp = self.components[component]
-            elif component in self.mfWellLocations:
-                comp = Component({'name': component, 'location': component, 'method': transferMethod})
-                self.add('component', component, comp)
+    def prepareLocation(self, component):
+        location = []
+        for comp in component:
+            if len(comp) == 2:
+                times = int(comp[1][1])
+                if comp[1][0] == '|':
+                    for well in comp[0].location:
+                        for i in range(0, times):
+                            location.append(well)
+                if comp[1][0] == '*':
+                    for i in range(0, times):
+                        for well in comp[0].location:
+                            location.append(well)
             else:
-                if ':' in component:
-                    comp = Component({'name': component, 'location': component, 'method': self.methods[0]})
-                    self.add('component', component, comp)
-                elif self.platform == 'microfluidics':
-                    comp = Component({'name': component, 'location': component, 'method': transferMethod})
-                    self.add('component', component, comp)
+                for well in comp[0].location:
+                    location.append(well)
+        return location
 
-            method = ''
-            methodError = False
-            if transferMethod == 'DEFAULT':
+    def createTransfer(self, source, destination, volume, transferMethod, line, wellsOnly = False):
+        
+        method = ''
+        methodError = False
+        if transferMethod == 'DEFAULT':
+            if self.platform == 'tecan' or self.platform == 'human':
                 method = self.methods[0]
+            elif self.platform == 'microfluidics':
+                method = 100
+        else:
+            m = self.checkMethod(transferMethod)
+            if m:
+                method = m
             else:
-                m = self.checkMethod(transferMethod)
-                if m:
-                    method = m
+                if self.platform == 'microscope':
+                    method = transferMethod
                 else:
                     methodError = True
                     self.log('Wrong method "' + transferMethod + '"')
                     self.errorLog('Error. Wrong method "' + transferMethod + '" in line "' + line + '"')
-            if method:
-                location = []
-                if modifier:
-                    times = int(modifier[1])
-                    if modifier[0] == '|':
-                        for well in comp.location:
-                            for i in range(0, times):
-                                location.append(well)
-                    if modifier[0] == '*':
-                        for i in range(0, times):
-                            for well in comp.location:
-                                location.append(well)
-                else:
-                    location = comp.location
-
-                if volume in self.volumes:
-                    amount = self.volumes[volume].amount
-                else:
-                    amount = volume
-
-                if self.platform != "microfluidics":
-                    volumeInfo = [self.splitAmount(x) for x in amount.split(',')]
-                else:
-                    volumeInfo = amount
-
-                transferDict = {'src': location, 'dst': destination, 'volume': volumeInfo, 'method': method, 'type': 'transfer'}
-                return transferDict
-
+        if method:
+            if volume in self.volumes:
+                amount = self.volumes[volume].amount
             else:
-                if not methodError:
-                    self.errorLog('Error. No method defined in line "' + line + '"')
+                amount = volume
+    
+            if self.platform == 'tecan':
+                volumeInfo = [self.splitAmount(x) for x in amount.split(',')]
+            else:
+                volumeInfo = amount
+            if wellsOnly:
+                src = source
+                dst = destination
+            else:
+                src = self.prepareLocation(source)
+                dst = self.prepareLocation(destination)
+            transferDict = {'src': src, 'dst': dst, 'volume': volumeInfo, 'method': method, 'type': 'transfer'}
+            return transferDict
+        
         else:
-            self.log('Error. Wrong component "' + component + '".')
-            self.errorLog('Error. Component "' + component + '" is not defined. Please correct the error and try again.')
-            return False
+            if not methodError:
+                self.errorLog('Error. No method defined in line "' + line + '"')
+                
+        
+        #else:
+        #    self.log('Error. Wrong component "' + component + '".')
+        #    self.errorLog('Error. Component "' + component + '" is not defined. Please correct the error and try again.')
+        #    return False
 
-
+### todo: separate by '/', ',' and '*' before calling platform location parse, common for all platforms, then parse location for both source and destination
+        
+        
+    def parseGivenLocation(self, location, method=''):
+        
+        def CheckMultiplier(componentInfo):
+            """
+            Checks for additional actions on components
+            """
+            if self.platform == 'microscope':
+                return [componentInfo]
+            else:
+                pipe = componentInfo.split('|')
+                times = componentInfo.split('*')
+                if len(pipe) == 2:
+                    pipe[1] = ('|', pipe[1])
+                    return pipe
+                elif len(times) == 2:
+                    times[1] = ('*', times[1])
+                    return times
+                else:
+                    return [componentInfo]
+            
+        def CheckIfPlatePreDefined(locationInfo):
+            plateAndWells = locationInfo.split(':')
+            if len(plateAndWells) >1:
+                if plateAndWells[0] in self.plates:
+                    print('plateAndWell is in selfplates:::::::::::::::::', self.plates)
+        
+        splitLocations = []
+        
+        locationPerPlate = location.split('/')
+        
+        tempLocations = []
+        for plateLocation in locationPerPlate:
+            singleLocations = plateLocation.split(',')
+            for l in singleLocations:
+                location = CheckMultiplier(l)
+                
+                if location[0] in self.components:
+                    prevLocations = ','.join(tempLocations)
+                    location[0] = self.components[location[0]]
+                    splitLocations.append(location)
+                    if prevLocations != '':
+                        lc = CheckMultiplier(prevLocations)
+                        if self.platform == 'tecan':
+                            method = self.methods[0]
+                            
+                        CheckIfPlatePreDefined(lc[0])
+                        tempComponent = Component({'name': lc[0], 'location': lc[0], 'method': method})
+                        self.add('component', tempComponent.name, tempComponent)
+                        lc[0] = self.components[location[0]]
+                        self.locations.append(lc)
+                    tempLocations = []
+                else:
+                    print('location is NOT in self.components', l)
+                    
+                    tempLocations.append(l)
+                    
+            prevLocations = ','.join(tempLocations)
+            if prevLocations != '':
+                location = CheckMultiplier(prevLocations)
+                if self.platform == 'tecan':
+                    method = self.methods[0]
+                    
+                CheckIfPlatePreDefined(location[0])
+                tempComponent = Component({'name': location[0], 'location': location[0], 'method': method})
+                self.add('component', tempComponent.name, tempComponent)
+                location[0] = self.components[location[0]]
+                splitLocations.append(location)     
+        
+        return splitLocations
+        
     def make(self, splitLine):
         originalLine = ' '.join(splitLine)
         line = splitLine[1:]
         if len(line) >= 3:
-            self.addComment('------ BEGIN MAKE ' + line[0] + ' in ' + line[1] + ' ------')
+            if self.platform != 'human':
+                self.addComment('------ BEGIN MAKE ' + line[0] + ' in ' + line[1] + ' ------')
             self.testindex += 1
             recipeInfo = line[0].split(':')
 
@@ -407,15 +335,8 @@ class Experiment:
                 subrecipeError = False
                 recipeName = self.recipes[recipeInfo[0]]
                 recipe = []
-                if line[1] not in self.components:
-                    if ':' in line[1]:
-                        dest = Component({'name': line[1], 'location': line[1], 'method': self.methods[0]})
-                        self.add('component', dest.name, dest)
-                    else:
-                        self.errorLog('Error. Wrong component "' + line[1] + '". Please correct the error and try again.')
-                else:
-                    dest = self.components[line[1]]
-                dstLocation = dest.location
+                destination = self.parseGivenLocation(line[1])
+                dstLocation = self.prepareLocation(destination)
 
                 if len(recipeInfo) == 2:
                     subrecipes = recipeInfo[1].split(',')
@@ -434,20 +355,19 @@ class Experiment:
                         a = zip(*recipe)
                         for element in a:
                             transferString = []
-                            z = zip(element, dstLocation)
-                            for el in z:
-                                component = el[0][0]
-                                if self.platform != "microfluidics":
-                                    volume = el[0][1]
+                            for i, z in enumerate(element):
+                                
+                                if len(dstLocation) == 1:
+                                    dst = dstLocation[0]
                                 else:
-                                    volume = el[0]
-                                destination = el[1]
+                                    dst = dstLocation[i]
+                                source = self.parseGivenLocation(z[0])
+                                src = self.prepareLocation(source)[0]
+                                volume = z[1]
                                 transferMethod = line[2]
-                                modifier = ()
-                                transaction = self.createTransfer(component, modifier, destination, volume, transferMethod, originalLine)
+                                transaction = self.createTransfer(src, dst, volume, transferMethod, originalLine, wellsOnly=True)
                                 if transaction:
-                                    transaction['src'] = transaction['src'][0] #making sure the transaction happens from one well (first if component has multiple wells)
-                                    if self.platform != "microfluidics":
+                                    if self.platform != "microfluidics" and self.platform != "human":
                                         transaction['volume'] = transaction['volume'][0]
                                     transferString.append(transaction)
                             if transferString:
@@ -455,7 +375,6 @@ class Experiment:
                     else:
                         self.log('Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
                         self.errorLog('Error. Please specify the correct amount of wells in line: "' + originalLine + '".')
-
                     if len(line) > 3:
                         options = line[3].split(',')
                         for option in options:
@@ -463,7 +382,7 @@ class Experiment:
                             if a.startswith('mix'):
                                 mixoptions = a.split(':')
                                 if len(mixoptions) == 2:
-                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': dest.location}
+                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': self.prepareLocation(destination)}
                                     self.transactionList.append([transaction])
                                 else:
                                     self.log('Error. Wrong mixing options in line "' + originalLine + '"')
@@ -472,8 +391,8 @@ class Experiment:
                     pass
             else:
                 self.errorLog('Error. No such recipe as "' + recipeInfo[0] + '".')
-
-            self.addComment('------ END MAKE ' + line[0] + ' in ' + line[1] + ' ------')
+            if self.platform != 'human':
+                self.addComment('------ END MAKE ' + line[0] + ' in ' + line[1] + ' ------')
         else:
             self.errorLog('Error. Not enough parameters in line "' + originalLine + '". Please correct your script.')
 
@@ -481,54 +400,27 @@ class Experiment:
     def transfer(self, splitLine, type):
         originalLine = ' '.join(splitLine)
         transferInfo = splitLine[1:]
-
-        def CheckMultiplier(componentInfo):
-            """
-            Checks for additional actions on components
-            """
-            pipe = componentInfo.split('|')
-            times = componentInfo.split('*')
-            pipe.insert(0, '|')
-            times.insert(0, '*')
-            if len(pipe) > 2:
-                return pipe
-            elif len(times) > 2:
-                return times
-            else:
-                return componentInfo
-
+        method = ''
+        source = self.parseGivenLocation(transferInfo[0], method)
+        destination = self.parseGivenLocation(transferInfo[1], method)
+        
         if len(transferInfo) >= 4:
-            self.addComment('------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+            if self.platform != 'human':
+                self.addComment('------ BEGIN ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
             self.testindex += 1
-
-            #check the source for multipliers
-            modifier = ()
-            if self.platform != "microfluidics":
-                check = CheckMultiplier(transferInfo[0])
-                if len(check) == 3:
-                    modifier = (check[0], check[2])
-                    source = check[1]
-                else:
-                    source = check
-            else:
-                source = transferInfo[0]
-            if transferInfo[1] not in self.components:
-                print('component, transferInfo...//..', transferInfo, transferInfo[1])
-                if self.platform != "microfluidics":
-                    destMethod = self.methods[0]
-                else:
-                    destMethod = transferInfo[3]
-                dest = Component({'name': transferInfo[1], 'location': transferInfo[1], 'method': destMethod}) #note: error when using with microfluidics, needs fixing
-                self.add('component', dest.name, dest)
-                dst = self.components[dest.name]
-
-            else:
-                dst = self.components[transferInfo[1]]
-            destination = dst.location
+            
             volume = transferInfo[2]
             method = transferInfo[3]
-            transferLine = self.createTransfer(source, modifier, destination, volume, method, originalLine)
-            print('transferline==>', transferLine, 's', source)
+            if self.platform == 'microfluidics':
+                #method = transferInfo[3]
+                if not isNumber(method):
+                    if method == 'DEFAULT':
+                        method = 100
+                    elif method in self.volumes:
+                        method = self.volumes[method].amount
+                    else:
+                        self.errorLog('Error in method "' + str(method) + '". Not found in defined methods.')
+            transferLine = self.createTransfer(source, destination, volume, method, originalLine)
             if transferLine:
                 newTr = False
 
@@ -546,16 +438,17 @@ class Experiment:
                         trLine = deepcopy(transferLine)
                         trLine['src'] = tr[0]
                         trLine['dst'] = tr[1]
-                        if self.platform != "microfluidics":
+                        if self.platform == "tecan":
                             if len(vol) == 1:
                                 trLine['volume'] = vol[0]
                             else:
                                 try:
-                                    trLine['volume'] = vol[i]
+                                    trLine['volume'] = vol[i]  #volume is the problem!!!
                                 except IndexError:
                                     self.errorLog('Error in line "' + originalLine + '". The number of volumes in "' + volume + '" is less than number of source wells.')
                         transfer.append(trLine)
-                    self.transactionList.append(transfer)
+                    if transfer:
+                        self.transactionList.append(transfer)
 
                     if len(transferInfo) > 4:
                         options = transferInfo[4].split(',')
@@ -564,17 +457,39 @@ class Experiment:
                             if a.startswith('mix'):
                                 mixoptions = a.split(':')
                                 if len(mixoptions) == 2:
-                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': dst.location}
+                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': self.prepareLocation(destination)}
                                     self.transactionList.append([transaction])
                                 else:
                                     self.log('Error. Wrong mixing options in line "' + originalLine + '"')
-                    self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
+                    if self.platform != 'human':
+                        self.addComment('------ END ' + type.upper() + ' ' + transferInfo[0] + ' to ' + transferInfo[1] + ' ------')
 
                 else:
                     self.errorLog('Error in line "' + originalLine + '"')
         else:
             self.errorLog('Error. Not enough parameters in line "' + originalLine + '". Please correct your script.')
 
+    def move(self, line, commandName):  #todo: add support for TRANSFER and COMPONENT commands
+        if self.platform == 'microscope':
+            self.testindex += 1
+            self.addComment('------ BEGIN MOVE' + ' at location ' + line[0] + ' ' + line[2] + ' times with increments ' + line[1] + ' ------')
+            transaction = []
+            coords = line[0].split(',')
+            increment = line[1].split(',')
+            times = line[2]
+            action = line[3]
+            from ast import literal_eval
+            coord_x = int(coords[0])
+            coord_y = int(coords[1])
+            coord_z = int(coords[2])
+            transaction.append({'type': 'command', 'action': 'move', 'options': action, 'location': (coord_x, coord_y, coord_z)})
+            for m in range(int(times)):
+                coord_x = literal_eval(str(coord_x) + increment[0])
+                coord_y = literal_eval(str(coord_y) + increment[1])
+                coord_z = literal_eval(str(coord_z) + increment[2])
+                transaction.append({'type': 'command', 'action': 'move', 'options': action, 'location': (coord_x, coord_y, coord_z)})
+            self.transactionList.append(transaction)
+            self.addComment('------ END MOVE' + ' at location ' + line[0] + ' ' + line[2] + ' times with increments ' + line[1] + ' ------')
 
     def message(self, line):
         message = {'type': 'command', 'action': 'message', 'options': line}
@@ -584,7 +499,6 @@ class Experiment:
     def addComment(self, line):
         comment = {'type': 'command', 'action': 'comment', 'options': line}
         self.transactionList.append([comment])
-
 
     def log(self, item):
         from datetime import datetime
@@ -596,50 +510,6 @@ class Experiment:
 
     def errorLog(self, item):
         self.errorLogger.append(item)
-
-
-class Well:
-    def __init__(self, dict):
-        self.plate = dict['Plate']
-        self.location = dict['Location']
-
-
-class Component:
-#    method = 'LC_W_Bot_Bot'
-    def __init__(self, dict):
-        self.name = dict['name']
-        self.location = dict['location']
-        self.shortLocation = dict['location']
-        if 'method' in dict:
-            self.method = dict['method']
-        else:
-            self.method = 'empty'
-
-
-class Plate:
-    def __init__(self, plateName, factoryName, plateLocation):
-        self.name = plateName
-        self.factoryName = factoryName
-        self.location = plateLocation
-        db = DBHandler.db('SELECT Rows, Columns from Plates WHERE FactoryName=' + '"' + factoryName + '"')
-        self.dimensions = db[0]
-
-
-class Volume:
-    def __init__(self, dict):
-        self.name = dict['name']
-        self.amount = dict['amount']
-
-
-class Recipe:
-    def __init__(self, name):
-        self.subrecipes = {}
-        self.name = name
-        self.lineCounter = 0
-
-    def addSubrecipe(self, name, info):
-        self.subrecipes[name] = info
-
 
 class Protocol:
     def __init__(self, protocolInfo):
@@ -665,13 +535,18 @@ class Protocol:
             protocolFile.writelines(newProtocol)
             protocolFile.seek(0)
             line = protocolFile.readline()
-            experiment.addComment('------ BEGIN PROTOCOL ' + self.name + ', variables: ' + ' '.join(self.variables) + '; values: ' + ' '.join(values) + ' ------')
+            if experiment.platform != 'human':
+                experiment.addComment('------ BEGIN PROTOCOL ' + self.name + ', variables: ' + ' '.join(self.variables) + '; values: ' + ' '.join(values) + ' ------')
+            else:
+                experiment.addComment('$')
             while line != '':
                 splitline = line.split()
                 LineToList(splitline, protocolFile, experiment)
                 line = protocolFile.readline()
-            experiment.addComment('------ END PROTOCOL ' + self.name + ' ------')
-
+            if experiment.platform != 'human':
+                experiment.addComment('------ END PROTOCOL ' + self.name + ' ------')
+            else:
+                experiment.addComment('$')
 
 class DBHandler:
     def __init__(self):
@@ -685,8 +560,9 @@ class DBHandler:
         maxTips = experiment.robotTips
         maxVolume = experiment.maxVolume
         platform = experiment.platform
+        language = 'en'
 
-        self.insert('Experiments', [expID, maxTips, maxVolume, '"' + platform + '"'])
+        self.insert('Experiments', [expID, maxTips, maxVolume, '"' + platform + '"', '"' + language + '"'])
 
     def insert(self, destination, items):
         list = []
@@ -730,9 +606,12 @@ class DBHandler:
         Dumps experiment information into database
         """
         self.experiment = experiment
+        
         list = [experiment.name,
                 experiment.docString,
 
+                experiment.wells,
+                
                 experiment.components,
                 experiment.plates,
                 experiment.volumes,
@@ -758,10 +637,19 @@ class DBHandler:
                             wellID = str(id(well))
                             plate = '"' + str(well.plate) + '"'
                             location = '"' + str(well.location) + '"'
-                            self.insert('Wells', [expID, wellID, plate, location])
+                            
                             self.insert('Components', [expID, componentID, wellID])
                         self.insert('ComponentMethods', [expID, componentID, method])
                         self.insert('ComponentNames', [expID, componentID, name])
+
+                elif element == experiment.wells:
+                    for well in experiment.wells:
+                    
+                        wellID = str(id(well))
+                        plate = '"' + str(well.plate) + '"'
+                        location = '"' + str(well.location) + '"'
+                        
+                        self.insert('Wells', [expID, wellID, plate, location])
 
                 elif element == experiment.plates:
                     for plate in experiment.plates:
@@ -770,11 +658,14 @@ class DBHandler:
                         site = p.location[1]
                         factoryName = '"' + p.factoryName + '"'
                         name = '"' + p.name + '"'
+                        
+                        plateLocationDescription = '"' + p.plateLocationDescription + '"'
+                        
                         if plate != p.name:
                             nickname = '"' + plate + '"'
                             self.insert('PlateNicknames', [expID, name, nickname])
                         else:
-                            self.insert('PlateLocations', [expID, name, factoryName, grid, site])
+                            self.insert('PlateLocations', [expID, name, factoryName, grid, site, plateLocationDescription])
 
                 elif element == experiment.volumes:
                     for volume in experiment.volumes:
@@ -824,6 +715,9 @@ class DBHandler:
                                     for l in locationList:
                                         self.insert('CommandLocations', [expID, actionID, str(m), str(id(l))])
                                         m += 1
+                                elif tr['action'] == 'move':
+                                    location = '"' + str(tr['location']) + '"'
+                                    self.insert('CommandLocations', [expID, actionID, str(t), location])
 
                 elif element == experiment.mfWellLocations:
                     for key in element:
@@ -848,13 +742,21 @@ class DBHandler:
         message = 'SELECT Method FROM DefaultMethod'
         default = DBHandler.db(message)[0][0]
         methods.append(default)
-
         message = 'SELECT Method FROM Methods'
-        list = DBHandler.db(message)
-        for row in list:
+        list_ = DBHandler.db(message)
+        for row in list_:
             methods.append(row[0])
         self.conn.commit()
         return methods
+    
+    def getPlates(self):
+        plates = []
+        message = 'SELECT * FROM Plates'
+        plate_list = DBHandler.db(message)
+        for row in plate_list:
+            plates.append(row)
+        self.conn.commit()
+        return plates
 
     @staticmethod
     def checkIfMethodExists(method):
@@ -909,7 +811,7 @@ def PlateFileParse(plateFile, experiment, plateNicknames, plateIndexes):
 
 def PlateNameParse(parts, plateFile, experiment, plateNicknames, plateIndexes):
     global stringCounter
-    if stringCounter < 31:
+    if stringCounter < 69:
         if parts[0] == '998':
             if len(parts) >= 2:
                 n_plates = parts[1]
@@ -927,7 +829,7 @@ def PlateNameParse(parts, plateFile, experiment, plateNicknames, plateIndexes):
                                 plateNicknames[plateNames[i]] = tempPlates[i]
                                 plateIndexes[plateNames[i]] = (stringCounter, i)
                                 if experiment:
-                                    experiment.plates[plateNames[i]] = Plate(plateNames[i], tempPlates[i],(stringCounter, i))
+                                    experiment.plates[plateNames[i]] = Plate(plateNames[i], tempPlates[i],(stringCounter, i), experiment.platform)
                                     experiment.log('Added a plate "' + tempPlates[i] + '" codename "' + plateNames[i] + '" at location ' + str((stringCounter, i + 1)))
                 stringCounter += 1
                 return plateNicknames
@@ -1011,6 +913,7 @@ def LineToList(line, configFileName, experiment):
                 experiment.add(command['name'], componentInfo['name'], Component(componentInfo))
 
             elif command['name'] == 'table':
+                print('table is added', line[1], experiment.platform)
                 if not experiment.tableAdded:
                     experiment.tableAdded = True
                     if __name__ == "__main__":
@@ -1020,9 +923,14 @@ def LineToList(line, configFileName, experiment):
                     plateFile = open(fileName, "r")
                     experiment.log('Table file location: "' + fileName + '"')
                     if experiment.platform == 'microfluidics':
+                        import prpr_microfluidics as platform
                         mfPlateFileParse(plateFile, experiment)
                     else:
-                        copyfile(fileName, 'esc' + os.sep + 'config' + experiment.ID + '.esc')
+                        import prpr_tecan as platform
+                        fileExtension = fileName[-3:]
+                        # copyfile(fileName, 'esc' + os.sep + 'config' + experiment.ID + '.esc')
+                        copyfile(fileName, 'esc' + os.sep + 'config' + experiment.ID + '.' + platform.defaults.fileExtensions[fileExtension])
+                        # copyfile(fileName, 'esc' + os.sep + 'config' + experiment.ID + '.gem')
                         PlateFileParse(plateFile, experiment, plateNicknames={}, plateIndexes={})
 
             elif command['name'] == 'volume':
@@ -1048,10 +956,27 @@ def LineToList(line, configFileName, experiment):
                     experiment.log('Docstring already added for this experiment.')
 
             elif command['name'] == 'plate':
-                if len(line) == 3:
+                if len(line) >= 3:
                     plateNickname = line[1]
                     plateName = line[2]
-                    experiment.plates[plateNickname] = experiment.plates[plateName]
+                    plateLocationDescription = ''
+                    if len(line) > 3:
+                        plateLocationDescription = ' '.join(line[3:])
+
+                    plateCoords = []
+                    if plateName.find('*') != -1:
+                        plateCoords = plateName.split('*')
+                    elif plateName.find('x') != -1:
+                        plateCoords = plateName.split('x')
+                    if len(plateCoords) == 2:
+                        row = plateCoords[0]
+                        col = plateCoords[1]
+
+                        plateInfo = Plate(plateNickname, plateNickname, plateCoords, experiment.platform, plateLocationDescription=plateLocationDescription, dimensions=(int(row), int(col)))
+                        experiment.add('plate', plateNickname, plateInfo)
+                    else:
+                        experiment.plates[plateNickname] = experiment.plates[plateName]
+
                     experiment.log('Added a nickname "' + plateNickname + '" to the plate name "' + plateName + '"')
                 else:
                     experiment.errorLog('Error. Wrong parameter count in line "' + ' '.join(line) + '"')
@@ -1072,6 +997,9 @@ def LineToList(line, configFileName, experiment):
 
             elif command['name'] == 'transfer' or command['name'] == 'spread':
                 experiment.transfer(line, command['name'])
+            
+            elif command['name'] == 'move':
+                experiment.move(line[1:], command['name'])
 
             elif command['name'] == 'message':
                 experiment.message(' '.join(line[1:]))
@@ -1131,15 +1059,13 @@ def isNumber(number):
 
 if __name__ == '__main__':
     global experiment
-    experiment = Experiment(maxVolume=150, tips=8, db=DBHandler(), platform="freedomevo")
+    experiment = Experiment(maxVolume=150, tips=8, db=DBHandler(), platform="tecan")
     print('Experiment ID: ', experiment.ID)
+    platform = __import__('prpr_'+ experiment.platform)
     ParseConfigFile(experiment)
 
     if not len(experiment.errorLogger):
-        if experiment.platform != "microfluidics":
-            prpr = Prpr_Tecan(experiment.ID)
-        else:
-            prpr = Prpr_MF(experiment.ID)
+        prpr = platform.PRPR(experiment.ID)
         print('Robot Config:')
         for element in prpr.robotConfig:
             print(element)

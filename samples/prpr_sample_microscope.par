@@ -1,0 +1,10 @@
+NAME    Microscope_Experiment_1
+
+LOCATION    Home    5000,6000,2000
+LOCATION    Dest    2000,3000,4000
+
+AMOUNT      Snaps     3
+
+TRANSFER    Home    Dest(+5,+10,+20)*5    Snaps    lighton
+TRANSFER    Home    +5,+10,+20*5    1    lighton
+TRANSFER    Home    Dest    1    lighton

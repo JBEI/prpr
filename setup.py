@@ -38,7 +38,7 @@ def CreateTables():
 
     #Plates
     crsr.execute('create table Plates(FactoryName UNIQUE, Rows, Columns)')
-    crsr.execute('create table PlateLocations(ExpID, Plate, FactoryName, Grid, Site, PRIMARY KEY(ExpID, Plate))')
+    crsr.execute('create table PlateLocations(ExpID, Plate, FactoryName, Grid, Site, PlateLocation, PRIMARY KEY(ExpID, Plate))')
     crsr.execute('create table PlateNicknames(ExpID, Plate, Nickname, PRIMARY KEY(ExpID, Nickname))')
 
     #Volumes
@@ -95,8 +95,8 @@ def UpdatePlates():
             crsr.execute(message)
         except sqlite3.IntegrityError:
             DatabaseConnect()
-            crsr.execute(message)
             message = 'UPDATE Plates SET Rows = ' + size[0] + ', Columns = ' + size[1] + '  WHERE FactoryName = ' + '"' + name + '"'
+            crsr.execute(message)
         DatabaseDisconnect()
 
 def CreateFolders():

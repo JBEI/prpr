@@ -6,11 +6,12 @@
  */
 
 function selectDevice(selection) {
-    $('.alert').remove();
+    $('#microscopeTable, #downloadMFtable, .alert').remove();
     $('#prpr-platform').children().removeClass('btn-info');
     $('#platform-' + selection).addClass('btn-info');
-    if (selection == 'freedomevo') {
-        $('#deviceselect').val('freedomevo');
+    if (selection == 'tecan') {
+        $('#tablefile, #table, #mftable').show();
+        $('#deviceselect').val('tecan');
         $('#tablefile .controls').attr('id', 'table');
         $('#tablefile .controls select').attr({ 'id' : 'tables', 'name' : 'tableselect', 'onchange' : 'selectClicked(\'table\');' });
         $('#tablefile .controls input').attr({'id' : 'data', 'name' : 'data' });
@@ -26,9 +27,10 @@ function selectDevice(selection) {
             }
         }
         $('#methodsToggle').removeClass('hidden');
-        $('#sampleScript').removeClass('hidden');
+//        $('#sampleScript').removeClass('hidden');
     }
     else if (selection == 'microfluidics') {
+        $('#tablefile, #table, #mftable').show();
         $('#tablefile .controls .btn').remove();
         $('#deviceselect').val('microfluidics');
         $('#tablefile .controls').attr('id', 'mftable');
@@ -45,9 +47,8 @@ function selectDevice(selection) {
         $('#methodsToggle').addClass('hidden');
         $('#tablefile .controls .btn').remove();
         $('#methods').addClass('hidden');
-        $('#result').before('<div class="alert"><i class="icon-exclamation-sign large"></i>&nbsp;<strong>Warning:</strong> Microfluidics functionality may not work correctly in <strong>Internet Explorer</strong>. Please use <strong>Chrome</strong> or <strong>Firefox</strong>.</div>');
         resetMFField();
-        $('#sampleScript').addClass('hidden');
+//        $('#sampleScript').addClass('hidden');
         $('#preview').remove();
 
         if ($('#tablefile .controls select').val() == 'select') {
@@ -56,14 +57,26 @@ function selectDevice(selection) {
             }
         }
     }
+    else if (selection == 'microscope') {
+        $('#deviceselect').val('microscope');
+        $('#tablefile').show();
+        $('#table, #mftable').hide();
+        $('#platename').html('Microscope');
+        $('#tablerow').html('<img src="static/img/microscope.png"/>');
+        $('#tablefile').append('<button class="btn btn-info" id="microscopeTable"  data-toggle="modal" href="#myModal" >View the microscope table</button>')
+    }
+    else if (selection == 'human') {
+        $('#deviceselect').val('human');
+        $('#tablefile').hide();
+    }
 }
 
 function recognizeFile() {
     var fileExtension = $('#tablefile .controls input').val().slice(-4);
     if (fileExtension == '.mfp') {
         selectDevice('microfluidics');
-    } else if (fileExtension == '.ewt') {
-        selectDevice('freedomevo');
+    } else if (fileExtension == '.ewt' || fileExtension == '.gem') {
+        selectDevice('tecan');
         createTablesList(tablesList);
         AppendUploadButton();
     } else {
@@ -78,12 +91,12 @@ function createTablesList(tablesList) {
     for (var i = 0; i < tablesList.length; i++) {
         var tableName = tablesList[i];
         var tableSelector;
-        if (tableName.substr(-4, 4) == '.ewt') {
+        if (tableName.substr(-4, 4) == '.ewt' || tableName.substr(-4, 4) == '.gem') {
             tableSelector = 'tables';
-            $('#' + tableSelector).append('<option value="' + tableName + '">' + tableName + '</option>')
-        } //else if (tableName.substr(-4, 4) == '.mfp') {
-        //tableSelector = 'mftables';
-        //}
+        } else if (tableName.substr(-4, 4) == '.mfp') {
+            tableSelector = 'mftables';
+        }
+        $('#' + tableSelector).append('<option value="' + tableName + '">' + tableName + '</option>')
     }
 }
 
@@ -119,7 +132,6 @@ function selectClicked(selectID) {
         setupDroppableWells(0);
     }
     else {
-        console.log(selectID, selection);
         $('#' + filename).remove();
         $('#' + preview).remove();
         $('#tablefile .controls .btn').remove();
@@ -133,13 +145,29 @@ function AppendUploadButton() {
 }
 
 function LoadSampleScript() {
+    var platformName = $('#prpr-platform').children('.btn-info').attr('id').split('-').pop();
     $('.alert').remove();
     $('#data').remove();
     $('#preview').remove();
     $('#uploadFile').remove();
-    $('#table').append('<button id="preview" class="btn btn-info pull-right" data-toggle="modal" href="#myModal" onclick="CallPython();">Preview table layout</button>');
-    $('#tables').val('BreakfastDrinks.ewt');
-    $.post('sample', function (data) {
+    var tag, selection;
+    if (platformName == 'microfluidics') {
+        tag = 'mftable';
+        selection = 'prpr_mf.mfp';
+    } else if (platformName == 'tecan') {
+        tag = 'table';
+        selection = 'BreakfastDrinks.ewt';
+    } else if (platformName == 'human') {
+        tag = 'table';
+        selection = 'BreakfastDrinks.ewt';
+    }
+    $('#' + tag + 's option')
+        .filter(function(index) { return $(this).text() === selection; })
+        .prop('selected', true);
+//    $('#table').append('<button id="preview" class="btn btn-info pull-right" data-toggle="modal" href="#myModal" onclick="CallPython();">Preview table layout</button>');
+//    $('#tables').val('BreakfastDrinks.ewt');
+    selectClicked(tag);
+    $.post('sample', platformName, function (data) {
         $('#textarea').val(data);
     });
 }
@@ -262,12 +290,52 @@ function customizeMethods() {
         if (methods.indexOf(method) == -1) {
             methods.push(method);
             var me = method;
-            $('#newMethod').after('<div class="label method" id="' + me + '" onclick="makeDefault(\'' + me + '\')">' + me + '<i class="icon-remove icon-white pull-right" onclick="removeMethod(\'' + me + '\');"></i></div>');
+            $('#newMethod').after('<div class="label method" id="' + me + '" onclick="makeDefault(\'' + me + '\')">' + me + '<i class="icon-remove icon-white pull-right" onclick="removeMethod(\'' + me + '\');"></i></div><br/>');
             $('#userMethod').val('');
             $('#methodsList').val(methods);
         }
     }
 }
+
+function displayDefaults() {
+    $('#defaultMethods, #defaultPlates').children().not('h5').remove();
+    displayDefaultMethods();
+    displayDefaultPlates()
+    
+}
+
+function displayDefaultMethods() {
+    $.post('/getMethods', function(data) {
+        var methods = $.parseJSON(data);
+        for (var n in methods) {
+            $('#defaultMethods').append('<div class="label method" id="' + methods[n] + '" onclick="makeDefault(\'' + methods[n] + '\')">' + methods[n] + '</div><br/>');
+            makeDefault(methods[0])
+        }
+    })
+}
+
+function displayDefaultPlates() {
+    $.post('/getPlates', function(data) {
+        var plates = $.parseJSON(data);
+        $('#defaultPlates').append('<table class="table table-striped">' +
+            '<thead>' +
+            '<tr>' +
+            '<td>Plate Name</td>' +
+            '<td>Rows</td>' +
+            '<td>Columns</td></tr>' +
+            '</thead>' +
+            '<tbody>' +
+            '</tbody>' +
+            '</table>');
+        for (var n in plates) {
+            var plateName = plates[n][0];
+            var plateRows = plates[n][1];
+            var plateCols = plates[n][2];
+            $('#defaultPlates tbody').append('<tr><td>' + plateName + '</td><td>' + plateRows + '</td><td>' + plateCols + '</td></tr>');
+        }
+    })
+}
+
 
 function removeMethod(method) {
     if (!e) var e = window.event;

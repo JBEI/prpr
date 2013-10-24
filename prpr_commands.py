@@ -11,17 +11,19 @@ def CheckCommand(command):
             'table'         : ['TABLE'],
             '"""'           : ['"""', '"""""', '""""""', '"""""""', '""""""""','DOC', 'ENDDOC'],
             'plate'         : ['PLATE'],
-            'component'     : ['COMPONENT', 'REAGENT'],
+            'component'     : ['COMPONENT', 'REAGENT', 'LOCATION'],
             'volume'        : ['VOLUME', 'AMOUNT'],
             'recipe'        : ['RECIPE', 'LIST', 'SET'],
-            'comment'       : ['COMMENT', '%']
+            'comment'       : ['COMMENT', '%'],
+            'wait'          : ['WAIT', '%']
         },
         'action' : {
             'use'           : ['USE'],
             'make'          : ['MAKE', 'PREPARE_LIST'],
             'spread'        : ['SPREAD', 'DISTRIBUTE', 'DIST_REAGENT'],
             'transfer'      : ['TRANSFER', 'TRANSFER_LOCATIONS'],
-            'message'       : ['MESSAGE', 'PROMPT']
+            'message'       : ['MESSAGE', 'PROMPT'],
+            'move'          : ['MOVE']
         },
         'function' : {
             'protocol'      : ['TEMPLATE', 'PROTOCOL'],

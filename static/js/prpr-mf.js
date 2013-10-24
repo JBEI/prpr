@@ -126,7 +126,7 @@ function resetMFField() {
         '</div>' +
         '</div>');
     $('#button-close-modal').after('<form id="mffile" class="pull-right">' +
-        '<div onclick="getMFTableFile();" class="btn btn-link">Download table file</div>' +
+        '<div onclick="getMFTableFile();" class="btn btn-link" id="downloadMFtable">Download table file</div>' +
         '</form>');
     setupDroppableWells();
     jsPlumb.importDefaults({
@@ -137,19 +137,35 @@ function resetMFField() {
 
 function loadMFTable(loadButtonOnClick) {
     resetMFField();
-    $('.modal-body').css('max-height', '900px');
-    var file = $('#mfdata')[0].files[0];
-    var formData = new FormData();
-    formData.append("file", file);
-    $.ajax({
-        url:'mfparse',
-        type:'POST',
-        data:formData,
-        cache:false,
-        contentType:false,
-        processData:false,
-        success:function (data) {
-            //ParseMFData(data);
+    if ($('#mfdata').length) {
+        $('.modal-body').css('max-height', '900px');
+        var file = $('#mfdata')[0].files[0];
+        var formData = new FormData();
+        formData.append("file", file);
+        $.ajax({
+            url:'mfparse',
+            type:'POST',
+            data:formData,
+            cache:false,
+            contentType:false,
+            processData:false,
+            success:function (data) {
+                //ParseMFData(data);
+                var mfplate = JSON.parse(data);
+                var views = mfplate[0];
+                var connections = mfplate.slice(1);
+                $('#position').val(views);
+                $('#wells').val(connections);
+                parseViews(views);
+                parseConnections(connections);
+                if (typeof loadButtonOnClick == "undefined") {
+                    $('#loadButton').attr('onClick', '');
+                }
+            }
+        });
+    } else {
+        var data = $('#mftables').find('option:selected').val();
+        $.post('mfparse', data, function (data) {
             var mfplate = JSON.parse(data);
             var views = mfplate[0];
             var connections = mfplate.slice(1);
@@ -160,8 +176,8 @@ function loadMFTable(loadButtonOnClick) {
             if (typeof loadButtonOnClick == "undefined") {
                 $('#loadButton').attr('onClick', '');
             }
-        }
-    });
+        });
+    }
 }
 
 function addEndpoint(element) {

@@ -23,7 +23,7 @@
       var renamed = [];
       $(document).ready(function () {
           $('#myModal').children().disableSelection();
-          selectDevice('freedomevo');
+          selectDevice('tecan');
           $(document).bind('touchmove', function(e) {
               e.preventDefault();
           }, false);
@@ -33,21 +33,35 @@
           
           var selected = '{{selected}}';
           
-          if (selected == 'freedomevo') {
-              selectDevice('freedomevo');
+          if (selected == 'tecan') {
+              selectDevice('tecan');
               createTablesList(tablesList);
           } else if (selected == 'microfluidics') {
               selectDevice('microfluidics');
+          } else if (selected == 'microscope') {
+              selectDevice('microscope');
+          } else if (selected == 'human') {
+              selectDevice('human');
           };
           
-          $('#platform-freedomevo').click(function() {
-              selectDevice('freedomevo');
+          $('#platform-tecan').click(function() {
+              selectDevice('tecan');
               createTablesList(tablesList);
           });
           
           $('#platform-microfluidics').click(function() {
               selectDevice('microfluidics');
+              createTablesList(tablesList);
           });
+          
+          $('#platform-microscope').click(function() {
+              selectDevice('microscope');
+          });
+          
+          $('#platform-human').click(function() {
+              selectDevice('human');
+          });
+          //$('#platform-human').addClass('disabled');
           
           $('#myModal').on('shown', function() {
               if ($('#deviceselect').val() == 'microfluidics') {
@@ -128,20 +142,11 @@
                 <div id="device" class="controls">
                   <input id="deviceselect" name="deviceselect" class="hidden">
                   <div id="prpr-platform" class="btn-group">
-                    <div id="platform-freedomevo" class="btn">Tecan Freedom Evo</div>
+                    <div id="platform-tecan" class="btn">Tecan (Genesis and Evo)</div>
                     <div id="platform-microfluidics" class="btn">Microfluidics</div>
-                  </div><a id="methodsToggle" onclick="$('#methods').toggleClass('hidden');" class="btn btn-link">Setup custom methods</a>
-                </div>
-                <div class="row">
-                  <div id="methods" class="hidden">
-                    <div class="span7">
-                      <h5>Custom methods</h5>
-                      <div id="newMethod" class="input-append">
-                        <input id="userMethod" size="16" type="text">
-                        <button type="button" onclick="customizeMethods();" class="btn">Add</button>
-                      </div>
-                    </div>
-                  </div>
+                    <div id="platform-microscope" class="btn">Microscope</div>
+                    <div id="platform-human" class="btn">Human</div>
+                  </div><a id="methodsToggle" data-toggle="modal" href="#settings" onClick="displayDefaults();" class="btn btn-link"><i class="icon-cog"></i></a>
                 </div>
               </li>
               <li id="tablefile">
@@ -174,6 +179,43 @@
             </div>
             <div class="modal-body">
               <div id="tablerow"></div>
+            </div>
+            <div class="modal-footer"><a data-dismiss="modal" id="button-close-modal" class="btn pull-right">Close popup</a></div>
+          </div>
+          <div id="settings" class="modal hide prpr-modal">
+            <div class="modal-header">
+              <button type="button" data-dismiss="modal" class="close">×</button>
+              <h3 id="modalName">Platform settings</h3>
+            </div>
+            <div class="modal-body">
+              <div class="row-fluid">
+                <div class="span6">
+                  <div id="methods">
+                    <h5>Custom methods</h5>
+                    <div id="newMethod" class="input-append">
+                      <input id="userMethod" size="16" type="text">
+                      <button type="button" onclick="customizeMethods();" class="btn">Add</button>
+                    </div>
+                  </div>
+                  <div id="defaultMethods">
+                    <h5>Default Methods</h5>
+                  </div>
+                </div>
+                <div class="span6">
+                  <div id="plates">
+                    <h5>Custom Plates</h5>
+                    <div id="newPlate" class="input-append">
+                      <input id="userPlateName" type="text" class="input-large">
+                      <input id="userPlateRows" type="text" class="input-micro input-mid">
+                      <input id="userPlateCols" type="text" class="input-micro input-mid">
+                      <button type="button" onclick="customizePlates();" class="btn">Add</button>
+                    </div>
+                  </div>
+                  <div id="defaultPlates">
+                    <h5>Default Plates</h5>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="modal-footer"><a data-dismiss="modal" id="button-close-modal" class="btn pull-right">Close popup</a></div>
           </div>

@@ -992,6 +992,9 @@ textarea::-webkit-input-placeholder {
 .checkbox.inline + .checkbox.inline {
   margin-left: 10px;
 }
+.input-micro {
+  width: 30px;
+}
 .input-mini {
   width: 60px;
 }
@@ -1311,6 +1314,12 @@ select:focus:required:invalid:focus {
 .input-append .dropdown-menu,
 .input-prepend .dropdown-menu {
   font-size: 13px;
+}
+.input-append .input-append input .input-mid,
+.input-prepend .input-append input .input-mid {
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  border-radius: 0;
 }
 .input-append input,
 .input-prepend input,
