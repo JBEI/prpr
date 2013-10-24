@@ -52,7 +52,7 @@ class PRPR:
         transfers = []
         from_ = transferList[0]['source']['well']
         to_ = transferList[len(transferList) - 1]['destination']['well']
-        print(from_, to_)
+        
         for t, transfer in enumerate(transferList):
             config = {}
             source = transfer['source']['well']
@@ -66,10 +66,8 @@ class PRPR:
                 self.wait[wait] = wait + '_o'
             waitNum = self.wait[wait]
             
-            print('transfer!', transfer)
             config['volume'] = self.parseVolume(transfer['volume'])
             transferPath = self.findPath(source, destination)
-            print('src dst trlist', transferPath, source, destination, transferList)
             p = 0
             while p <= len(transferPath) - 1:
                 currentWell = transferPath[p]
@@ -97,7 +95,6 @@ class PRPR:
 
     def saveTransfers(self, transferList):
         self.config('main')
-        print('transferList________', transferList)
         for t in [transfer for transfer in transferList]:
             if 'name' in t:
                 self.config('call ' + t['name'] + (' ' + str(t['volume']) if t['volume'] > 1 else ''))
@@ -114,7 +111,6 @@ class PRPR:
             elif 'message' in tr:
                 self.config('#' + tr['message'])
                 
-        print('MF-transfer-list', transferList)
         for wait in self.wait:
             line = ['method' + str(self.wait[wait]), 'w' + wait, 'end']
             for l in line:
@@ -190,9 +186,7 @@ class PRPR:
         return timesTransfer        
         
     def parseLocation(self, location):
-        print('location is: ', location)
         loc = []
-        print('location__', location)
         
         splitLocation = location.split(',')
         for l in splitLocation:

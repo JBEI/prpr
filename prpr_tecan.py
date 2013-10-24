@@ -445,9 +445,6 @@ class PRPR:
                             w = Well({'Plate': plateName, 'Location': well}) #todo: append well only if there are no same wells registered; otherwise error
                             loc.append(w)
                             self.wells.append(w)
-                            print('self wells in Tecan', self.wells)
-                            #                    else:
-                            #                        self.errorLog('Error. No wells in location "' + str(location) + '"')
                 else:
                     self.errorLog('Error. No such plate in the system "' + str(plateAndWells[0]) + '"')
             else:

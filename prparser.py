@@ -132,12 +132,9 @@ class Experiment:
                 else:
                     return self.methods[0]
         elif self.platform == 'microfluidics':
-            print('method for microfluidics', method)
             if isNumber(method):
-                print('method for microfluidics is number', method)
                 return method
             else:
-                print('method for microfluidics is not number', method)
                 return '100'
                 #self.errorLog('Error in method "' + str(method) + '". Microfluidic methods should be numbers.')
 
@@ -205,22 +202,6 @@ class Experiment:
 
     def createTransfer(self, source, destination, volume, transferMethod, line, wellsOnly = False):
         
-        print('create transfer -->>', source, destination)
-        #if component in self.components or ':' in component or self.platform == "microfluidics":
-        #            if component in self.groups: #better parse groups
-        #    if component in self.components:
-        #        comp = self.components[component]
-        #    elif component in self.mfWellLocations:
-        #        comp = Component({'name': component, 'location': component, 'method': transferMethod})
-        #        self.add('component', component, comp)
-        #    else:
-        #        if ':' in component:
-        #            comp = Component({'name': component, 'location': component, 'method': self.methods[0]})
-        #            self.add('component', component, comp)
-        #        elif self.platform == 'microfluidics':
-        #            comp = Component({'name': component, 'location': component, 'method': transferMethod})
-        #            self.add('component', component, comp)
-        
         method = ''
         methodError = False
         if transferMethod == 'DEFAULT':
@@ -242,7 +223,6 @@ class Experiment:
         if method:
             if volume in self.volumes:
                 amount = self.volumes[volume].amount
-                print('amount in transfer', amount)
             else:
                 amount = volume
     
@@ -257,7 +237,6 @@ class Experiment:
                 src = self.prepareLocation(source)
                 dst = self.prepareLocation(destination)
             transferDict = {'src': src, 'dst': dst, 'volume': volumeInfo, 'method': method, 'type': 'transfer'}
-            print('transfer DICTIONARY', transferDict)
             return transferDict
         
         else:
@@ -274,8 +253,6 @@ class Experiment:
         
         
     def parseGivenLocation(self, location, method=''):
-        
-        print('location in GIVEN Locations_________===', location)
         
         def CheckMultiplier(componentInfo):
             """
@@ -299,28 +276,21 @@ class Experiment:
             plateAndWells = locationInfo.split(':')
             if len(plateAndWells) >1:
                 if plateAndWells[0] in self.plates:
-                    print('plateAndWell is in selfplates:::::::::::::::::', self.plates[plateAndWells[0]])
                     print('plateAndWell is in selfplates:::::::::::::::::', self.plates)
         
         splitLocations = []
-        print('location in parseGivenLocation', location)
         
         locationPerPlate = location.split('/')
-        print('locationPerPlate', locationPerPlate)
         
         tempLocations = []
         for plateLocation in locationPerPlate:
             singleLocations = plateLocation.split(',')
-            print('singleLocation', singleLocations)
             for l in singleLocations:
                 location = CheckMultiplier(l)
                 
                 if location[0] in self.components:
-                    print('location is in self.components:', location)
-                    print('here is location:', location)
                     prevLocations = ','.join(tempLocations)
                     location[0] = self.components[location[0]]
-                    print('location now is:', location)
                     splitLocations.append(location)
                     if prevLocations != '':
                         lc = CheckMultiplier(prevLocations)
@@ -329,10 +299,8 @@ class Experiment:
                             
                         CheckIfPlatePreDefined(lc[0])
                         tempComponent = Component({'name': lc[0], 'location': lc[0], 'method': method})
-                        print('location after check multiplier, no components: ', lc)
                         self.add('component', tempComponent.name, tempComponent)
                         lc[0] = self.components[location[0]]
-                        print('location after check multiplier, added component: ', lc)
                         self.locations.append(lc)
                     tempLocations = []
                 else:
@@ -348,13 +316,10 @@ class Experiment:
                     
                 CheckIfPlatePreDefined(location[0])
                 tempComponent = Component({'name': location[0], 'location': location[0], 'method': method})
-                print('location after check multiplier, no components: ', location)
                 self.add('component', tempComponent.name, tempComponent)
                 location[0] = self.components[location[0]]
-                print('location after check multiplier, added component: ', location)
                 splitLocations.append(location)     
         
-        print('splitlocations', splitLocations)
         return splitLocations
         
     def make(self, splitLine):
@@ -372,8 +337,6 @@ class Experiment:
                 recipe = []
                 destination = self.parseGivenLocation(line[1])
                 dstLocation = self.prepareLocation(destination)
-                print('destination___________', destination)
-                print('dstLocation___________', dstLocation)
 
                 if len(recipeInfo) == 2:
                     subrecipes = recipeInfo[1].split(',')
@@ -391,18 +354,14 @@ class Experiment:
                     if len(recipe) == len(dstLocation):
                         a = zip(*recipe)
                         for element in a:
-                            print('transactionEllll_________', element)
                             transferString = []
                             for i, z in enumerate(element):
-                                print('transactionEllllzzz_________', i, z)
                                 
                                 if len(dstLocation) == 1:
                                     dst = dstLocation[0]
                                 else:
                                     dst = dstLocation[i]
-                                print('transactionEllll_dst_________', dst.__dict__)
                                 source = self.parseGivenLocation(z[0])
-                                print('source___________', source)
                                 src = self.prepareLocation(source)[0]
                                 volume = z[1]
                                 transferMethod = line[2]
@@ -489,7 +448,6 @@ class Experiment:
                                     self.errorLog('Error in line "' + originalLine + '". The number of volumes in "' + volume + '" is less than number of source wells.')
                         transfer.append(trLine)
                     if transfer:
-                        print('!!!???_____________________________________', transfer)
                         self.transactionList.append(transfer)
 
                     if len(transferInfo) > 4:
@@ -499,7 +457,6 @@ class Experiment:
                             if a.startswith('mix'):
                                 mixoptions = a.split(':')
                                 if len(mixoptions) == 2:
-                                    print('destination!!!', destination, self.prepareLocation(destination))
                                     transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': self.prepareLocation(destination)}
                                     self.transactionList.append([transaction])
                                 else:
@@ -650,8 +607,6 @@ class DBHandler:
         """
         self.experiment = experiment
         
-        print('experiment wells in main', experiment.wells)
-        
         list = [experiment.name,
                 experiment.docString,
 
@@ -694,7 +649,6 @@ class DBHandler:
                         plate = '"' + str(well.plate) + '"'
                         location = '"' + str(well.location) + '"'
                         
-                        print('well______ in wells:', expID, wellID, plate, location)
                         self.insert('Wells', [expID, wellID, plate, location])
 
                 elif element == experiment.plates:

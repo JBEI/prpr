@@ -61,7 +61,6 @@ def table():
     tabledirname = 'default_tables' + os.sep
     plateFile = open(tabledirname + tablename, "r")
     PlateFileParse(plateFile, experiment, plateNicknames, plateIndexes)
-    print(plateNicknames, plateIndexes)
     plates = []
     for key in plateIndexes.keys():
         plates.append([key, [plateIndexes[key][0], plateIndexes[key][1]], plateNicknames[key]])
@@ -83,7 +82,6 @@ def plates():
     for key in plateIndexes.keys():
         plates.append([key, [plateIndexes[key][0], plateIndexes[key][1]], plateNicknames[key]])
         tojs = json_dumps(plates)
-    print(plateNicknames, plateIndexes)
     return tojs
 
 
@@ -98,7 +96,6 @@ def mfplates():
 
 def createMFPlate(wells, position):
     directory = 'tables'
-    print('createMFPlate wells:>', wells, 'position:', position)
     mydata = position + '\n' + wells
     fileCounter = len(glob.glob1(directory, "tables_mf_*"))
     tablename = 'tables_mf_' + str(fileCounter) + '.mfp'
@@ -117,8 +114,7 @@ def mfparse():
             a = plateFile.readlines()
     else:
         a = request.body.read().decode().split('\n')[4:-2]
-        a[-1] = a[-1].strip()        
-    print('aa...', a)
+        a[-1] = a[-1].strip()
     tojs = json_dumps(a)
     return tojs
 
@@ -179,14 +175,12 @@ def config():
                     return template('pages' + os.sep + 'page.html', file='', btn='', text=getconfig, alerterror=errorList, alertsuccess=successList,tables=GetDefaultTables(), selected=platform, version=__version__)
         elif platform == 'microfluidics':
             preselected = request.forms.get('mftableselect')
-            print('platform__ MF')
             #note: if the platform is microfluidics
             if preselected != 'select':
                 tablename = 'default_tables' + os.sep + preselected
             else:
                 position = request.forms.get('position', '')
                 wells = '\n'.join(request.forms.get('wells', '').strip().split(';'))
-                print('!!>', wells, position)
                 tablename = 'tables' + os.sep + createMFPlate(wells, position)
 
         dirname = 'incoming' + os.sep
@@ -222,15 +216,6 @@ def config():
             log = 'experiment' + str(expID) + '.log'
             successList.append("Your configuration file has been successfully processed.")
 
-            # information = {
-            #     'file' : file,
-            #     'text' : getconfig,
-            #     'alerterror' : errorList,
-            #     'alertsuccess' : successList
-            # }
-            # tojs = json_dumps(information)
-            # return tojs
-
             return template('pages' + os.sep + 'page.html', file=file, btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
 
         else:
@@ -249,7 +234,6 @@ def static(path):
 
 @route('/download/<filename>')
 def download(filename):
-    print(filename)
     if filename.startswith('config'):
         root = 'esc'
     elif filename.startswith('tables_mf_'):
@@ -261,7 +245,6 @@ def download(filename):
 
 @route('/get/<filename>')
 def download(filename):
-    print(filename)
     return static_file(filename, root='tables', download=filename)
 
 
