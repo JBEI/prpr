@@ -99,7 +99,7 @@ class PRPR:
             if 'name' in t:
                 self.config('call ' + t['name'] + (' ' + str(t['volume']) if t['volume'] > 1 else ''))
             elif 'message' in t:
-                self.config('#' + t['message'])
+                self.config('# ' + t['message'])
         self.config('end')
         self.config('')
         
@@ -109,7 +109,7 @@ class PRPR:
                     self.config(line)
                 self.config('')
             elif 'message' in tr:
-                self.config('#' + tr['message'])
+                self.config('# ' + tr['message'])
                 
         for wait in self.wait:
             line = ['method' + str(self.wait[wait]), 'w' + wait, 'end']
