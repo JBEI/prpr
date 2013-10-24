@@ -21,7 +21,7 @@ def CreateTables():
     DatabaseConnect()
 
     #Experiment info
-    crsr.execute('create table Experiments(ExpID UNIQUE, maxTips, maxVolume, Platform)')
+    crsr.execute('create table Experiments(ExpID UNIQUE, maxTips, maxVolume, Platform, Language)')
     crsr.execute('create table ExperimentInfo(ExpID UNIQUE, Name, Comment)')
 
     #Methods
