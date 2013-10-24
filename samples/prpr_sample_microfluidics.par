@@ -15,9 +15,22 @@ COMPONENT LemonJuice   16           100
 #         alias        units
 VOLUME    DrinkVol     5
 VOLUME    WaterVol     10
-  
-#         component  destination   units       delay(ms)
-SPREAD    Water      8             DrinkVol    100      
 
+#         name
+RECIPE    Drinks
+#         component1   volume1 component2 volume2 component3   volume3
+chai:     TeaExtract   30      Syrup      30      Water        WaterVol
+coffee:   BeanExtract  30      Milk       30      Water        WaterVol
+lemonade: LemonJuice   15      24         45      Water        WaterVol
+ 
+#      recipe:sub-recipe       location           method       options
+MAKE   Drinks                  7,8,9   DEFAULT
+% Robot comment line
+MAKE   Drinks:coffee,lemonade  10,11   DEFAULT      MIX:30x10
+
+#         component  destination   units       delay(ms)
+SPREAD    Water      8,10,11       DrinkVol    100      
+
+MESSAGE Start transferring the reagent
 #         source     destination   units     delay(ms)
 TRANSFER  Syrup      7             3         100
