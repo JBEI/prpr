@@ -79,6 +79,11 @@ class DatabaseHandler:
                     command = element[0]
                     message = element[1]
                     transfer['info'].append({'command' : command, 'message' : message})
+                
+                elif element[0] == 'wait':
+                    print('element is wait in the database', element, element[1])
+                    wait = element[1]
+                    transfer['info'].append({'command' : 'wait', 'wait' : wait})
         return transfer
 
     def getMFinfo(self): #mfWellLocations, mfWellConnections

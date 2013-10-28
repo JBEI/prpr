@@ -14,8 +14,7 @@ def CheckCommand(command):
             'component'     : ['COMPONENT', 'REAGENT', 'LOCATION'],
             'volume'        : ['VOLUME', 'AMOUNT'],
             'recipe'        : ['RECIPE', 'LIST', 'SET'],
-            'comment'       : ['COMMENT', '%'],
-            'wait'          : ['WAIT', '%']
+            'comment'       : ['COMMENT', '%']
         },
         'action' : {
             'use'           : ['USE'],
@@ -23,7 +22,8 @@ def CheckCommand(command):
             'spread'        : ['SPREAD', 'DISTRIBUTE', 'DIST_REAGENT'],
             'transfer'      : ['TRANSFER', 'TRANSFER_LOCATIONS'],
             'message'       : ['MESSAGE', 'PROMPT'],
-            'move'          : ['MOVE']
+            'move'          : ['MOVE'],
+            'wait'          : ['WAIT']
         },
         'function' : {
             'protocol'      : ['TEMPLATE', 'PROTOCOL'],

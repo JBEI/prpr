@@ -499,6 +499,10 @@ class Experiment:
     def addComment(self, line):
         comment = {'type': 'command', 'action': 'comment', 'options': line}
         self.transactionList.append([comment])
+        
+    def wait(self, line):
+        comment = {'type': 'command', 'action': 'wait', 'options': line}
+        self.transactionList.append([comment])
 
     def log(self, item):
         from datetime import datetime
@@ -1006,6 +1010,16 @@ def LineToList(line, configFileName, experiment):
 
             elif command['name'] == 'comment':
                 experiment.addComment(' '.join(line[1:]))
+                
+            elif command['name'] == 'wait':
+                print(line)
+                if len(line[1:]) == 1:
+                    if line[1].isdigit():
+                        experiment.wait(line[1])
+                    else:
+                        experiment.errorLog('Error. Wait value should be a number in line: ' + ' '.join(line))
+                else:
+                    experiment.errorLog('Error in line: ' + ' '.join(line) + '. WAIT value shouldn\'t have spaces or tabs in it')
 
         elif line[0].startswith('#'):
             return

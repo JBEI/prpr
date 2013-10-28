@@ -139,6 +139,14 @@ class PRPR:
                   volumesString + ',' + location + ',1,"' + \
                   wellString + '",' + mixOptions + ',0);'
         self.config(command)
+        
+    def wait(self, timer):
+        import random
+        name = 'timer' + str(random.randrange(1, 10000))
+        startTimer = 'StartTimer("' + name + '");'
+        waitTimer = 'WaitTimer("' + name + '", "'+ timer +'");'
+        self.config(startTimer)
+        self.config(waitTimer)
 
     def command(self, action, tipNumber, gridAndSite, wellString, method, volumesString):
         location = str(gridAndSite[0]) + ',' + str(gridAndSite[1])
@@ -164,6 +172,9 @@ class PRPR:
                             self.message(element['message'])
                         elif element['command'] == 'comment':
                             self.comment(element['message'])
+                        elif element['command'] == 'wait':
+                            print('element command is wait')
+                            self.wait(element['wait'])
                         else:
                             if e:
                                 previousElement = t[e-1]
@@ -199,7 +210,7 @@ class PRPR:
                                 plateInfo = {'dimensions' : element['wellInfo']['plateDimensions'], 'location' : element['wellInfo']['plate']}
                     element = t[len(t)-1]
 
-                    if element['command'] == 'message' or element['command'] == 'comment':
+                    if element['command'] == 'message' or element['command'] == 'comment' or element['command'] == 'wait':
                         pass
                     else:
                         volumesList = self.fillVolumesList(volumesDict)
@@ -270,6 +281,8 @@ class PRPR:
                         trList.append({ 'command' : 'Mix', 'tipNumber' : tipNumber, 'wellInfo' : wellInfo, 'volume' : option['volume'], 'times' : option['times'] })
                         tipNumber += 1
                     elif option['command'] == 'message' or option['command'] == 'comment':
+                        trList.append(option)
+                    elif option['command'] == 'wait':
                         trList.append(option)
                 elements.append(trList)
             self.transactions.append(elements)
