@@ -502,6 +502,7 @@ class Experiment:
         
     def wait(self, line):
         comment = {'type': 'command', 'action': 'wait', 'options': line}
+        self.addComment('------ WAIT ' + line + ' ms ------')
         self.transactionList.append([comment])
 
     def log(self, item):

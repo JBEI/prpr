@@ -100,6 +100,8 @@ class PRPR:
                 self.config('call ' + t['name'] + (' ' + str(t['volume']) if t['volume'] > 1 else ''))
             elif 'message' in t:
                 self.config('# ' + t['message'])
+            elif 'wait' in t:
+                self.config('call wait' + self.wait[t['wait']])
         self.config('end')
         self.config('')
         
@@ -146,7 +148,11 @@ class PRPR:
     def parseCommand(self, transferList):
         option=transferList[0]
         messages = []
-        if option['command'] == 'message' or option['command'] == 'comment':
+        if option['command']:
+            if option['command'] == 'wait':
+                wait = option['wait']
+                if wait not in self.wait:
+                    self.wait[wait] = wait + '_o'
             messages.append(option)
         return messages
 
