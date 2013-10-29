@@ -13,12 +13,13 @@ from prpr import *
 
 class PRPR:
     # wash = 'Wash(255,1,1,1,0,"2",500,"1.0",500,20,70,30,1,1,1000);'
-    wash = 'Wash(255,17,1,17,2,"2.0",500,"1.0",500,10,70,30,0,0,1000);'
+    #wash = 'Wash(255,17,1,17,2,"2.0",500,"1.0",500,10,70,30,0,0,1000);'
     def __init__(self, ID):
         self.expID = ID
         db = DatabaseHandler(ID)
         self.transfers = db.transfers
         self.maxTips = db.maxTips
+        self.findOutFileExtension()
         self.logger = []
         self.robotConfig = []
         self.transactions = []
@@ -104,13 +105,20 @@ class PRPR:
             for line in self.robotConfig:
                 file.write(line.rstrip() + '\r\n')
                 
-        fileName = ''
+        fileName = self.configFileName
+        with open(fileName, 'a', encoding='latin1') as myfile:
+            writeLines(myfile)
+
+    def findOutFileExtension(self):
+        fileFound = False
         for key in defaults.fileExtensions:
             file_ = 'esc' + os.sep + 'config' + self.expID + '.' + defaults.fileExtensions[key]
             if os.path.isfile(file_):
-                fileName = file_
-        with open(fileName, 'a', encoding='latin1') as myfile:
-            writeLines(myfile)
+                fileFound = True
+                self.configFileName = file_
+                self.wash = defaults.washLine[key]
+        if not fileFound:
+            print('Error. Config file not found in defaults')
 
     def log(self, item):
         from datetime import datetime
