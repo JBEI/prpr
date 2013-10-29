@@ -13,12 +13,13 @@ from prpr import *
 
 class PRPR:
     # wash = 'Wash(255,1,1,1,0,"2",500,"1.0",500,20,70,30,1,1,1000);'
-    wash = 'Wash(255,17,1,17,2,"2.0",500,"1.0",500,10,70,30,0,0,1000);'
+    #wash = 'Wash(255,17,1,17,2,"2.0",500,"1.0",500,10,70,30,0,0,1000);'
     def __init__(self, ID):
         self.expID = ID
         db = DatabaseHandler(ID)
         self.transfers = db.transfers
         self.maxTips = db.maxTips
+        self.findOutFileExtension()
         self.logger = []
         self.robotConfig = []
         self.transactions = []
@@ -104,13 +105,20 @@ class PRPR:
             for line in self.robotConfig:
                 file.write(line.rstrip() + '\r\n')
                 
-        fileName = ''
+        fileName = self.configFileName
+        with open(fileName, 'a', encoding='latin1') as myfile:
+            writeLines(myfile)
+
+    def findOutFileExtension(self):
+        fileFound = False
         for key in defaults.fileExtensions:
             file_ = 'esc' + os.sep + 'config' + self.expID + '.' + defaults.fileExtensions[key]
             if os.path.isfile(file_):
-                fileName = file_
-        with open(fileName, 'a', encoding='latin1') as myfile:
-            writeLines(myfile)
+                fileFound = True
+                self.configFileName = file_
+                self.wash = defaults.washLine[key]
+        if not fileFound:
+            print('Error. Config file not found in defaults')
 
     def log(self, item):
         from datetime import datetime
@@ -139,6 +147,14 @@ class PRPR:
                   volumesString + ',' + location + ',1,"' + \
                   wellString + '",' + mixOptions + ',0);'
         self.config(command)
+        
+    def wait(self, timer):
+        import random
+        name = 'timer' + str(random.randrange(1, 10000))
+        startTimer = 'StartTimer("' + name + '");'
+        waitTimer = 'WaitTimer("' + name + '", "'+ timer +'");'
+        self.config(startTimer)
+        self.config(waitTimer)
 
     def command(self, action, tipNumber, gridAndSite, wellString, method, volumesString):
         location = str(gridAndSite[0]) + ',' + str(gridAndSite[1])
@@ -164,6 +180,9 @@ class PRPR:
                             self.message(element['message'])
                         elif element['command'] == 'comment':
                             self.comment(element['message'])
+                        elif element['command'] == 'wait':
+                            print('element command is wait')
+                            self.wait(element['wait'])
                         else:
                             if e:
                                 previousElement = t[e-1]
@@ -199,7 +218,7 @@ class PRPR:
                                 plateInfo = {'dimensions' : element['wellInfo']['plateDimensions'], 'location' : element['wellInfo']['plate']}
                     element = t[len(t)-1]
 
-                    if element['command'] == 'message' or element['command'] == 'comment':
+                    if element['command'] == 'message' or element['command'] == 'comment' or element['command'] == 'wait':
                         pass
                     else:
                         volumesList = self.fillVolumesList(volumesDict)
@@ -270,6 +289,8 @@ class PRPR:
                         trList.append({ 'command' : 'Mix', 'tipNumber' : tipNumber, 'wellInfo' : wellInfo, 'volume' : option['volume'], 'times' : option['times'] })
                         tipNumber += 1
                     elif option['command'] == 'message' or option['command'] == 'comment':
+                        trList.append(option)
+                    elif option['command'] == 'wait':
                         trList.append(option)
                 elements.append(trList)
             self.transactions.append(elements)

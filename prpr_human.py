@@ -22,7 +22,9 @@ class PRPR:
             'tube' : 'tube',
             'to' : 'to',
             'mix' : 'mix',
-            'in' : 'in'
+            'in' : 'in',
+            'wait' : 'wait',
+            'seconds' : 'seconds'
         },
         'ru' : {
             'transfer' : 'перенести',
@@ -32,7 +34,9 @@ class PRPR:
             'tube' : 'пробирка',
             'to' : 'в',
             'mix' : 'перемешать',
-            'in' : 'в'
+            'in' : 'в',
+            'wait' : 'подождать',
+            'seconds' : 'секунд'
         }
     }
     defaultMethodDescriptions = {
@@ -213,6 +217,13 @@ class PRPR:
                         if len(self.robotConfig) and self.robotConfig[-1] != '':
                             self.config('')
                     else:
+                        self.config('')
+            elif option['command'] == 'wait':
+                if option['wait']:
+                    if len(self.robotConfig) and self.robotConfig[-1] != '':
+                        self.config('')
+                    self.config(self.dictionary[self.language]['wait'].capitalize() + ' ' + str(int(option['wait'])*0.001) + ' ' + self.dictionary[self.language]['seconds'] + '.')
+                    if len(self.robotConfig) and self.robotConfig[-1] != '':
                         self.config('')
         self.transactions.append(trList)
     
