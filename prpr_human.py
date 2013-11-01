@@ -139,12 +139,7 @@ class PRPR:
             if int(well1[1]) == int(well2[1]):
                 if int(well1[0]) == (int(well2[0]) - 1):
                     return True
-                else:
-                    return False
-            else:
-                return False
-        else:
-            return False
+        return False
 
     def config(self, line):
         self.robotConfig.append(line)
