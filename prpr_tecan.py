@@ -336,6 +336,7 @@ class PRPR:
         volumesString = ','.join(volumesList)
         return volumesString, tipsEnc
     
+
     def parseLocation(self, location):
         """
         Parses the given location, i.e. PL3:A1+4 to individual wells

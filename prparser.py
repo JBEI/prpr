@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.3
 
 # prparser.py, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-handling robots
 # Author: Nina Stawski, nstawski@lbl.gov, me@ninastawski.com
@@ -23,8 +23,7 @@ from copy import deepcopy
 #todo: switch to postgres
 
 class Experiment:
-    language = 'en'
-    def __init__(self, maxVolume, tips, db, platform, userMethods=''):
+    def __init__(self, maxVolume, tips, db, platform, userMethods='', language = 'en'):
         """
         New experiment with parameters:
         robotTips - maximum amount of tips the robot has
@@ -32,6 +31,7 @@ class Experiment:
         """
         self.name = ''
         self.platform = platform
+        self.language = language
         self.components = {}
         self.plates = {}
         self.volumes = {}
@@ -1011,6 +1011,7 @@ def LineToList(line, configFileName, experiment):
 
             elif command['name'] == 'comment':
                 experiment.addComment(' '.join(line[1:]))
+                print('line================================', line)
                 
             elif command['name'] == 'wait':
                 print(line)

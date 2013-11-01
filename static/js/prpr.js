@@ -5,11 +5,12 @@
  * http://github.com/JBEI/prpr/blob/master/license.txt
  */
 
-function selectDevice(selection) {
+function selectDevice(selection, languages) {
     $('#microscopeTable, #downloadMFtable, .alert').remove();
     $('#prpr-platform').children().removeClass('btn-info');
     $('#platform-' + selection).addClass('btn-info');
     if (selection == 'tecan') {
+        $('#languages').remove();
         $('#tablefile, #table, #mftable').show();
         $('#deviceselect').val('tecan');
         $('#tablefile .controls').attr('id', 'table');
@@ -30,6 +31,7 @@ function selectDevice(selection) {
 //        $('#sampleScript').removeClass('hidden');
     }
     else if (selection == 'microfluidics') {
+        $('#languages').remove();
         $('#tablefile, #table, #mftable').show();
         $('#tablefile .controls .btn').remove();
         $('#deviceselect').val('microfluidics');
@@ -58,6 +60,7 @@ function selectDevice(selection) {
         }
     }
     else if (selection == 'microscope') {
+        $('#languages').remove();
         $('#deviceselect').val('microscope');
         $('#tablefile').show();
         $('#table, #mftable').hide();
@@ -68,7 +71,22 @@ function selectDevice(selection) {
     else if (selection == 'human') {
         $('#deviceselect').val('human');
         $('#tablefile').hide();
+        var langButtons = '<span style="padding-right: 10px">Select the output language:</span><div class="btn-group" id="languages">'
+        for (var el in languages) {
+            var lang = languages[el];
+            langButtons += '<div class="btn lang" id="lang_' + lang + '" onclick="changeLanguage(\'' + lang + '\')">' + lang + '</div>';
+        }
+        langButtons += '</div>';
+        $('#btns').prepend(langButtons);
+        $('#lang_en').addClass('btn-info');
+        $('#language').val('en');
     }
+}
+
+function changeLanguage(newLang) {
+    $('.lang').removeClass('btn-info');
+    $('#lang_' + newLang).addClass('btn-info');
+    $('#language').val(newLang);
 }
 
 function recognizeFile() {
