@@ -71,12 +71,12 @@ function selectDevice(selection, languages) {
     else if (selection == 'human') {
         $('#deviceselect').val('human');
         $('#tablefile').hide();
-        var langButtons = '<span style="padding-right: 10px">Select the output language:</span><div class="btn-group" id="languages">'
+        var langButtons = '<span id="languages"><span style="padding-right: 10px">Select the output language:</span><div class="btn-group">'
         for (var el in languages) {
             var lang = languages[el];
             langButtons += '<div class="btn lang" id="lang_' + lang + '" onclick="changeLanguage(\'' + lang + '\')">' + lang + '</div>';
         }
-        langButtons += '</div>';
+        langButtons += '</div></span>';
         $('#btns').prepend(langButtons);
         $('#lang_en').addClass('btn-info');
         $('#language').val('en');
