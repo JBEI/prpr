@@ -15,8 +15,6 @@ from prparser import *
 from tempfile import TemporaryFile
 import glob
 import importlib
-from prpr_microfluidics import *
-from prpr_tecan import *
 
 global robotTips
 global maxAm
@@ -25,7 +23,9 @@ maxAm = 150
 
 @route('/')
 def prpr():
-    return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[], tables=GetDefaultTables(), selected='tecan', version=__version__)
+    human = __import__('prpr_human')
+    languages = list(human.PRPR.dictionary)
+    return template('pages' + os.sep + 'page.html', file='', btn='', text='', alerterror=[], alertsuccess=[], tables=GetDefaultTables(), selected='tecan', version=__version__, languages = languages)
 
 @post('/preview')
 def preview():
@@ -141,18 +141,21 @@ def getPlates():
 
 @post('/getconfig')
 def config():
+    human = __import__('prpr_human')
+    languages = list(human.PRPR.dictionary)
     errorList = []
     successList = []
     platform = request.forms.get('deviceselect', '').strip()
     getconfig = request.forms.get('text', '').strip()
+    language = request.forms.get('language', '').strip()
     customMethods = request.forms.get('methods', '').strip().split(',')
     if getconfig != '':
         db = DBHandler()
         global experiment
         if customMethods != ['']:
-            experiment = Experiment(maxVolume=150, tips=8, db=db, platform=platform, userMethods=customMethods)
+            experiment = Experiment(maxVolume=150, tips=8, db=db, platform=platform, userMethods=customMethods, language=language)
         else:
-            experiment = Experiment(maxVolume=150, tips=8, platform=platform, db=db)
+            experiment = Experiment(maxVolume=150, tips=8, platform=platform, db=db, language=language)
         expID = experiment.ID
         
         print('platform:', platform)
@@ -185,7 +188,7 @@ def config():
 
         dirname = 'incoming' + os.sep
         filename = 'config_' + expID + '.par'
-        writefile = open(dirname + filename, "w")
+        writefile = open(dirname + filename, "w", encoding="utf-8")
 
         if getconfig.startswith('TABLE'):
             getconfig = '\n'.join(getconfig.split('\n')[1:]) #removing the extra 'TABLE' from the config file
@@ -195,14 +198,15 @@ def config():
             list_ = getconfig
         writefile.writelines(''.join(list_))
         writefile.close()
-        readfile = open(dirname + filename, "r")
+        readfile = open(dirname + filename, "r", encoding="utf-8")
         platform = __import__('prpr_'+ experiment.platform)
+        
         ParseFile(readfile, experiment)
 
         if len(experiment.errorLogger):
             for item in experiment.errorLogger:
                 errorList.append(item)
-            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
+            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__, languages=languages)
 
         elif experiment.testindex:
             if experiment.platform == 'human':
@@ -216,15 +220,15 @@ def config():
             log = 'experiment' + str(expID) + '.log'
             successList.append("Your configuration file has been successfully processed.")
 
-            return template('pages' + os.sep + 'page.html', file=file, btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
+            return template('pages' + os.sep + 'page.html', file=file, btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__, languages=languages)
 
         else:
             errorList.append("Your configuration file doesn't contain any actions. Please refer to PR-PR howto guide.")
-            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
+            return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__, languages=languages)
 
     else:
         errorList.append("Your configuration file doesn't contain any actions. Please refer to PR-PR howto guide.")
-        return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__)
+        return template('pages' + os.sep + 'page.html', file='', btn='btn-success', text=getconfig, alerterror=errorList, alertsuccess=successList, tables=GetDefaultTables(), selected=platform, version=__version__, languages=languages)
 
 
 @route('/static/:path#.+#', name='static')

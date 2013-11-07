@@ -1,7 +1,7 @@
 //-
    Author: Nina Stawski
    Contact: me@ninastawski.com
-   Version: 0.6
+   Version: 0.7
 
     prpr.js, a part of PR-PR (previously known as PaR-PaR), a biology-friendly language for liquid-handling robots
     Author: Nina Stawski, nstawski@lbl.gov, me@ninastawski.com
@@ -28,6 +28,8 @@ block script
 
             var tablesList = {{!tables}};
             createTablesList(tablesList);
+            
+            var languages = {{!languages}};
             
             var selected = '{{selected}}';
             
@@ -57,7 +59,7 @@ block script
             });
             
             $('#platform-human').click(function() {
-                selectDevice('human');
+                selectDevice('human', languages.sort());
             });
             //$('#platform-human').addClass('disabled');
             
@@ -147,13 +149,15 @@ block content
                     li#script
                         h4 Write script &nbsp;&nbsp;
                             small: a#sampleScript(onclick="LoadSampleScript()") load example
-                input#position.hidden(name='position', id='position', hidden)
-                input#wells.hidden(name='wells', id='wells', hidden)
+                input#position.hidden(name='position', hidden)
+                input#wells.hidden(name='wells', hidden)
+                input#language.hidden(name='language', hidden)
         .row
             .span12
                 #result
                 textarea#textarea.input-large.span12(rows="30", name="text") {{text}}
-                button.btn.pull-right(type="submit", name="upload", onclick="$('.alert').remove();") Prepare robot file
+                #btns.pull-right
+                    button.btn(type="submit", name="upload", onclick="$('.alert').remove();") Prepare file
 
             #myModal.modal.hide.prpr-modal
                 .modal-header

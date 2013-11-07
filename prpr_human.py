@@ -24,7 +24,8 @@ class PRPR:
             'mix' : 'mix',
             'in' : 'in',
             'wait' : 'wait',
-            'seconds' : 'seconds'
+            'seconds' : 'seconds',
+            'transfer method descriptions' : 'transfer method descriptions'
         },
         'ru' : {
             'transfer' : 'перенести',
@@ -36,33 +37,62 @@ class PRPR:
             'mix' : 'перемешать',
             'in' : 'в',
             'wait' : 'подождать',
-            'seconds' : 'секунд'
+            'seconds' : 'секунд',
+            'transfer method descriptions' : 'описание способов переноса'
         }
     }
     defaultMethodDescriptions = {
-        'LC_W_Bot_Bot' : {
-            'short': 'bottom to bottom',
-            'long': 'Aspirate from bottom of the source well, dispense to the bottom of the destination well.'
+        'en' : {
+            'LC_W_Bot_Bot' : {
+                'short': 'bottom to bottom',
+                'long': 'Aspirate from bottom of the source well, dispense to the bottom of the destination well.'
+            },
+            'LC_W_Bot_Air' : {
+                'short': 'bottom to air',
+                'long': 'Aspirate from bottom of the source well, dispense from above the liquid level to the destination well.'
+            },
+            'LC_W_Bot_Lev' : {
+                'short': 'bottom to level',
+                'long': 'Aspirate from bottom of the source well, dispense at the liquid level of the destination well.'
+            },
+            'LC_W_Lev_Bot' : {
+                'short': 'level to bottom',
+                'long': 'Aspirate from the liquid level of the source well, dispense to the bottom of the destination well.'
+            },
+            'LC_W_Lev_Air' : {
+                'short': 'level to air',
+                'long': 'Aspirate from the liquid level of the source well, dispense from above the liquid level to the destination well.'
+            },
+            'LC_W_Lev_Lev' : {
+                'short': 'level to level',
+                'long': 'Aspirate from the liquid level of the source well, dispense at the liquid level of the destination well.'
+            }
         },
-        'LC_W_Bot_Air' : {
-            'short': 'bottom to air',
-            'long': 'Aspirate from bottom of the source well, dispense from above the liquid level to the destination well.'
-        },
-        'LC_W_Bot_Lev' : {
-            'short': 'bottom to level',
-            'long': 'Aspirate from bottom of the source well, dispense at the liquid level of the destination well.'
-        },
-        'LC_W_Lev_Bot' : {
-            'short': 'level to bottom',
-            'long': 'Aspirate from the liquid level of the source well, dispense to the bottom of the destination well.'
-        },
-        'LC_W_Lev_Air' : {
-            'short': 'level to air',
-            'long': 'Aspirate from the liquid level of the source well, dispense from above the liquid level to the destination well.'
-        },
-        'LC_W_Lev_Lev' : {
-            'short': 'level to level',
-            'long': 'Aspirate from the liquid level of the source well, dispense at the liquid level of the destination well.'
+        'ru' : {
+            'LC_W_Bot_Bot' : {
+                'short': 'со дна на дно',
+                'long': 'Забрать реагент со дна исходной лунки, внести его на дно в лунке назначения'
+            },
+            'LC_W_Bot_Air' : {
+                'short': 'со дна над уровнем',
+                'long': 'Забрать реагент со дна исходной лунки, внести его над уровнем реагента в лунке назначения'
+            },
+            'LC_W_Bot_Lev' : {
+                'short': 'со дна на уровень',
+                'long': 'Забрать реагент со дна исходной лунки, внести его на уровне реагента в лунке назначения'
+            },
+            'LC_W_Lev_Bot' : {
+                'short': 'с уровня на дно',
+                'long': 'Забрать реагент с уровня реагента в исходной лунке, внести его на дно в лунке назначения'
+            },
+            'LC_W_Lev_Air' : {
+                'short': 'с уровня над уровнем',
+                'long': 'Забрать реагент с уровня реагента в исходной лунке, внести его над уровнем реагента в лунке назначения'
+            },
+            'LC_W_Lev_Lev' : {
+                'short': 'с уровня на уровень',
+                'long': 'Забрать реагент с уровня реагента в исходной лунке, внести его на уровне реагента в лунке назначения'
+            }
         }
     }
     
@@ -83,9 +113,9 @@ class PRPR:
         self.saveConfig()
         
     def addMethodDescriptions(self):
-        info = ['Transfer method descriptions:', '']
+        info = [self.dictionary[self.language]['transfer method descriptions'].capitalize() + ':', '']
         for method in self.usedMethods:
-            info.append(self.defaultMethodDescriptions[method]['short'].capitalize() + ': ' + self.defaultMethodDescriptions[method]['long'])
+            info.append(self.defaultMethodDescriptions[self.language][method]['short'].capitalize() + ': ' + self.defaultMethodDescriptions[self.language][method]['long'])
             info.append('')
         self.robotConfig = info + self.robotConfig
 
@@ -109,12 +139,7 @@ class PRPR:
             if int(well1[1]) == int(well2[1]):
                 if int(well1[0]) == (int(well2[0]) - 1):
                     return True
-                else:
-                    return False
-            else:
-                return False
-        else:
-            return False
+        return False
 
     def config(self, line):
         self.robotConfig.append(line)
@@ -191,7 +216,7 @@ class PRPR:
             else:
                 destinationLocation = ' (' + tr['destination']['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(tr['destination']['well']) + ')'
             
-            transfer = self.dictionary[self.language]['transfer'].capitalize() + ' ' + volume + ' uL ' + self.dictionary[self.language]['of'] + ' "' + tr['source']['componentName'] + '" ' + self.dictionary[self.language]['from'] + sourceLocation + self.dictionary[self.language]['to'] + destinationLocation + ': ' + self.defaultMethodDescriptions[method]['short']
+            transfer = self.dictionary[self.language]['transfer'].capitalize() + ' ' + volume + ' uL ' + self.dictionary[self.language]['of'] + ' "' + tr['source']['componentName'] + '" ' + self.dictionary[self.language]['from'] + sourceLocation + self.dictionary[self.language]['to'] + destinationLocation + ': ' + self.defaultMethodDescriptions[self.language][method]['short']
             self.config(transfer)
 
     def parseCommand(self, transferList):
