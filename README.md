@@ -1,5 +1,7 @@
 PR-PR is a new simple way to do biological experiments faster on multiple platforms.
+
 Reuse your scripts for different platforms — Tecan, Microfluidics, even human languages.
+
 Paper: http://pubs.acs.org/doi/abs/10.1021/sb300075t
 
 PR-PR alpha v.032
