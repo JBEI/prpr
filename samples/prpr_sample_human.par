@@ -4,7 +4,7 @@ NAME 	BreakfastDrinks
 Recipe for breakfast drinks
 """
 
-#         alias        name
+#         alias        dimensions
 PLATE     DrinksPlate  8x12
 PLATE     ResultPlate  8x12
 
