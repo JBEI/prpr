@@ -382,7 +382,7 @@ class Experiment:
                             if a.startswith('mix'):
                                 mixoptions = a.split(':')
                                 if len(mixoptions) == 2:
-                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': self.prepareLocation(destination)}
+                                    transaction = {'type': 'command', 'action': 'mix', 'options': mixoptions[1], 'location': self.prepareLocation(destination), 'recipe': line[0]}
                                     self.transactionList.append([transaction])
                                 else:
                                     self.log('Error. Wrong mixing options in line "' + originalLine + '"')
