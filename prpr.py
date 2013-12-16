@@ -68,6 +68,7 @@ class DatabaseHandler:
                     m = self.getAll('SELECT Location FROM CommandLocations WHERE ActionID = ' + str(actionID), order='ORDER BY trOrder ASC')
                     for well in m:
                         w = self.getWell(well)
+                        print('mix', mixOptions, element)
                         transfer['info'].append({'command' : 'mix', 'volume' : mixOptions[0], 'times' : mixOptions[1], 'target' : w })
                 elif element[0] == 'move':
                     trOrder = element[-1]

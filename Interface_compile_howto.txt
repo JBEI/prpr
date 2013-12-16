@@ -1,0 +1,30 @@
+How to set interface files (currently just less) to autocompile.
+
+
+1. Install node (http://nodejs.org/)
+
+
+2. Run the following in your console (to install globally):
+
+> sudo npm install -g less
+> sudo npm install -g grunt-cli
+
+If you wish to install locally, remove 'sudo' and '-g' from the above line. Modules will then be installed into the current folder.
+
+
+3. Run the following in your console:
+
+> npm install
+
+This will take the settings from 'package.json' file and install all necessaty dependencies into node_modules/ folder.
+
+
+4. Make sure you add the folder node_modules/ to your .gitignore!
+
+
+5. Run the following in your console:
+
+> grunt watch
+
+
+6. Enjoy!

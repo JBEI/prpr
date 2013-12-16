@@ -225,13 +225,17 @@ class PRPR:
         for option in tr:
             if option['command'] == 'mix':
                 wellInfo = option['target']
+                componentName = ''
+                if ':' not in wellInfo['componentName']:
+                    
+                    componentName = ' "' + wellInfo['componentName'] + '" ' + self.dictionary[self.language]['in']
                 
                 if wellInfo['plateName'] == 'Tubes':
                     mixLocation = ' (' + self.dictionary[self.language]['tube'] + ' ' + self.getNumberForTube(wellInfo['well']) + ') '
                 else:
                     mixLocation = ' (' + wellInfo['plateName'] + ' ' + self.dictionary[self.language]['well'] + ' ' + self.getLetterForWell(wellInfo['well']) + ') '
                 
-                mix = self.dictionary[self.language]['mix'].capitalize() + ' "' + wellInfo['componentName'] + '" ' + self.dictionary[self.language]['in'] + mixLocation
+                mix = self.dictionary[self.language]['mix'].capitalize() + componentName + mixLocation
                 self.config(mix)
             elif (option['command'] == 'message') or (option['command'] == 'comment'):
                 if option['message']:
