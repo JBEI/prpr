@@ -4,7 +4,7 @@ Reuse your scripts for different platforms — Tecan, Microfluidics, even human 
 
 Paper: http://pubs.acs.org/doi/abs/10.1021/sb300075t
 
-PR-PR alpha v.1.1
+PR-PR Laboratory Automation Platform v.1.1
 ==================
 
 Simple web mode:
