@@ -67,7 +67,8 @@ class PRPR:
             waitNum = self.wait[wait]
             
             config['volume'] = self.parseVolume(transfer['volume'])
-            transferPath = self.findPath(source, destination)
+            # transferPath = self.findPath(source, destination)
+            transferPath = self.findPath(source, destination, [], [], [])
             p = 0
             while p <= len(transferPath) - 1:
                 currentWell = transferPath[p]
@@ -120,7 +121,32 @@ class PRPR:
             self.config('')
 
 
-    def findPath(self, source, destination, path=[]):
+    # def findPath(self, source, destination, path=[]):
+    #     """
+    #     Finds a shortest path between two wells on a microfluidic table.
+    #     
+    #     :param source: source well, int (must be in self.mfWellConnections)
+    #     :param destination: destination well, int (must be in self.mfWellConnections)
+    #     :param path: current path
+    #     :return: resulting path, list
+    # 
+    #     """
+    #     path = path + [source]
+    #     if source == destination:
+    #         return path
+    #     if source not in self.mfWellConnections:
+    #         return None
+    #     shortestPath = None
+    #     for node in self.mfWellConnections[source]:
+    #         if node not in path:
+    #             newPath = self.findPath(node, destination, path)
+    #             if newPath:
+    #                 if not shortestPath or len(newPath) < len(shortestPath):
+    #                     shortestPath = newPath
+    #     return shortestPath
+
+
+    def findPath(self, source, destination, path, locationsVisited, shortestPath):
         """
         Finds a shortest path between two wells on a microfluidic table.
         
@@ -128,21 +154,23 @@ class PRPR:
         :param destination: destination well, int (must be in self.mfWellConnections)
         :param path: current path
         :return: resulting path, list
-
+    
         """
-        path = path + [source]
+        print('info for path:', path, locationsVisited, shortestPath)
         if source == destination:
-            return path
-        if source not in self.mfWellConnections:
-            return None
-        shortestPath = None
-        for node in self.mfWellConnections[source]:
-            if node not in path:
-                newPath = self.findPath(node, destination, path)
-                if newPath:
-                    if not shortestPath or len(newPath) < len(shortestPath):
-                        shortestPath = newPath
-        return shortestPath
+            if not len(shortestPath) or (len(path) < len(shortestPath)):
+                shortestPath = deepcopy(path)
+                return shortestPath
+        else:
+            trialLocationsVisited = locationsVisited
+            for location in self.mfWellConnections[source]:
+                if location not in trialLocationsVisited:
+                    trialPath = deepcopy(path)
+                    trialPath.append(location)
+                    trialLocationsVisited.append(location)
+                    newPath = self.findPath(location, destination, trialPath, trialLocationsVisited, shortestPath)
+                    if newPath:
+                        return newPath
 
 
     def parseCommand(self, transferList):
