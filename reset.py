@@ -7,7 +7,7 @@ def resetPrpr():
     """
     Removes all files from working directories, invokes prpr setup.
     """
-    os.remove('parpar.db')
+    os.remove('prpr.db')
     dirs = ['esc', 'incoming', 'logs', 'tables']
     for dir in dirs:
         files = os.listdir(dir)

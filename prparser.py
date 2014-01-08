@@ -555,7 +555,7 @@ class Protocol:
 
 class DBHandler:
     def __init__(self):
-        self.conn = sqlite3.connect('parpar.db')
+        self.conn = sqlite3.connect('prpr.db')
         self.crsr = self.conn.cursor()
 
     def createExperiment(self, experiment):
@@ -776,7 +776,7 @@ class DBHandler:
 
     @staticmethod
     def db(request):
-        conn = sqlite3.connect('parpar.db')
+        conn = sqlite3.connect('prpr.db')
         c = conn.cursor()
         c.execute(request)
         q = c.fetchall()

@@ -7,7 +7,7 @@ import stat
 
 def DatabaseConnect():
     global conn
-    conn = sqlite3.connect('parpar.db')
+    conn = sqlite3.connect('prpr.db')
     global crsr
     crsr = conn.cursor()
 
@@ -111,7 +111,7 @@ def setup():
     CreateTables()
     UpdatePlates()
     UpdateMethods()
-    os.chmod('parpar.db', stat.S_IRWXU|stat.S_IRWXG|stat.S_IRWXO)
+    os.chmod('prpr.db', stat.S_IRWXU|stat.S_IRWXG|stat.S_IRWXO)
     print('Done!')
 
 if __name__ == '__main__':

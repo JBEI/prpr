@@ -15,7 +15,7 @@ class DatabaseHandler:
     Pulls all experiment info from the database and calls the appropriate parser depending on the platform
     """
     def __init__(self, expID):
-        self.conn = sqlite3.connect('parpar.db')
+        self.conn = sqlite3.connect('prpr.db')
         self.crsr = self.conn.cursor()
         self.expID = str(expID)
         self.getExperimentInfo()
@@ -128,7 +128,7 @@ class DatabaseHandler:
 
     @staticmethod
     def db(request):
-        conn = sqlite3.connect('parpar.db')
+        conn = sqlite3.connect('prpr.db')
         c = conn.cursor()
         c.execute(request)
         q = c.fetchall()
